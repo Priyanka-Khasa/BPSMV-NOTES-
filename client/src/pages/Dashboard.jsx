@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import UploadModal from '../components/UploadModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -8,6 +9,7 @@ const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -19,12 +21,12 @@ const Dashboard = () => {
       setUser(res.data);
       fetchSubjects(res.data.degree, res.data.branch);
     } catch (error) {
-      console.log('Auth disabled for testing, using mock user profile.');
+      // Auth bypassed - use mock user for testing
       const mockUser = {
         name: 'Demo Student',
         degree: 'B.Tech',
         branch: 'CSE',
-        avatar: 'https://via.placeholder.com/150'
+        avatar: null
       };
       setUser(mockUser);
       fetchSubjects(mockUser.degree, mockUser.branch);
@@ -112,6 +114,11 @@ const Dashboard = () => {
       <main className="main-content">
         <header className="content-header glass-panel">
           <h1>{selectedSubject ? subjects.find(s => s._id === selectedSubject)?.name : 'Dashboard Overview'}</h1>
+          {selectedSubject && (
+            <button className="btn btn-primary" onClick={() => setIsUploadModalOpen(true)}>
+              + Upload Resource
+            </button>
+          )}
         </header>
 
         <div className="resources-grid">
@@ -124,7 +131,7 @@ const Dashboard = () => {
           ) : resources.length === 0 ? (
             <div className="empty-state">
               <p>No resources uploaded for this subject yet.</p>
-              <button className="btn btn-primary mt-4">+ Upload Resource</button>
+              <button className="btn btn-primary mt-4" onClick={() => setIsUploadModalOpen(true)}>+ Upload Resource</button>
             </div>
           ) : (
             resources.map(res => (
@@ -143,6 +150,14 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      <UploadModal 
+        isOpen={isUploadModalOpen} 
+        onClose={() => setIsUploadModalOpen(false)} 
+        subjects={subjects} 
+        currentSubjectId={selectedSubject}
+        onUploadSuccess={fetchResources}
+      />
     </div>
   );
 };
