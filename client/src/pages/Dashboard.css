@@ -103,6 +103,53 @@
   color: var(--text-secondary);
 }
 
+.branch-switcher {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem var(--spacing-lg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.branch-btn {
+  flex: 1;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+}
+
+.branch-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+.branch-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.semester-group {
+  margin-bottom: var(--spacing-sm);
+}
+
+.semester-label {
+  padding: 0.5rem var(--spacing-lg);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+  opacity: 0.8;
+  margin: 0;
+}
+
 .sidebar-footer {
   padding: var(--spacing-lg);
   border-top: 1px solid var(--glass-border);
@@ -125,6 +172,7 @@
   margin-bottom: var(--spacing-xl);
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .content-header h1 {

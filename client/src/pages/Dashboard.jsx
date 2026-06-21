@@ -33,6 +33,13 @@ const Dashboard = () => {
     }
   };
 
+  const switchBranch = (branch) => {
+    setUser(prev => ({ ...prev, branch }));
+    setSelectedSubject(null);
+    setResources([]);
+    fetchSubjects('B.Tech', branch);
+  };
+
   const fetchSubjects = async (degree, branch) => {
     try {
       const res = await axios.get(`http://localhost:5000/api/resources/subjects?degree=${degree}&branch=${branch}`, { withCredentials: true });
@@ -77,11 +84,23 @@ const Dashboard = () => {
         </div>
         
         <div className="user-profile">
-          <img src={user?.avatar || 'https://via.placeholder.com/150'} alt="Profile" className="avatar" />
+          <img src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=6366f1&color=fff`} alt="Profile" className="avatar" />
           <div className="user-info">
             <h3>{user?.name}</h3>
             <p>{user?.degree} - {user?.branch}</p>
           </div>
+        </div>
+
+        <div className="branch-switcher">
+          {['CSE', 'ECE', 'IT', 'FT'].map(b => (
+            <button
+              key={b}
+              className={`branch-btn ${user?.branch === b ? 'active' : ''}`}
+              onClick={() => switchBranch(b)}
+            >
+              {b}
+            </button>
+          ))}
         </div>
 
         <nav className="subject-list">
@@ -89,17 +108,30 @@ const Dashboard = () => {
           {subjects.length === 0 ? (
             <p className="no-subjects">No subjects found for your branch yet.</p>
           ) : (
-            <ul>
-              {subjects.map(subject => (
-                <li 
-                  key={subject._id} 
-                  className={selectedSubject === subject._id ? 'active' : ''}
-                  onClick={() => fetchResources(subject._id)}
-                >
-                  {subject.name}
-                </li>
-              ))}
-            </ul>
+            // Group subjects by semester
+            Object.entries(
+              subjects.reduce((acc, subject) => {
+                const sem = `Semester ${subject.semester}`;
+                if (!acc[sem]) acc[sem] = [];
+                acc[sem].push(subject);
+                return acc;
+              }, {})
+            ).map(([sem, semSubjects]) => (
+              <div key={sem} className="semester-group">
+                <p className="semester-label">{sem}</p>
+                <ul>
+                  {semSubjects.map(subject => (
+                    <li
+                      key={subject._id}
+                      className={selectedSubject === subject._id ? 'active' : ''}
+                      onClick={() => fetchResources(subject._id)}
+                    >
+                      {subject.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
           )}
         </nav>
 
