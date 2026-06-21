@@ -160,3 +160,89 @@ a:hover {
 .animate-fade-in {
   animation: fadeIn 0.5s ease forwards;
 }
+/* 1. Custom select arrow (native one looks default/ugly against dark theme) */
+select.input-field {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0a0ab' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* 2. Focus-visible for accessibility (keyboard nav) */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* 3. Custom scrollbar to match theme (default scrollbar breaks the dark aesthetic) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* 4. Text selection color */
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* 5. Disabled button state (you have hover but no disabled) */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 6. Modal overlay backdrop (the dialog in your screenshot needs a dimmed backdrop, not just the page bg) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+/* 7. Sidebar active/hover state — visible nav items need clear affordance */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+.sidebar-link.active {
+  background: var(--accent-gradient);
+  color: white;
+}
+select.input-field option {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
+select.input-field option:checked,
+select.input-field option:hover {
+  background: var(--accent-primary);
+}
+
+/* placeholder option should look muted, not selectable as "real" */
+select.input-field option[value=""][disabled] {
+  color: var(--text-secondary);
+}
