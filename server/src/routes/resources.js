@@ -4,14 +4,14 @@ const Subject = require('../models/Subject');
 const Resource = require('../models/Resource');
 const { verifyToken } = require('./auth'); // Import auth middleware
 
-// Get subjects based on user's degree and branch (Auth bypassed for testing)
+const { upload } = require('../config/cloudinary'); // Import upload middleware
+
+// Get subjects based on user's degree and branch
 router.get('/subjects', async (req, res) => {
   try {
     const { degree, branch } = req.query;
-    // Fallback to query params since req.user is bypassed
     const searchDegree = degree || 'B.Tech';
     const searchBranch = branch || 'CSE';
-
     const subjects = await Subject.find({ degree: searchDegree, branch: searchBranch }).sort({ semester: 1 });
     res.json(subjects);
   } catch (error) {
@@ -19,37 +19,40 @@ router.get('/subjects', async (req, res) => {
   }
 });
 
-// Get resources for a specific subject (Auth bypassed for testing)
+// Get resources for a specific subject
 router.get('/subject/:subjectId', async (req, res) => {
   try {
-    const resources = await Resource.find({ 
+    const resources = await Resource.find({
       subjectId: req.params.subjectId,
-      isApproved: true 
-    }).populate('uploadedBy', 'name');
-    
+      isApproved: true
+    });
     res.json(resources);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching resources' });
   }
 });
 
-// Add a new resource (Auth bypassed for testing)
-router.post('/add', async (req, res) => {
-  const { title, fileUrl, resourceType, year, subjectId } = req.body;
-  
+// Add a new resource with physical file upload
+router.post('/add', upload.single('file'), async (req, res) => {
+  const { title, resourceType, year, subjectId } = req.body;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Please upload a file' });
+  }
+
   try {
     const newResource = await Resource.create({
       title,
-      fileUrl,
+      fileUrl: req.file.path,
       resourceType,
-      year,
+      year: year ? parseInt(year) : undefined,
       subjectId,
-      uploadedBy: null, // Hardcoded for testing without auth
+      uploadedBy: null,
       isApproved: true
     });
-    
     res.status(201).json(newResource);
   } catch (error) {
+    console.error('Upload Error:', error);
     res.status(500).json({ message: 'Error creating resource' });
   }
 });
