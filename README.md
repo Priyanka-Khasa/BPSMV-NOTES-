@@ -1,150 +1,197 @@
-# 🎓 BPSMV Resource Hub
+# BPSMV Resource Hub 🎓
 
-A real-time academic resource platform built for students of **BPSMV** (Bhagat Phool Singh Mahila Vishwavidyalaya University). It gives students a single, centralized place to find previous years' question papers, subject notes, and other study material — filtered automatically by their degree and branch.
+A professional, responsive university resource hub for BPSMV students. Upload, discover, and discuss subject-wise PDFs, notes, links, and previous year question papers.
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-61DAFB)
+![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
 ![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)
 ![Database](https://img.shields.io/badge/database-MongoDB-47A248)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
----
-
 ## 🚀 Features
 
-- **Google OAuth integration** — secure login via Gmail accounts *(currently bypassed with a mock user for local development)*
-- **Personalized dashboard** — subjects and resources auto-filtered by the student's degree and branch
-- **Premium UI** — glassmorphism, dark-mode design system, and subtle micro-animations
-- **Resource categorization** — clear tagging for Notes, Question Papers, and Syllabus, with year-based sorting for question papers
-- **Scalable data model** — new degrees, branches, and subjects can be added in MongoDB without touching the codebase
-
----
+- **Dual Authentication**: Google OAuth OR email/password login.
+- **Guest Mode**: One-click "Enter as Guest" — no registration needed.
+- **Personalized Dashboard**: Filters subjects by your degree and branch.
+- **Resource Explorer**: Search & filter by degree, branch, semester, year, type, and subject.
+- **Upload System**: Upload PDF notes, question papers, external links, and syllabi.
+- **PDF Viewer**: Clean, responsive iframe preview with download capability.
+- **Subject Discussion Board**: Public chat/comments for every subject.
+- **Admin Panel**: Moderate resources (admin role).
+- **Fully Responsive**: Mobile, tablet, laptop, and desktop.
+- **Modern Light Theme**: Professional UI with Tailwind CSS.
 
 ## 🛠️ Tech Stack
 
 | Layer | Stack |
 |---|---|
-| Frontend | React.js (Vite), React Router, custom CSS (CSS variables, glassmorphism) |
-| Backend | Node.js, Express.js |
+| Frontend | React.js 19 (Vite), React Router, Tailwind CSS, Lucide React |
+| Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs |
 | Database | MongoDB (Mongoose ODM) |
-| Auth | Passport.js (Google OAuth 2.0), JWT |
-| File handling | Multipart uploads (`multer` or equivalent) for notes/papers |
-
----
+| File Storage | Local disk (`server/uploads/`) — no Cloudinary required |
 
 ## 📂 Project Structure
 
 ```text
 bpsmv-resource-hub/
-├── client/                 # React frontend (Vite)
+├── client/                  # React Frontend (Vite)
 │   ├── src/
-│   │   ├── components/     # Reusable UI components (e.g. UploadModal)
-│   │   ├── pages/          # Full page views (Dashboard, Login, Onboarding)
-│   │   ├── App.jsx         # Main routing
-│   │   └── index.css       # Global design system & theme variables
-│   └── package.json
+│   │   ├── components/      # Navbar, Layout, ProtectedRoute
+│   │   ├── context/         # AuthContext (global auth state)
+│   │   ├── pages/           # All pages
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Onboarding.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Resources.jsx
+│   │   │   ├── UploadPage.jsx
+│   │   │   ├── PDFViewer.jsx
+│   │   │   ├── Chat.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   └── Admin.jsx
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css        # Tailwind + custom theme
+│   ├── index.html
+│   ├── package.json
+│   ├── tailwind.config.js
+│   └── postcss.config.js
 │
-├── server/                 # Node/Express backend
+├── server/                  # Node/Express Backend
 │   ├── src/
-│   │   ├── config/         # DB connection & Passport configuration
-│   │   ├── models/         # Mongoose schemas (User, Subject, Resource)
-│   │   ├── routes/         # API endpoints (auth, resources)
-│   │   └── app.js          # Server entry point
-│   └── package.json
-│
-└── README.md
+│   │   ├── config/          # DB, Passport, Local Storage
+│   │   ├── models/          # User, Resource, Subject, Comment
+│   │   ├── routes/          # Auth, Resources, Comments
+│   │   └── app.js           # Server entry point
+│   ├── uploads/             # Local file storage
+│   ├── .env
+│   ├── package.json
+│   ├── seedSubjects.js      # Seed database with subjects
+│   └── fixDB.js             # Fix MongoDB index issues
 ```
 
----
+## ⚙️ Environment Setup
 
-## 💻 Running Locally
+Create a `.env` file inside `server/` (if not already present):
+
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/bpsmv-resource-hub
+JWT_SECRET=your_jwt_secret_here
+CLIENT_URL=http://localhost:5173
+
+# Optional — only if you have valid Google OAuth credentials
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+SESSION_SECRET=your_session_secret_here
+```
+
+> **Note**: Google OAuth is **optional**. The app works fully with email/password, guest mode, and local file storage.
+
+## 💻 How to Run Locally
 
 ### Prerequisites
+- Node.js (v18+)
+- MongoDB running locally or MongoDB Atlas URI
 
-- Node.js v16+
-- MongoDB (local instance or a MongoDB Atlas URI)
-- A Google Cloud Console project with OAuth 2.0 credentials (only needed once auth is re-enabled)
-
-### 1. Backend
-
+### 1. Backend Setup
 ```bash
 cd bpsmv-resource-hub/server
 npm install
 ```
 
-Create a `.env` file in `server/`:
-
-```env
-MONGO_URI=your_mongodb_connection_string
-PORT=5000
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-SESSION_SECRET=your_session_secret
-CLIENT_URL=http://localhost:5173
-```
-
-Start the server:
-
+Ensure MongoDB is running, then start the server:
 ```bash
 node src/app.js
 ```
 
-The API will run at `http://localhost:5000`.
+Server will run on `http://localhost:5000`.
 
-### 2. Frontend
+### 2. Fix MongoDB Indexes (If registration fails)
+If you see "Server error during registration", run:
+```bash
+node fixDB.js
+```
+Then restart the server.
 
-In a new terminal:
+### 3. Seed Subjects (First Time Only)
+```bash
+node seedSubjects.js
+```
 
+### 4. Frontend Setup
 ```bash
 cd bpsmv-resource-hub/client
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Frontend will run on `http://localhost:5173`.
 
-> **Note:** Google OAuth is currently bypassed in `Dashboard.jsx` — a mock student user is used automatically if `/api/auth/me` fails, so the dashboard is fully testable without configuring Google credentials.
-
----
-
-## 📡 Core API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/auth/me` | Returns the currently logged-in user |
-| `POST` | `/api/auth/logout` | Logs the user out |
-| `GET` | `/api/resources/subjects?degree=&branch=` | Lists subjects for a degree/branch, grouped by semester |
-| `GET` | `/api/resources/subject/:subjectId` | Lists resources for a given subject |
-| `POST` | `/api/resources/add` | Uploads a new resource (multipart form: title, resourceType, year, subjectId, file) |
-
----
+### 5. Create an Admin User (Optional)
+After signing up via email or guest mode, manually update the user's role in MongoDB:
+```js
+db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
+```
 
 ## 🎨 Design System
 
-The UI is driven by CSS custom properties defined in `client/src/index.css` — colors, spacing, radii, and typography are centralized there so the whole app restyles from one place. Key conventions:
+- **Background**: `#f8fafc` (slate-50)
+- **Headings/Text**: `#111827` (slate-900) / `#1e293b` (slate-800)
+- **Primary Accent**: `#2563eb` (brand-600)
+- **Cards**: White with subtle border and shadow
+- **Font**: Inter (body) + Outfit (headings)
 
-- `.glass-panel` — the shared glassmorphism container style used by the sidebar, modal, and resource cards
-- `color-scheme: dark` is set on dark-themed containers (e.g. the upload modal) so native form controls like `<select>` popups render correctly instead of defaulting to light-mode browser chrome
-- `.btn-primary` / `.btn-secondary` — shared button variants
+## 🔐 Auth & Security
 
----
+- JWT tokens stored in HTTP-only cookies
+- Passwords hashed with bcryptjs
+- All upload/delete/comment routes protected
+- Ownership checks before delete operations
+- Only uploader or admin can delete a resource
+- Only comment owner or admin can delete a comment
+- Guest accounts are real users with auto-generated credentials
+
+## 📄 API Endpoints
+
+### Auth
+- `GET /api/auth/google` — Initiate Google Login (optional)
+- `GET /api/auth/google/callback` — Google Callback (optional)
+- `POST /api/auth/register` — Email Register
+- `POST /api/auth/login` — Email Login
+- `POST /api/auth/logout` — Logout
+- `GET /api/auth/me` — Get current user
+- `POST /api/auth/onboard` — Complete onboarding
+- `PUT /api/auth/profile` — Update profile
+
+### Resources
+- `GET /api/resources/all` — List all resources (with search/filter)
+- `GET /api/resources/subjects` — List subjects
+- `GET /api/resources/filter-options` — Get degrees/branches for filters
+- `GET /api/resources/subject/:id` — Get resources for a subject
+- `GET /api/resources/:id` — Get single resource
+- `POST /api/resources/add` — Upload resource (auth + file upload)
+- `DELETE /api/resources/:id` — Delete resource (auth + ownership check)
+
+### Comments
+- `GET /api/comments/:subjectId` — Get comments for a subject
+- `POST /api/comments/:subjectId` — Add comment (auth)
+- `DELETE /api/comments/:id` — Delete comment (auth + ownership check)
 
 ## 🗺️ Roadmap
 
 - [ ] Re-enable Google OAuth for production
 - [ ] Admin view for managing subjects/resources without direct DB access
-- [ ] Search and filter within a subject's resource list
-- [ ] File preview before download (PDF/image inline viewer)
 - [ ] Pagination for subjects/resources at scale
-
----
+- [ ] File preview before download (PDF/image inline viewer)
 
 ## 🤝 Contributing
 
-This is currently a solo academic project. Issues and suggestions are welcome via GitHub Issues.
+This is currently an academic project. Issues and suggestions are welcome.
 
 ## 📄 License
 
 MIT — free to use and adapt with attribution.
----
+
 *Developed for BPSMV University Students.*
+
