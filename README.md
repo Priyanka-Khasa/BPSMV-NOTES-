@@ -2,6 +2,12 @@
 
 A professional, responsive university resource hub for BPSMV students. Upload, discover, and discuss subject-wise PDFs, notes, links, and previous year question papers.
 
+![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
+![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)
+![Database](https://img.shields.io/badge/database-MongoDB-47A248)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
 ## 🚀 Features
 
 - **Dual Authentication**: Google OAuth OR email/password login.
@@ -15,12 +21,14 @@ A professional, responsive university resource hub for BPSMV students. Upload, d
 - **Fully Responsive**: Mobile, tablet, laptop, and desktop.
 - **Modern Light Theme**: Professional UI with Tailwind CSS.
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-- **Frontend**: React 19, Vite, Tailwind CSS, React Router, Lucide React
-- **Backend**: Node.js, Express.js, Passport.js (Google OAuth 2.0), JWT, bcryptjs
-- **Database**: MongoDB (Mongoose ODM)
-- **File Storage**: Local disk (`server/uploads/`) — no Cloudinary required
+| Layer | Stack |
+|---|---|
+| Frontend | React.js 19 (Vite), React Router, Tailwind CSS, Lucide React |
+| Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs |
+| Database | MongoDB (Mongoose ODM) |
+| File Storage | Local disk (`server/uploads/`) — no Cloudinary required |
 
 ## 📂 Project Structure
 
@@ -78,7 +86,7 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 SESSION_SECRET=your_session_secret_here
 ```
 
-> **Note**: Google OAuth and Cloudinary are **optional**. The app works fully with email/password and local file storage.
+> **Note**: Google OAuth is **optional**. The app works fully with email/password, guest mode, and local file storage.
 
 ## 💻 How to Run Locally
 
@@ -170,6 +178,20 @@ db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
 - `POST /api/comments/:subjectId` — Add comment (auth)
 - `DELETE /api/comments/:id` — Delete comment (auth + ownership check)
 
-## 📝 License
+## 🗺️ Roadmap
 
-Developed for BPSMV University Students.
+- [ ] Re-enable Google OAuth for production
+- [ ] Admin view for managing subjects/resources without direct DB access
+- [ ] Pagination for subjects/resources at scale
+- [ ] File preview before download (PDF/image inline viewer)
+
+## 🤝 Contributing
+
+This is currently an academic project. Issues and suggestions are welcome.
+
+## 📄 License
+
+MIT — free to use and adapt with attribution.
+
+*Developed for BPSMV University Students.*
+
