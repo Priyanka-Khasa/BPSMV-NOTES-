@@ -4,14 +4,15 @@ A professional, responsive university resource hub for BPSMV students. Upload, d
 
 ## 🚀 Features
 
-- **Dual Authentication**: Secure login via Google OAuth OR email/password.
-- **Personalized Dashboard**: Automatically filters subjects by your degree and branch.
-- **Resource Explorer**: Search and filter all resources by degree, branch, semester, year, and type.
+- **Dual Authentication**: Google OAuth OR email/password login.
+- **Guest Mode**: One-click "Enter as Guest" — no registration needed.
+- **Personalized Dashboard**: Filters subjects by your degree and branch.
+- **Resource Explorer**: Search & filter by degree, branch, semester, year, type, and subject.
 - **Upload System**: Upload PDF notes, question papers, external links, and syllabi.
-- **PDF Viewer**: Clean, responsive PDF preview with download capability.
+- **PDF Viewer**: Clean, responsive iframe preview with download capability.
 - **Subject Discussion Board**: Public chat/comments for every subject.
 - **Admin Panel**: Moderate resources (admin role).
-- **Fully Responsive**: Works on mobile, tablet, laptop, and desktop.
+- **Fully Responsive**: Mobile, tablet, laptop, and desktop.
 - **Modern Light Theme**: Professional UI with Tailwind CSS.
 
 ## 🛠️ Technology Stack
@@ -19,7 +20,7 @@ A professional, responsive university resource hub for BPSMV students. Upload, d
 - **Frontend**: React 19, Vite, Tailwind CSS, React Router, Lucide React
 - **Backend**: Node.js, Express.js, Passport.js (Google OAuth 2.0), JWT, bcryptjs
 - **Database**: MongoDB (Mongoose ODM)
-- **File Storage**: Cloudinary (PDFs & images)
+- **File Storage**: Local disk (`server/uploads/`) — no Cloudinary required
 
 ## 📂 Project Structure
 
@@ -50,13 +51,15 @@ bpsmv-resource-hub/
 │
 ├── server/                  # Node/Express Backend
 │   ├── src/
-│   │   ├── config/          # DB, Passport, Cloudinary
+│   │   ├── config/          # DB, Passport, Local Storage
 │   │   ├── models/          # User, Resource, Subject, Comment
 │   │   ├── routes/          # Auth, Resources, Comments
 │   │   └── app.js           # Server entry point
+│   ├── uploads/             # Local file storage
 │   ├── .env
 │   ├── package.json
-│   └── seedSubjects.js      # Seed database with subjects
+│   ├── seedSubjects.js      # Seed database with subjects
+│   └── fixDB.js             # Fix MongoDB index issues
 ```
 
 ## ⚙️ Environment Setup
@@ -68,25 +71,20 @@ PORT=5000
 MONGO_URI=mongodb://localhost:27017/bpsmv-resource-hub
 JWT_SECRET=your_jwt_secret_here
 CLIENT_URL=http://localhost:5173
+
+# Optional — only if you have valid Google OAuth credentials
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 SESSION_SECRET=your_session_secret_here
-
-# Cloudinary Storage Configuration
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-> **Note**: Replace all placeholder values with your actual credentials. `CLOUDINARY_CLOUD_NAME` should not contain spaces.
+> **Note**: Google OAuth and Cloudinary are **optional**. The app works fully with email/password and local file storage.
 
 ## 💻 How to Run Locally
 
 ### Prerequisites
 - Node.js (v18+)
 - MongoDB running locally or MongoDB Atlas URI
-- Google Cloud Console Project (for OAuth Credentials)
-- Cloudinary Account (for file uploads)
 
 ### 1. Backend Setup
 ```bash
@@ -101,12 +99,19 @@ node src/app.js
 
 Server will run on `http://localhost:5000`.
 
-### 2. Seed Subjects (First Time Only)
+### 2. Fix MongoDB Indexes (If registration fails)
+If you see "Server error during registration", run:
+```bash
+node fixDB.js
+```
+Then restart the server.
+
+### 3. Seed Subjects (First Time Only)
 ```bash
 node seedSubjects.js
 ```
 
-### 3. Frontend Setup
+### 4. Frontend Setup
 ```bash
 cd bpsmv-resource-hub/client
 npm install
@@ -115,8 +120,8 @@ npm run dev
 
 Frontend will run on `http://localhost:5173`.
 
-### 4. Create an Admin User (Optional)
-After signing up via email, manually update the user's role in MongoDB:
+### 5. Create an Admin User (Optional)
+After signing up via email or guest mode, manually update the user's role in MongoDB:
 ```js
 db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
 ```
@@ -137,12 +142,13 @@ db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
 - Ownership checks before delete operations
 - Only uploader or admin can delete a resource
 - Only comment owner or admin can delete a comment
+- Guest accounts are real users with auto-generated credentials
 
 ## 📄 API Endpoints
 
 ### Auth
-- `GET /api/auth/google` — Initiate Google Login
-- `GET /api/auth/google/callback` — Google Callback
+- `GET /api/auth/google` — Initiate Google Login (optional)
+- `GET /api/auth/google/callback` — Google Callback (optional)
 - `POST /api/auth/register` — Email Register
 - `POST /api/auth/login` — Email Login
 - `POST /api/auth/logout` — Logout
