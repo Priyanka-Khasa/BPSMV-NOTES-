@@ -180,10 +180,16 @@ db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
 
 ## 🗺️ Roadmap
 
-- [ ] Re-enable Google OAuth for production
+- [x] Enterprise-grade authentication system
+- [x] Google OAuth with duplicate account prevention
+- [x] Production-ready error handling
+- [x] Glassmorphism login/signup pages
+- [x] Chat with message grouping, auto-scroll, and typing indicators
+- [x] Skeleton loaders and loading states
+- [x] Code splitting and lazy loading
 - [ ] Admin view for managing subjects/resources without direct DB access
 - [ ] Pagination for subjects/resources at scale
-- [ ] File preview before download (PDF/image inline viewer)
+- [ ] Real-time WebSocket chat
 
 ## 🤝 Contributing
 
@@ -194,4 +200,3 @@ This is currently an academic project. Issues and suggestions are welcome.
 MIT — free to use and adapt with attribution.
 
 *Developed for BPSMV University Students.*
-
