@@ -30,7 +30,7 @@ const PDFViewer = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-[3px] border-brand-200 border-t-brand-600"></div>
       </div>
     );
   }
@@ -38,10 +38,10 @@ const PDFViewer = () => {
   if (error || !resource) {
     return (
       <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="card p-8 text-center max-w-md">
+        <div className="card p-8 text-center max-w-md animate-scale-in">
           <FileText size={40} className="text-slate-300 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Resource not found</h2>
-          <button onClick={() => navigate(-1)} className="btn btn-primary mt-4">
+          <button onClick={() => navigate(-1)} className="btn btn-primary mt-4 shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300">
             <ArrowLeft size={16} /> Go Back
           </button>
         </div>
@@ -53,12 +53,12 @@ const PDFViewer = () => {
   const isImage = resource.fileType === 'image';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-fade-in">
       {/* Header */}
       <div className="card p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors mt-0.5">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-all duration-300 hover:scale-105 mt-0.5">
               <ArrowLeft size={20} className="text-slate-600" />
             </button>
             <div>
