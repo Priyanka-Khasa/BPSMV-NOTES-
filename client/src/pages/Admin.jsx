@@ -50,14 +50,14 @@ const Admin = () => {
 
   const stats = [
     { label: 'Total Resources', value: resources.length, icon: FileText, color: 'text-brand-600', bg: 'bg-brand-50' },
-    { label: 'Pending', value: resources.filter(r => !r.isApproved).length, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Approved', value: resources.filter(r => r.isApproved).length, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Pending', value: resources.filter(r => !r.isApproved).length, icon: AlertTriangle, color: 'text-brand-700', bg: 'bg-brand-100' },
+    { label: 'Approved', value: resources.filter(r => r.isApproved).length, icon: CheckCircle, color: 'text-brand-600', bg: 'bg-brand-50' },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-violet-50 to-violet-100 text-violet-600 rounded-xl flex items-center justify-center shadow-sm">
+        <div className="w-10 h-10 bg-gradient-to-br from-brand-50 to-brand-100 text-brand-600 rounded-xl flex items-center justify-center shadow-sm">
           <Shield size={20} />
         </div>
         <div>
@@ -93,7 +93,7 @@ const Admin = () => {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                 filter === f
-                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:-translate-y-0.5'
               }`}
             >
@@ -147,17 +147,17 @@ const Admin = () => {
                     <td className="px-4 py-3 text-slate-600">{r.subjectName}</td>
                     <td className="px-4 py-3">
                       <span className={`badge ${
-                        r.resourceType === 'Note' ? 'bg-emerald-50 text-emerald-700' :
-                        r.resourceType === 'Question Paper' ? 'bg-violet-50 text-violet-700' :
-                        'bg-slate-100 text-slate-700'
+                        r.resourceType === 'Note' ? 'bg-brand-50 text-brand-700' :
+                        r.resourceType === 'Question Paper' ? 'bg-brand-100 text-brand-800' :
+                        'bg-brand-50 text-brand-700'
                       }`}>{r.resourceType}</span>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{r.uploaderName}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
                         r.isApproved
-                          ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200/50'
-                          : 'bg-amber-50 text-amber-600 ring-1 ring-amber-200/50'
+                          ? 'bg-brand-50 text-brand-600 ring-1 ring-brand-200/50'
+                          : 'bg-brand-50 text-brand-700 ring-1 ring-brand-300/50'
                       }`}>
                         {r.isApproved ? <CheckCircle size={12} /> : <XCircle size={12} />}
                         {r.isApproved ? 'Approved' : 'Pending'}

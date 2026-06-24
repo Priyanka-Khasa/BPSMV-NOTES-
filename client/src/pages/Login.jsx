@@ -52,7 +52,7 @@ const Login = () => {
         <div className="card p-8 sm:p-10">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-brand-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
               <BookOpen size={24} />
             </div>
             <h1 className="text-2xl font-display font-bold text-slate-900 mb-1">
@@ -150,7 +150,7 @@ const Login = () => {
               finally { setLoading(false); }
             }}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-medium hover:bg-emerald-100 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-brand-50 text-brand-700 border border-brand-200 rounded-xl text-sm font-medium hover:bg-brand-100 transition-colors"
           >
             <User size={18} /> Continue as Guest
           </button>

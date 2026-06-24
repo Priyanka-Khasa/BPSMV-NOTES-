@@ -69,7 +69,7 @@ const Profile = () => {
           <div className="flex items-center gap-5 mb-8">
             <div className="relative group/avatar">
               <img
-                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=2563eb&color=fff&size=96`}
+                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=c17a5c&color=fff&size=96`}
                 alt=""
                 className="w-24 h-24 rounded-full object-cover border-4 border-brand-100 shadow-lg shadow-brand-500/10 group-hover/avatar:scale-105 transition-transform duration-500"
               />
@@ -86,7 +86,7 @@ const Profile = () => {
                 <Mail size={14} /> {user.email}
               </p>
               <span className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                user.role === 'admin' ? 'bg-violet-50 text-violet-700 ring-1 ring-violet-200/50' : 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50'
+                user.role === 'admin' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50' : 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50'
               }`}>
                 {user.role === 'admin' ? 'Admin' : 'Student'}
               </span>
@@ -95,7 +95,7 @@ const Profile = () => {
 
           {message && (
             <div className={`mb-6 p-3 rounded-xl text-sm border animate-pop flex items-center gap-2 ${
-              message.includes('success') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
+              message.includes('success') ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-red-50 text-red-700 border-red-200'
             }`}>
               {message.includes('success') ? <Sparkles size={14} /> : <Save size={14} />}
               {message}

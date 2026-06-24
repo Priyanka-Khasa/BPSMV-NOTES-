@@ -19,8 +19,8 @@ const Home = () => {
         {/* Animated background blobs */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <div className="absolute top-10 left-10 w-72 h-72 bg-brand-300/20 rounded-full blur-3xl animate-float-slow"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-300/10 rounded-full blur-3xl animate-pulse-slow"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-brand-400/20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-300/10 rounded-full blur-3xl animate-pulse-slow"></div>
         </div>
 
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50/80 backdrop-blur text-brand-700 rounded-full text-sm font-medium mb-6 shadow-sm ring-1 ring-brand-200/50 animate-slide-down">
@@ -28,7 +28,7 @@ const Home = () => {
           For BPSMV Students
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-slate-900 mb-6 leading-tight animate-slide-up">
-          Your Academic Resource <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-indigo-600 animate-shimmer bg-[length:200%_auto]">Hub</span>
+          Your Academic Resource <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-700 animate-shimmer bg-[length:200%_auto]">Hub</span>
         </h1>
         <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           Access subject-wise notes, previous year question papers, and external resources — all in one place.
@@ -80,7 +80,7 @@ const Home = () => {
 
       {/* Stats / CTA */}
       <section className="card bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8 sm:p-12 text-center relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-600/10 via-transparent to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-600/10 via-transparent to-brand-700/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
         <div className="relative z-10">
           <h2 className="text-3xl font-display font-bold mb-4 animate-fade-in">Ready to boost your studies?</h2>
           <p className="text-slate-300 mb-8 max-w-xl mx-auto animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -90,7 +90,7 @@ const Home = () => {
             <button onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 hover:-translate-y-0.5 shadow-lg shadow-white/10">
               <Sparkles size={18} /> Open Dashboard
             </button>
-            <button onClick={() => navigate('/upload')} className="bg-emerald-600 text-white hover:bg-emerald-500 px-8 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 hover:-translate-y-0.5 shadow-lg shadow-emerald-500/20">
+            <button onClick={() => navigate('/upload')} className="bg-brand-600 text-white hover:bg-brand-500 px-8 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 hover:-translate-y-0.5 shadow-lg shadow-brand-500/20">
               <Upload size={18} /> Upload Resource
             </button>
           </div>

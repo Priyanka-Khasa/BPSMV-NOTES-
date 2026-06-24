@@ -203,10 +203,10 @@ const Resources = () => {
             <div key={res._id} className="card p-5 flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
               <div className="flex items-center justify-between mb-3">
                 <span className={`badge ${
-                  res.resourceType === 'Note' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50' :
-                  res.resourceType === 'Question Paper' ? 'bg-violet-50 text-violet-700 ring-1 ring-violet-200/50' :
-                  res.resourceType === 'Link' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-200/50' :
-                  'bg-slate-100 text-slate-700 ring-1 ring-slate-200/50'
+                  res.resourceType === 'Note' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50' :
+                  res.resourceType === 'Question Paper' ? 'bg-brand-100 text-brand-800 ring-1 ring-brand-300/50' :
+                  res.resourceType === 'Link' ? 'bg-brand-200 text-brand-900 ring-1 ring-brand-300/50' :
+                  'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50'
                 }`}>
                   {res.resourceType}
                 </span>
@@ -220,7 +220,7 @@ const Resources = () => {
               <p className="text-xs text-slate-400 mb-4">By {res.uploaderName} · {new Date(res.createdAt).toLocaleDateString()}</p>
               <div className="mt-auto">
                 {res.resourceType === 'Link' ? (
-                  <a href={res.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full text-sm py-2 hover:bg-sky-50 hover:text-sky-700 transition-all duration-300">
+                  <a href={res.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full text-sm py-2 hover:bg-brand-50 hover:text-brand-700 transition-all duration-300">
                     <ExternalLink size={14} /> Open Link
                   </a>
                 ) : (
@@ -252,9 +252,9 @@ const Resources = () => {
                     <td className="px-4 py-3 text-slate-600">{r.subjectName}</td>
                     <td className="px-4 py-3">
                       <span className={`badge ${
-                        r.resourceType === 'Note' ? 'bg-emerald-50 text-emerald-700' :
-                        r.resourceType === 'Question Paper' ? 'bg-violet-50 text-violet-700' :
-                        'bg-slate-100 text-slate-700'
+                        r.resourceType === 'Note' ? 'bg-brand-50 text-brand-700' :
+                        r.resourceType === 'Question Paper' ? 'bg-brand-100 text-brand-800' :
+                        'bg-brand-50 text-brand-700'
                       }`}>{r.resourceType}</span>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{r.uploaderName}</td>

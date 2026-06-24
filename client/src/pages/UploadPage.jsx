@@ -94,7 +94,7 @@ const UploadPage = () => {
 
           {error && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200 animate-shake">{error}</div>}
           {success && (
-            <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-200 flex items-center gap-2 animate-pop">
+            <div className="mb-4 p-3 bg-brand-50 text-brand-700 rounded-xl text-sm border border-brand-200 flex items-center gap-2 animate-pop">
               <CheckCircle size={16} /> {success}
             </div>
           )}
@@ -167,7 +167,7 @@ const UploadPage = () => {
                   </label>
                 </div>
                 {file && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 animate-pop">
+                  <div className="mt-2 flex items-center gap-2 text-sm text-brand-700 bg-brand-50 px-3 py-2 rounded-xl border border-brand-200 animate-pop">
                     <CheckCircle size={14} /> Selected: {file.name}
                   </div>
                 )}
