@@ -17,7 +17,7 @@ const FAKE_USER = {
   yearOfStudy: 3,
   semester: 5,
   onboarded: true,
-  avatar: 'https://ui-avatars.com/api/?name=Dev+Student&background=2563eb&color=fff'
+  avatar: 'https://ui-avatars.com/api/?name=Dev+Student&background=c17a5c&color=fff'
 };
 
 export const AuthProvider = ({ children }) => {

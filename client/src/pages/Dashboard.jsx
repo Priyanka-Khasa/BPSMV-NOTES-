@@ -80,11 +80,11 @@ const Dashboard = () => {
           <div className="flex items-center gap-3 mb-4">
             <div className="relative">
               <img
-                src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=2563eb&color=fff`}
+                src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
                 alt=""
                 className="w-12 h-12 rounded-full object-cover ring-2 ring-brand-100 shadow-sm"
               />
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-brand-500 rounded-full border-2 border-white"></div>
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 text-sm truncate">{user?.name}</p>
@@ -109,7 +109,7 @@ const Dashboard = () => {
             <p className="text-xs text-slate-500">Subjects</p>
           </div>
           <div className="card p-3 text-center hover:scale-[1.02] transition-all duration-300">
-            <TrendingUp size={18} className="mx-auto mb-1 text-emerald-500" />
+            <TrendingUp size={18} className="mx-auto mb-1 text-brand-500" />
             <p className="text-lg font-bold text-slate-900">{resources.length}</p>
             <p className="text-xs text-slate-500">Resources</p>
           </div>
@@ -157,7 +157,7 @@ const Dashboard = () => {
           <div>
             <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
               {selectedSubjectObj ? selectedSubjectObj.name : 'Dashboard'}
-              {!selectedSubject && <Sparkles size={18} className="text-amber-500 animate-wiggle" />}
+              {!selectedSubject && <Sparkles size={18} className="text-brand-500 animate-wiggle" />}
             </h1>
             <p className="text-sm text-slate-500">
               {selectedSubjectObj ? `${selectedSubjectObj.degree} · ${selectedSubjectObj.branch} · Sem ${selectedSubjectObj.semester}` : 'Select a subject to view resources'}
@@ -206,10 +206,10 @@ const Dashboard = () => {
               <div key={res._id} className="card p-5 flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
                 <div className="flex items-center justify-between mb-3">
                   <span className={`badge ${
-                    res.resourceType === 'Note' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/50' :
-                    res.resourceType === 'Question Paper' ? 'bg-violet-50 text-violet-700 ring-1 ring-violet-200/50' :
-                    res.resourceType === 'Link' ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-200/50' :
-                    'bg-slate-100 text-slate-700 ring-1 ring-slate-200/50'
+                    res.resourceType === 'Note' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50' :
+                    res.resourceType === 'Question Paper' ? 'bg-brand-100 text-brand-800 ring-1 ring-brand-300/50' :
+                    res.resourceType === 'Link' ? 'bg-brand-200 text-brand-900 ring-1 ring-brand-300/50' :
+                    'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50'
                   }`}>
                     {res.resourceType}
                   </span>
@@ -222,7 +222,7 @@ const Dashboard = () => {
                 <p className="text-xs text-slate-400 mb-4">By {res.uploaderName} · {new Date(res.createdAt).toLocaleDateString()}</p>
                 <div className="mt-auto">
                   {res.resourceType === 'Link' ? (
-                    <a href={res.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full text-sm py-2 hover:bg-sky-50 hover:text-sky-700 hover:border-sky-200 transition-all duration-300">
+                    <a href={res.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full text-sm py-2 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all duration-300">
                       <ExternalLink size={14} /> Open Link
                     </a>
                   ) : (

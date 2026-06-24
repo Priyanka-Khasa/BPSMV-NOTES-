@@ -25,9 +25,11 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-brand-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
-              B
-            </div>
+            <img
+              src="/vite.svg"
+              alt="BPSMV Hub"
+              className="w-9 h-9 drop-shadow-lg shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300"
+            />
             <span className="font-display font-bold text-lg text-slate-900 hidden sm:block tracking-tight">BPSMV Hub</span>
           </Link>
 
@@ -60,7 +62,7 @@ const Navbar = () => {
                 className="flex items-center gap-2 hover:bg-slate-100/80 px-3 py-1.5 rounded-xl transition-all duration-300 hover:scale-[1.02]"
               >
                 <img
-                  src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=2563eb&color=fff`}
+                  src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
                   alt=""
                   className="w-7 h-7 rounded-full object-cover ring-2 ring-white shadow-sm"
                 />
