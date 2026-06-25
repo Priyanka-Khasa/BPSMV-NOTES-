@@ -174,11 +174,16 @@ const Dashboard = () => {
         </div>
 
         {!selectedSubject ? (
-          <div className="card p-12 text-center relative overflow-hidden group">
+          <div className="card p-8 sm:p-12 text-center relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-40 h-40 bg-brand-100/50 rounded-full blur-3xl -z-0 group-hover:scale-150 transition-transform duration-700"></div>
             <div className="relative z-10">
-              <div className="w-20 h-20 bg-gradient-to-br from-brand-50 to-brand-100 text-brand-400 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-brand-500/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                <BookOpen size={36} />
+              <div className="relative w-full max-w-xs mx-auto mb-6">
+                <div className="absolute -inset-3 bg-gradient-to-br from-brand-100/60 to-amber-100/40 rounded-3xl blur-xl"></div>
+                <img
+                  src="/image4.jpeg"
+                  alt="Bright aesthetic study desk"
+                  className="relative w-full h-auto rounded-2xl shadow-xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/30"
+                />
               </div>
               <h2 className="text-xl font-semibold text-slate-900 mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h2>
               <p className="text-slate-500 mb-6 max-w-md mx-auto">Select a subject from the sidebar to view notes, question papers, and shared resources.</p>
