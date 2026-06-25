@@ -4,8 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Trash2, FileText, CheckCircle, XCircle, AlertTriangle, BarChart3, TrendingUp, Users, Clock } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const Admin = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -24,7 +22,7 @@ const Admin = () => {
       const params = new URLSearchParams();
       if (filter === 'pending') params.append('isApproved', 'false');
       if (filter === 'approved') params.append('isApproved', 'true');
-      const res = await axios.get(`${API_URL}/resources/all?${params.toString()}`);
+      const res = await axios.get(`/resources/all?${params.toString()}`);
       setResources(res.data.resources || []);
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -36,7 +34,7 @@ const Admin = () => {
   const handleDelete = async (id) => {
     if (!confirm('Delete this resource?')) return;
     try {
-      await axios.delete(`${API_URL}/resources/${id}`);
+      await axios.delete(`/resources/${id}`);
       fetchResources();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');

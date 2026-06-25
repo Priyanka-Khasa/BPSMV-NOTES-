@@ -4,8 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { BookOpen, FileText, ExternalLink, Trash2, Upload, ArrowRight, MessageSquare, Sparkles, TrendingUp, Clock, Layers } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,7 +23,7 @@ const Dashboard = () => {
 
   const fetchSubjects = async (degree, branch) => {
     try {
-      const res = await axios.get(`${API_URL}/resources/subjects?degree=${degree}&branch=${branch}`);
+      const res = await axios.get(`/resources/subjects?degree=${degree}&branch=${branch}`);
       setSubjects(res.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -37,7 +35,7 @@ const Dashboard = () => {
   const fetchResources = async (subjectId) => {
     setSelectedSubject(subjectId);
     try {
-      const res = await axios.get(`${API_URL}/resources/subject/${subjectId}`);
+      const res = await axios.get(`/resources/subject/${subjectId}`);
       setResources(res.data);
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -47,7 +45,7 @@ const Dashboard = () => {
   const handleDelete = async (id) => {
     if (!confirm('Delete this resource?')) return;
     try {
-      await axios.delete(`${API_URL}/resources/${id}`);
+      await axios.delete(`/resources/${id}`);
       fetchResources(selectedSubject);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');
@@ -279,7 +277,7 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
     if (linkUrl) formData.append('linkUrl', linkUrl);
 
     try {
-      await axios.post(`${API_URL}/resources/add`, formData, {
+      await axios.post(`/resources/add`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });

@@ -4,8 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Search, Filter, FileText, ExternalLink, Trash2, BookOpen, X, Sparkles, Grid, List, ArrowUpDown } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const Resources = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -31,7 +29,7 @@ const Resources = () => {
       const merged = { ...filters, ...override };
       Object.entries(merged).forEach(([k, v]) => { if (v) params.append(k, v); });
       if (search) params.append('search', search);
-      const res = await axios.get(`${API_URL}/resources/all?${params.toString()}`);
+      const res = await axios.get(`/resources/all?${params.toString()}`);
       setResources(res.data.resources || []);
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -42,7 +40,7 @@ const Resources = () => {
 
   const fetchFilterOptions = async () => {
     try {
-      const res = await axios.get(`${API_URL}/resources/filter-options`);
+      const res = await axios.get(`/resources/filter-options`);
       setFilterOptions(res.data);
     } catch (error) {
       console.error('Error fetching filter options:', error);
@@ -51,7 +49,7 @@ const Resources = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await axios.get(`${API_URL}/resources/subjects`);
+      const res = await axios.get(`/resources/subjects`);
       setSubjects(res.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -76,7 +74,7 @@ const Resources = () => {
   const handleDelete = async (id) => {
     if (!confirm('Delete this resource?')) return;
     try {
-      await axios.delete(`${API_URL}/resources/${id}`);
+      await axios.delete(`/resources/${id}`);
       fetchResources();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');

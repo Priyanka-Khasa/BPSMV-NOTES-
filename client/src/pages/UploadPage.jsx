@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Upload, FileText, ArrowRight, ExternalLink, CheckCircle, Sparkles, CloudUpload } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const UploadPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -27,7 +25,7 @@ const UploadPage = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await axios.get(`${API_URL}/resources/subjects`);
+      const res = await axios.get(`/resources/subjects`);
       setSubjects(res.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -49,7 +47,7 @@ const UploadPage = () => {
     if (linkUrl) formData.append('linkUrl', linkUrl);
 
     try {
-      await axios.post(`${API_URL}/resources/add`, formData, {
+      await axios.post(`/resources/add`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });

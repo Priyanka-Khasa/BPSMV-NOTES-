@@ -155,4 +155,25 @@ router.post('/logout', (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+// Guest Login
+router.post('/guest', async (req, res) => {
+  try {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 10);
+    const email = `guest-${timestamp}-${randomStr}@bpsmv.local`;
+    const user = await User.create({
+      name: 'Guest Student',
+      email: email.toLowerCase(),
+      password: randomStr + timestamp + Math.random().toString(36),
+      role: 'student',
+      onboarded: true
+    });
+    setAuthCookie(res, user);
+    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: true, role: 'student' } });
+  } catch (error) {
+    console.error('Guest login error:', error);
+    res.status(500).json({ message: 'Guest login failed', details: error.message });
+  }
+});
+
 module.exports = { router, verifyToken };

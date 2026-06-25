@@ -4,8 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { MessageSquare, Send, Trash2, BookOpen, ArrowLeft, User, Hash, AtSign, Smile } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const Chat = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -30,7 +28,7 @@ const Chat = () => {
 
   const fetchSubjects = async () => {
     try {
-      const res = await axios.get(`${API_URL}/resources/subjects`);
+      const res = await axios.get(`/resources/subjects`);
       setSubjects(res.data);
       if (!selectedSubject && res.data.length > 0) {
         setSelectedSubject(res.data[0]._id);
@@ -43,7 +41,7 @@ const Chat = () => {
   const fetchComments = async (subjectId) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/comments/${subjectId}`);
+      const res = await axios.get(`/comments/${subjectId}`);
       setComments(res.data);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -57,7 +55,7 @@ const Chat = () => {
     if (!newComment.trim()) return;
     setSending(true);
     try {
-      await axios.post(`${API_URL}/comments/${selectedSubject}`, { text: newComment.trim() });
+      await axios.post(`/comments/${selectedSubject}`, { text: newComment.trim() });
       setNewComment('');
       fetchComments(selectedSubject);
     } catch (error) {
@@ -70,7 +68,7 @@ const Chat = () => {
   const deleteComment = async (id) => {
     if (!confirm('Delete this comment?')) return;
     try {
-      await axios.delete(`${API_URL}/comments/${id}`);
+      await axios.delete(`/comments/${id}`);
       fetchComments(selectedSubject);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete');
