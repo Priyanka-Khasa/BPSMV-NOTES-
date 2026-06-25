@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ArrowLeft, Download, FileText, Calendar, User, BookOpen } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/api';
-
 const PDFViewer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,7 +16,7 @@ const PDFViewer = () => {
 
   const fetchResource = async () => {
     try {
-      const res = await axios.get(`${API_URL}/resources/${id}`);
+      const res = await axios.get(`/resources/${id}`);
       setResource(res.data);
     } catch (err) {
       setError('Resource not found or could not be loaded.');

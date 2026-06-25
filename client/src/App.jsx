@@ -11,22 +11,55 @@ import PDFViewer from './pages/PDFViewer';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/resources" element={<Resources />} />
-        <Route path="/viewer/:id" element={<PDFViewer />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/upload" element={<UploadPage />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/onboarding" element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/resources" element={
+          <ProtectedRoute>
+            <Resources />
+          </ProtectedRoute>
+        } />
+        <Route path="/viewer/:id" element={
+          <ProtectedRoute>
+            <PDFViewer />
+          </ProtectedRoute>
+        } />
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="/upload" element={
+          <ProtectedRoute>
+            <UploadPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute adminOnly>
+            <Admin />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
   );
