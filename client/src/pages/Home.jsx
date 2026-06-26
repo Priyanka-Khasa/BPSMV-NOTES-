@@ -260,11 +260,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section with Background Image */}
+      {/* Testimonials Section with Background */}
       <section className="py-20 sm:py-28 bg-white/60 relative overflow-hidden">
-        {/* Background image overlay */}
-        <div className="absolute inset-0 opacity-[0.07]">
-          <img src="/image5.jpeg" alt="" className="w-full h-full object-cover" />
+        {/* Decorative gradient blobs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-200/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl"></div>
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white/60"></div>
 

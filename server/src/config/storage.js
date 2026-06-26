@@ -36,4 +36,20 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB max
 });
 
-module.exports = { upload, uploadDir };
+// Audio upload filter
+const audioFileFilter = (req, file, cb) => {
+  const allowedTypes = ['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'];
+  if (allowedTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only audio files are allowed'), false);
+  }
+};
+
+const audioUpload = multer({
+  storage,
+  fileFilter: audioFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB max
+});
+
+module.exports = { upload, uploadDir, audioUpload };

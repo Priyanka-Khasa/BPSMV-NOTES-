@@ -3,9 +3,17 @@ const mongoose = require('mongoose');
 const commentSchema = new mongoose.Schema({
   text: {
     type: String,
-    required: true,
+    required: function() { return this.type !== 'voice'; },
     trim: true,
     maxlength: 2000
+  },
+  type: {
+    type: String,
+    enum: ['text', 'voice'],
+    default: 'text'
+  },
+  audioUrl: {
+    type: String
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
