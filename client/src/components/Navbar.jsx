@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight, GraduationCap } from 'lucide-react';
+import { BookOpen, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -32,8 +32,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 group-hover:shadow-brand-500/30 group-hover:scale-105 transition-all duration-300">
-              <GraduationCap size={20} className="text-white" />
+            <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 group-hover:shadow-brand-500/30 group-hover:scale-105 transition-all duration-300 overflow-hidden">
+              <img src="/vite.svg" alt="BPSMV Hub" className="w-6 h-6 object-contain" />
             </div>
             <span className="font-display font-bold text-lg text-slate-900 hidden sm:block tracking-tight">BPSMV Hub</span>
           </Link>

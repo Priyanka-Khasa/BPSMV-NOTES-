@@ -63,7 +63,7 @@ router.post('/register', async (req, res) => {
 
     const user = await User.create({ name, email: email.toLowerCase(), password, onboarded: false });
     setAuthCookie(res, user);
-    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded } });
+    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Register error FULL:', error);
     res.status(500).json({ message: 'Server error during registration', details: error.message, stack: error.stack });
@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
     }
 
     setAuthCookie(res, user);
-    res.json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded, role: user.role } });
+    res.json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
@@ -169,10 +169,32 @@ router.post('/guest', async (req, res) => {
       onboarded: true
     });
     setAuthCookie(res, user);
-    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: true, role: 'student' } });
+    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: true, role: 'student', degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Guest login error:', error);
     res.status(500).json({ message: 'Guest login failed', details: error.message });
+  }
+});
+
+// Avatar upload
+const { upload: localUpload } = require('../config/storage');
+
+router.post('/avatar', verifyToken, localUpload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: fileUrl },
+      { new: true }
+    ).select('-googleId');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (error) {
+    console.error('Avatar upload error:', error);
+    res.status(500).json({ message: 'Error uploading avatar' });
   }
 });
 

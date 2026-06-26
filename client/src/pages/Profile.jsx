@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, GraduationCap, BookOpen, Save, ArrowRight, Camera, Sparkles, ShieldCheck } from 'lucide-react';
+import axios from 'axios';
+import { Mail, Save, Camera, Sparkles, ShieldCheck, Loader2 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, updateProfile, loading: authLoading } = useAuth();
+  const { user, updateProfile, loading: authLoading, setUser } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', degree: '', branch: '', yearOfStudy: '', semester: '' });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState(null);
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -19,6 +23,7 @@ const Profile = () => {
         yearOfStudy: user.yearOfStudy || '',
         semester: user.semester || ''
       });
+      setPreviewAvatar(user.avatar || null);
     }
   }, [user]);
 
@@ -53,6 +58,44 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setMessage('Please select an image file.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage('Image size should be less than 5MB.');
+      return;
+    }
+    // Preview
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreviewAvatar(ev.target.result);
+    reader.readAsDataURL(file);
+
+    setAvatarUploading(true); setMessage('');
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const res = await axios.post('/auth/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUser(res.data);
+      setPreviewAvatar(res.data.avatar);
+      setMessage('Avatar updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to upload avatar.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   if (authLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -69,13 +112,24 @@ const Profile = () => {
           <div className="flex items-center gap-5 mb-8">
             <div className="relative group/avatar">
               <img
-                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=c17a5c&color=fff&size=96`}
+                src={previewAvatar || user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=c17a5c&color=fff&size=96`}
                 alt=""
                 className="w-24 h-24 rounded-full object-cover border-4 border-brand-100 shadow-lg shadow-brand-500/10 group-hover/avatar:scale-105 transition-transform duration-500"
               />
-              <div className="absolute bottom-0 right-0 w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer hover:bg-brand-700 transition-colors">
-                <Camera size={14} />
-              </div>
+              <button
+                onClick={handleAvatarClick}
+                disabled={avatarUploading}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-brand-600 text-white rounded-full flex items-center justify-center shadow-md cursor-pointer hover:bg-brand-700 transition-colors disabled:opacity-50"
+              >
+                {avatarUploading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
             <div>
               <h1 className="text-2xl font-display font-bold text-slate-900 flex items-center gap-2">
