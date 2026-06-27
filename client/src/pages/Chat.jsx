@@ -30,14 +30,32 @@ const Chat = () => {
   const [recording, setRecording] = useState(false);
   const [recordTime, setRecordTime] = useState(0);
   const [recordError, setRecordError] = useState('');
+  const [previewBlob, setPreviewBlob] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [previewDuration, setPreviewDuration] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const inputRef = useRef(null);
+  const previewAudioRef = useRef(null);
 
   // Audio playback states
   const [playingId, setPlayingId] = useState(null);
+  const [audioProgress, setAudioProgress] = useState({ currentTime: 0, duration: 0 });
   const audioPlayerRef = useRef(null);
+
+  const discardPreview = () => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+    setPreviewBlob(null);
+    setPreviewUrl('');
+    setPreviewPlaying(false);
+    setPreviewDuration(0);
+  };
 
   useEffect(() => {
     fetchSubjects();
@@ -46,14 +64,42 @@ const Chat = () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
     };
   }, []);
 
   useEffect(() => {
-    if (selectedSubject) {
-      fetchComments(selectedSubject);
+    if (!selectedSubject) return;
+
+    fetchComments(selectedSubject);
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      setPlayingId(null);
+      setAudioProgress({ currentTime: 0, duration: 0 });
     }
+    discardPreview();
+
+    // Start polling for new messages every 4 seconds (Real-time updates)
+    const interval = setInterval(() => {
+      fetchCommentsSilent(selectedSubject);
+    }, 4000);
+
+    return () => clearInterval(interval);
   }, [selectedSubject]);
+
+  const fetchCommentsSilent = async (subjectId) => {
+    try {
+      const res = await axios.get(`/comments/${subjectId}`);
+      setComments(res.data);
+    } catch (error) {
+      console.error('Error polling comments:', error);
+    }
+  };
 
   const fetchSubjects = async () => {
     try {
@@ -95,29 +141,63 @@ const Chat = () => {
     }
   };
 
-  const sendVoiceMessage = async (blob) => {
+  const sendVoiceComment = async () => {
+    if (!previewBlob) return;
     setSending(true);
+    setUploadProgress(0);
     try {
       const formData = new FormData();
-      formData.append('audio', blob, 'voice-message.webm');
+      formData.append('audio', previewBlob, 'voice-message.webm');
       await axios.post(`/comments/${selectedSubject}/voice`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        }
       });
+      discardPreview();
       fetchComments(selectedSubject);
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to send voice message');
     } finally {
       setSending(false);
+      setUploadProgress(0);
     }
   };
 
   const deleteComment = async (id) => {
-    if (!confirm('Delete this message?')) return;
+    if (!confirm('Are you sure you want to delete this message? This action cannot be undone.')) return;
     try {
+      // Optimistic UI update: instantly remove the message
+      setComments(prev => prev.filter(c => c._id !== id));
+      
       await axios.delete(`/comments/${id}`);
-      fetchComments(selectedSubject);
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete');
+      alert(err.response?.data?.message || 'Failed to delete message');
+      fetchComments(selectedSubject);
+    }
+  };
+
+  const handlePreviewPlayPause = () => {
+    if (!previewUrl) return;
+    if (previewPlaying) {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      setPreviewPlaying(false);
+    } else {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      const audio = new Audio(previewUrl);
+      audio.onended = () => setPreviewPlaying(false);
+      audio.onerror = () => {
+        setPreviewPlaying(false);
+        alert('Failed to play preview');
+      };
+      audio.play();
+      previewAudioRef.current = audio;
+      setPreviewPlaying(true);
     }
   };
 
@@ -135,8 +215,12 @@ const Chat = () => {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
         stream.getTracks().forEach(t => t.stop());
-        sendVoiceMessage(audioBlob);
+        setPreviewBlob(audioBlob);
+        setPreviewUrl(audioUrl);
+        setPreviewDuration(recordTime);
+        setRecordTime(0);
       };
 
       mediaRecorder.onerror = (e) => {
@@ -161,7 +245,6 @@ const Chat = () => {
     }
     if (timerRef.current) clearInterval(timerRef.current);
     setRecording(false);
-    setRecordTime(0);
   };
 
   const togglePlay = (audioUrl, commentId) => {
@@ -170,14 +253,25 @@ const Chat = () => {
         audioPlayerRef.current.pause();
       }
       setPlayingId(null);
+      setAudioProgress({ currentTime: 0, duration: 0 });
     } else {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
       }
       const audio = new Audio(audioUrl);
-      audio.onended = () => setPlayingId(null);
+      audio.addEventListener('loadedmetadata', () => {
+        setAudioProgress(prev => ({ ...prev, duration: audio.duration }));
+      });
+      audio.addEventListener('timeupdate', () => {
+        setAudioProgress({ currentTime: audio.currentTime, duration: audio.duration || 0 });
+      });
+      audio.onended = () => {
+        setPlayingId(null);
+        setAudioProgress({ currentTime: 0, duration: 0 });
+      };
       audio.onerror = () => {
         setPlayingId(null);
+        setAudioProgress({ currentTime: 0, duration: 0 });
         alert('Failed to play audio');
       };
       audio.play();
@@ -281,19 +375,29 @@ const Chat = () => {
                       <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
                     </div>
                     {comment.type === 'voice' && comment.audioUrl ? (
-                      <div className="flex items-center gap-3 mt-1">
+                      <div className="flex items-center gap-3 mt-1 w-full max-w-sm bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
                         <button
+                          type="button"
                           onClick={() => togglePlay(comment.audioUrl, comment._id)}
-                          className="w-9 h-9 bg-brand-50 text-brand-700 rounded-full flex items-center justify-center hover:bg-brand-100 transition-colors"
+                          className="w-9 h-9 bg-brand-600 text-white rounded-full flex items-center justify-center hover:bg-brand-700 transition-colors shadow-sm"
                         >
                           {playingId === comment._id ? <Pause size={16} /> : <Play size={16} />}
                         </button>
-                        <div className="flex-1">
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-brand-400 rounded-full w-1/2 animate-pulse"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="h-2 bg-slate-200/80 rounded-full overflow-hidden relative">
+                            <div 
+                              className="h-full bg-brand-500 rounded-full transition-all duration-100" 
+                              style={{ width: `${playingId === comment._id ? (audioProgress.duration ? (audioProgress.currentTime / audioProgress.duration) * 100 : 0) : 0}%` }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="text-[10px] font-medium text-slate-500">
+                              {playingId === comment._id 
+                                ? `${formatTime(Math.round(audioProgress.currentTime))} / ${formatTime(Math.round(audioProgress.duration))}` 
+                                : 'Voice message'}
+                            </span>
                           </div>
                         </div>
-                        <span className="text-xs text-slate-400">Voice</span>
                       </div>
                     ) : (
                       <p className="text-sm text-slate-700 whitespace-pre-wrap">{comment.text}</p>
@@ -359,50 +463,96 @@ const Chat = () => {
             </div>
           )}
 
-          <form onSubmit={sendComment} className="flex gap-2 items-center">
-            <div className="relative flex-1">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={recording ? 'Recording voice...' : 'Write a message...'}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="input-field pr-20"
-                disabled={recording}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setShowEmoji(v => !v)}
-                  className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                >
-                  <Smile size={18} />
-                </button>
+          {previewUrl ? (
+            <div className="flex gap-3 items-center bg-brand-50/50 border border-brand-200/50 rounded-xl p-3 animate-fade-in">
+              <button
+                type="button"
+                onClick={handlePreviewPlayPause}
+                className="w-10 h-10 bg-brand-600 text-white rounded-full flex items-center justify-center hover:bg-brand-700 transition-colors shadow-md shadow-brand-500/10"
+              >
+                {previewPlaying ? <Pause size={18} /> : <Play size={18} />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-brand-900">Voice Message Preview</p>
+                {uploadProgress > 0 ? (
+                  <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div className="bg-brand-600 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500">Ready to send ({formatTime(previewDuration)})</p>
+                )}
               </div>
-            </div>
-            <button
-              type="button"
-              onClick={recording ? stopRecording : startRecording}
-              className={`p-3 rounded-xl transition-all duration-300 ${
-                recording
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {recording ? <MicOff size={18} /> : <Mic size={18} />}
-            </button>
-            <button
-              type="submit"
-              disabled={sending || recording || !newComment.trim()}
-              className="btn btn-primary px-5 shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0"
-            >
-              {sending ? (
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-              ) : (
-                <Send size={16} className="animate-bounce-x" />
+              {uploadProgress > 0 && (
+                <span className="text-xs font-bold text-brand-700">{uploadProgress}%</span>
               )}
-            </button>
-          </form>
+              <button
+                type="button"
+                onClick={discardPreview}
+                disabled={sending}
+                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors disabled:opacity-50"
+                title="Discard Recording"
+              >
+                <Trash2 size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={sendVoiceComment}
+                disabled={sending}
+                className="btn btn-primary px-5 py-2.5 shadow-brand-500/20 hover:shadow-brand-500/30 transition-all duration-300 disabled:opacity-50"
+              >
+                {sending ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                ) : (
+                  <Send size={16} />
+                )}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={sendComment} className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={recording ? 'Recording voice...' : 'Write a message...'}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="input-field pr-20"
+                  disabled={recording}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowEmoji(v => !v)}
+                    className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                  >
+                    <Smile size={18} />
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={recording ? stopRecording : startRecording}
+                className={`p-3 rounded-xl transition-all duration-300 ${
+                  recording
+                    ? 'bg-red-100 text-red-600 hover:bg-red-200 animate-pulse'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {recording ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+              <button
+                type="submit"
+                disabled={sending || recording || !newComment.trim()}
+                className="btn btn-primary px-5 shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:hover:translate-y-0"
+              >
+                {sending ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                ) : (
+                  <Send size={16} className="animate-bounce-x" />
+                )}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

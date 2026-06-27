@@ -55,17 +55,38 @@ router.get('/all', async (req, res) => {
   }
 });
 
+const jwt = require('jsonwebtoken');
+
 // Get subjects based on query
 router.get('/subjects', async (req, res) => {
   try {
-    const { degree, branch, semester } = req.query;
+    const { degree, branch, semester, mine, showAll } = req.query;
     const filter = {};
-    if (degree) filter.degree = degree;
-    if (branch) filter.branch = branch;
+
+    if (mine === 'true') {
+      const token = req.cookies.token;
+      if (!token) return res.status(401).json({ message: 'Unauthorized' });
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'bpsmv_fallback_secret_2026');
+      const user = await User.findById(decoded.id);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      // If student or admin not requesting showAll, filter by user course
+      if (user.role !== 'admin' || showAll !== 'true') {
+        if (user.degree) filter.degree = user.degree;
+        if (user.branch) filter.branch = user.branch;
+      }
+    } else {
+      if (degree) filter.degree = degree;
+      if (branch) filter.branch = branch;
+    }
+
     if (semester) filter.semester = parseInt(semester);
+
     const subjects = await Subject.find(filter).sort({ semester: 1, name: 1 });
     res.json(subjects);
   } catch (error) {
+    console.error('Error fetching subjects:', error);
     res.status(500).json({ message: 'Error fetching subjects' });
   }
 });
