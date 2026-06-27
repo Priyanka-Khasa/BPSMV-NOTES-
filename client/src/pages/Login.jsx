@@ -21,7 +21,7 @@ const Login = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', rollNumber: '' });
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -31,13 +31,16 @@ const Login = () => {
     setLoading(true);
     try {
       if (mode === 'signup') {
-        if (!form.name || !form.email || !form.password) {
+        if (!form.name || !form.email || !form.password || !form.rollNumber) {
           throw new Error('All fields are required');
         }
         if (form.password.length < 6) {
           throw new Error('Password must be at least 6 characters');
         }
-        await register(form.name, form.email, form.password);
+        if (!form.rollNumber.trim()) {
+          throw new Error('Roll number is required');
+        }
+        await register(form.name, form.email, form.password, form.rollNumber.trim());
         navigate('/onboarding');
       } else {
         const userData = await login(form.email, form.password);
@@ -98,18 +101,33 @@ const Login = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
-              <div className="animate-fade-in">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
-                <input
-                  name="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="input-field"
-                  required
-                />
-              </div>
+              <>
+                <div className="animate-fade-in">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
+                  <input
+                    name="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div className="animate-fade-in">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Roll Number</label>
+                  <input
+                    name="rollNumber"
+                    type="text"
+                    placeholder="e.g., BTECH2024001"
+                    value={form.rollNumber}
+                    onChange={handleChange}
+                    className="input-field"
+                    required
+                  />
+                  <p className="text-xs text-slate-400 mt-1.5">Your university roll number</p>
+                </div>
+              </>
             )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>

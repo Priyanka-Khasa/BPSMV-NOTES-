@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Download, FileText, Calendar, User, BookOpen } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Calendar, User, BookOpen, ExternalLink } from 'lucide-react';
+
+const getYoutubeEmbedUrl = (url) => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
+};
+
+const isDirectVideo = (url) => /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
 
 const PDFViewer = () => {
   const { id } = useParams();
@@ -80,7 +88,44 @@ const PDFViewer = () => {
 
       {/* Viewer */}
       <div className="card overflow-hidden">
-        {isPdf && resource.fileUrl ? (
+        {resource.resourceType === 'Link' || resource.fileType === 'link' ? (
+          (() => {
+            const youtubeEmbed = getYoutubeEmbedUrl(resource.linkUrl);
+            if (youtubeEmbed) {
+              return (
+                <div className="w-full h-[70vh] sm:h-[80vh] bg-slate-900">
+                  <iframe
+                    src={youtubeEmbed}
+                    title={resource.title}
+                    className="w-full h-full border-0"
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
+                </div>
+              );
+            }
+            if (isDirectVideo(resource.linkUrl)) {
+              return (
+                <div className="w-full p-4 flex justify-center bg-slate-900">
+                  <video controls className="max-w-full max-h-[80vh] rounded-xl">
+                    <source src={resource.linkUrl} />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              );
+            }
+            return (
+              <div className="p-12 text-center">
+                <ExternalLink size={48} className="text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500 mb-2">This is an external link.</p>
+                <p className="text-xs text-slate-400 mb-6 break-all max-w-md mx-auto">{resource.linkUrl}</p>
+                <a href={resource.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary inline-flex">
+                  <ExternalLink size={16} /> Open Link
+                </a>
+              </div>
+            );
+          })()
+        ) : isPdf && resource.fileUrl ? (
           <div className="w-full h-[70vh] sm:h-[80vh]">
             <iframe
               src={resource.fileUrl}

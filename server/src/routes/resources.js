@@ -57,30 +57,65 @@ router.get('/all', async (req, res) => {
 
 const jwt = require('jsonwebtoken');
 
-// Get subjects based on query
-router.get('/subjects', async (req, res) => {
+// Public stats route
+router.get('/public/stats', async (req, res) => {
   try {
-    const { degree, branch, semester, mine, showAll } = req.query;
+    const [
+      totalResources,
+      totalSubjects,
+      totalStudents,
+      totalNotes,
+      totalPYQs,
+      branches,
+      courses
+    ] = await Promise.all([
+      Resource.countDocuments({ isApproved: true }),
+      Subject.countDocuments(),
+      User.countDocuments({ role: 'student' }),
+      Resource.countDocuments({ resourceType: 'Note', isApproved: true }),
+      Resource.countDocuments({ resourceType: 'Question Paper', isApproved: true }),
+      Subject.distinct('branch'),
+      Subject.aggregate([
+        { $group: { _id: { degree: '$degree', branch: '$branch' } } },
+        { $count: 'total' }
+      ])
+    ]);
+
+    res.json({
+      totalResources,
+      totalSubjects,
+      totalStudents,
+      totalNotes,
+      totalPYQs,
+      totalBranches: branches.length,
+      totalCourses: courses[0]?.total || 0
+    });
+  } catch (error) {
+    console.error('Error fetching public stats:', error);
+    res.status(500).json({ message: 'Error fetching stats' });
+  }
+});
+
+// Get subjects based on query (protected)
+router.get('/subjects', verifyToken, async (req, res) => {
+  try {
+    const { degree, branch, semester, showAll } = req.query;
     const filter = {};
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    if (mine === 'true') {
-      const token = req.cookies.token;
-      if (!token) return res.status(401).json({ message: 'Unauthorized' });
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'bpsmv_fallback_secret_2026');
-      const user = await User.findById(decoded.id);
-      if (!user) return res.status(404).json({ message: 'User not found' });
-
-      // If student or admin not requesting showAll, filter by user course
-      if (user.role !== 'admin' || showAll !== 'true') {
+    if (user.role === 'student') {
+      if (user.degree) filter.degree = user.degree;
+      if (user.branch) filter.branch = user.branch;
+    } else if (user.role === 'admin') {
+      if (showAll !== 'true') {
         if (user.degree) filter.degree = user.degree;
         if (user.branch) filter.branch = user.branch;
       }
-    } else {
-      if (degree) filter.degree = degree;
-      if (branch) filter.branch = branch;
     }
 
+    if (degree) filter.degree = degree;
+    if (branch) filter.branch = branch;
     if (semester) filter.semester = parseInt(semester);
 
     const subjects = await Subject.find(filter).sort({ semester: 1, name: 1 });

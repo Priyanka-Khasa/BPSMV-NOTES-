@@ -7,7 +7,7 @@ import { Mail, Save, Camera, Sparkles, ShieldCheck, Loader2 } from 'lucide-react
 const Profile = () => {
   const { user, updateProfile, loading: authLoading, setUser } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', degree: '', branch: '', yearOfStudy: '', semester: '' });
+  const [form, setForm] = useState({ name: '', degree: '', branch: '', yearOfStudy: '', semester: '', rollNumber: '' });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -21,7 +21,8 @@ const Profile = () => {
         degree: user.degree || '',
         branch: user.branch || '',
         yearOfStudy: user.yearOfStudy || '',
-        semester: user.semester || ''
+        semester: user.semester || '',
+        rollNumber: user.rollNumber || ''
       });
       setPreviewAvatar(user.avatar || null);
     }
@@ -160,6 +161,18 @@ const Profile = () => {
             <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
               <input name="name" value={form.name} onChange={handleChange} className="input-field" required />
+            </div>
+            <div className="animate-slide-up" style={{ animationDelay: '0.075s' }}>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Roll Number</label>
+              <input
+                name="rollNumber"
+                value={form.rollNumber}
+                onChange={handleChange}
+                className="input-field"
+                disabled={user?.role !== 'admin'}
+                title={user?.role === 'admin' ? 'Editable for admins only' : 'Roll number cannot be changed'}
+              />
+              <p className="text-xs text-slate-400 mt-1">{user?.role === 'admin' ? 'Admins can edit roll numbers' : 'Roll number is read-only'}</p>
             </div>
             <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
               <label className="block text-sm font-medium text-slate-700 mb-1">Degree</label>

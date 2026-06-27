@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import {
   BookOpen, Search, Upload, MessageSquare, Users, ArrowRight,
   GraduationCap, Sparkles, Zap, ShieldCheck, Star, Layers,
-  ChevronRight, Award, Clock, FileText, ArrowUpRight
+  ChevronRight, Award, Clock, FileText, ArrowUpRight, Send,
+  User, ChevronLeft, Loader2
 } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
@@ -13,11 +15,69 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const containerRef = useScrollAnimation('.scroll-reveal');
 
+  const [stats, setStats] = useState({ totalResources: 0, totalSubjects: 0, totalStudents: 0, totalNotes: 0, totalPYQs: 0, totalBranches: 0, totalCourses: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  const [reviewForm, setReviewForm] = useState({ fullName: '', rating: 5, review: '' });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState('');
+
   useEffect(() => {
-    if (isAuthenticated && window.location.pathname === '/') {
-      // Optionally redirect authenticated users to dashboard, but let's keep landing accessible
+    // Fetch stats
+    axios.get('/resources/public/stats').then(res => {
+      setStats(res.data);
+      setStatsLoading(false);
+    }).catch(() => setStatsLoading(false));
+
+    // Fetch approved reviews
+    fetchReviews(1);
+  }, []);
+
+  const fetchReviews = async (page) => {
+    setReviewsLoading(true);
+    try {
+      const res = await axios.get(`/reviews/approved?page=${page}&limit=6`);
+      setReviews(res.data.reviews || []);
+      setReviewsTotal(res.data.total || 0);
+      setReviewsPage(res.data.page || 1);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    } finally {
+      setReviewsLoading(false);
     }
-  }, [isAuthenticated]);
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.fullName.trim() || !reviewForm.review.trim()) return;
+    setReviewSubmitting(true);
+    setReviewMessage('');
+    try {
+      await axios.post('/reviews', {
+        fullName: reviewForm.fullName.trim(),
+        rating: parseInt(reviewForm.rating),
+        review: reviewForm.review.trim()
+      });
+      setReviewForm({ fullName: '', rating: 5, review: '' });
+      setReviewMessage('Thank you! Your review has been submitted for approval.');
+      setTimeout(() => setReviewMessage(''), 5000);
+    } catch (err) {
+      setReviewMessage(err.response?.data?.message || 'Failed to submit review. Please try again.');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const statItems = [
+    { icon: BookOpen, label: 'Subjects', value: stats.totalSubjects },
+    { icon: Zap, label: 'Resources', value: stats.totalResources },
+    { icon: Users, label: 'Students', value: stats.totalStudents },
+  ];
 
   const features = [
     {
@@ -115,17 +175,13 @@ const Home = () => {
 
               {/* Quick stats */}
               <div className="scroll-reveal scroll-reveal-delay-5 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0 mt-12">
-                {[
-                  { icon: BookOpen, label: 'Subjects', value: '50+' },
-                  { icon: Zap, label: 'Resources', value: '500+' },
-                  { icon: ShieldCheck, label: 'Trusted', value: '100%' },
-                ].map((s, i) => (
+                {statItems.map((s, i) => (
                   <div
                     key={i}
                     className="text-center p-4 rounded-2xl bg-white/70 backdrop-blur border border-slate-200/60 hover:scale-105 hover:shadow-lg hover:shadow-brand-500/5 transition-all duration-500"
                   >
                     <s.icon size={22} className="mx-auto mb-2 text-brand-600" />
-                    <p className="text-xl font-bold text-slate-900">{s.value}</p>
+                    <p className="text-xl font-bold text-slate-900">{statsLoading ? '...' : s.value}+</p>
                     <p className="text-xs text-slate-500 font-medium">{s.label}</p>
                   </div>
                 ))}
@@ -337,7 +393,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section with Background */}
+      {/* Reviews + Submit Section */}
       <section className="py-20 sm:py-28 bg-white/60 relative overflow-hidden">
         {/* Decorative gradient blobs */}
         <div className="absolute inset-0 pointer-events-none">
@@ -348,40 +404,146 @@ const Home = () => {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 scroll-reveal">
-            <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Testimonials</span>
+            <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Reviews</span>
             <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-4 line-decoration inline-block">Loved by Students</h2>
             <p className="text-slate-500 max-w-xl mx-auto mt-6">See what your fellow BPSMV students have to say.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className="scroll-reveal card p-8 hover:-translate-y-2 hover:shadow-xl transition-all duration-500 bg-white/80 backdrop-blur-sm"
-                style={{ transitionDelay: `${0.15 * i}s` }}
-              >
-                <div className="flex gap-1 mb-4">
-                  {Array.from({ length: 5 }).map((_, si) => (
-                    <Star
-                      key={si}
-                      size={16}
-                      className={si < t.stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-                    />
-                  ))}
+          {/* Submit Review Form */}
+          <div className="max-w-xl mx-auto mb-16 scroll-reveal">
+            <div className="card p-6 sm:p-8">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Star size={18} className="text-amber-500" /> Submit a Review
+              </h3>
+              {reviewMessage && (
+                <div className={`mb-4 p-3 rounded-xl text-sm border animate-fade-in ${reviewMessage.includes('Thank you') ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                  {reviewMessage}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed italic">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-sm">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 text-sm">{t.name}</p>
-                    <p className="text-xs text-slate-500">{t.role}</p>
+              )}
+              <form onSubmit={handleReviewSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    value={reviewForm.fullName}
+                    onChange={(e) => setReviewForm({ ...reviewForm, fullName: e.target.value })}
+                    className="input-field"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Rating</label>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                        className="p-1 transition-transform hover:scale-110"
+                      >
+                        <Star
+                          size={24}
+                          className={star <= reviewForm.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                        />
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-            ))}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Your Review</label>
+                  <textarea
+                    placeholder="Share your experience..."
+                    value={reviewForm.review}
+                    onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
+                    className="input-field min-h-[100px]"
+                    required
+                    maxLength={2000}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={reviewSubmitting}
+                  className="btn btn-primary w-full shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
+                >
+                  {reviewSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 size={16} className="animate-spin" /> Submitting...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Send size={16} /> Submit Review
+                    </span>
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
+
+          {/* Approved Reviews */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {reviewsLoading ? (
+              <div className="col-span-full flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-brand-200 border-t-brand-600"></div>
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="col-span-full text-center text-slate-400 py-12">
+                <Star size={32} className="mx-auto mb-3 text-slate-300" />
+                <p>No reviews yet. Be the first to share your experience!</p>
+              </div>
+            ) : (
+              reviews.map((r, i) => (
+                <div
+                  key={r._id}
+                  className="scroll-reveal card p-8 hover:-translate-y-2 hover:shadow-xl transition-all duration-500 bg-white/80 backdrop-blur-sm"
+                  style={{ transitionDelay: `${0.15 * i}s` }}
+                >
+                  <div className="flex gap-1 mb-4">
+                    {Array.from({ length: 5 }).map((_, si) => (
+                      <Star
+                        key={si}
+                        size={16}
+                        className={si < r.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 mb-6 leading-relaxed italic">"{r.review}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-sm">
+                      {r.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900 text-sm">{r.fullName}</p>
+                      <p className="text-xs text-slate-500">{new Date(r.createdAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Reviews Pagination */}
+          {reviewsTotal > 6 && (
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <button
+                onClick={() => fetchReviews(reviewsPage - 1)}
+                disabled={reviewsPage <= 1 || reviewsLoading}
+                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 transition-all"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="text-sm text-slate-500 font-medium">
+                Page {reviewsPage} of {Math.ceil(reviewsTotal / 6)}
+              </span>
+              <button
+                onClick={() => fetchReviews(reviewsPage + 1)}
+                disabled={reviewsPage >= Math.ceil(reviewsTotal / 6) || reviewsLoading}
+                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 transition-all"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
