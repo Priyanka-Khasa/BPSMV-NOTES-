@@ -19,8 +19,8 @@ router.get('/:subjectId', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
       return res.status(400).json({ message: 'Invalid subject ID' });
     }
-    const comments = await Comment.find({ subjectId })
-      .sort({ createdAt: -1 })
+    const comments = await Comment.find({ subjectId, isDeleted: { $ne: true } })
+      .sort({ createdAt: 1 })
       .populate('userId', 'name email');
     res.json(comments);
   } catch (error) {
@@ -113,7 +113,8 @@ router.delete('/:commentId', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this comment' });
     }
 
-    await Comment.findByIdAndDelete(commentId);
+    comment.isDeleted = true;
+    await comment.save();
     res.json({ message: 'Comment deleted successfully' });
   } catch (error) {
     console.error('Error deleting comment:', error);

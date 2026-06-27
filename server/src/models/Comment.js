@@ -12,6 +12,10 @@ const commentSchema = new mongoose.Schema({
     enum: ['text', 'voice'],
     default: 'text'
   },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
   audioUrl: {
     type: String
   },

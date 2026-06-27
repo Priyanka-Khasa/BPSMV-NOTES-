@@ -211,6 +211,83 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Premium Interactive Workspace Section (Using Image 5) */}
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-parchment-light to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Study Desk Illustration with image 5 */}
+            <div className="scroll-reveal relative flex justify-center order-last lg:order-first">
+              <div className="relative group">
+                {/* Decorative gradients */}
+                <div className="absolute -inset-6 bg-gradient-to-tr from-brand-200/40 to-emerald-200/35 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-[750ms]"></div>
+                <div className="absolute -inset-2 border-2 border-brand-200/30 rounded-[2.2rem] animate-pulse-slow"></div>
+                
+                <img
+                  src="/image5.jpeg"
+                  alt="Students collaborating and studying"
+                  className="relative w-[400px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/50 transition-all duration-700 hover:scale-[1.03] hover:rotate-1"
+                />
+                
+                {/* Floating badge */}
+                <div className="absolute -top-6 -left-6 bg-white/95 backdrop-blur rounded-2xl p-4 shadow-xl shadow-brand-500/5 border border-brand-100 animate-float">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Student Community</p>
+                      <p className="text-[10px] text-slate-500">Learn together in real-time</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating badge bottom right */}
+                <div className="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur rounded-2xl p-4 shadow-xl shadow-brand-500/5 border border-brand-100 animate-float" style={{ animationDelay: '1.2s' }}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                      <Sparkles size={18} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Premium Notes</p>
+                      <p className="text-[10px] text-slate-500">Verified by top students</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Copy Content */}
+            <div className="text-center lg:text-left scroll-reveal">
+              <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Study Environment</span>
+              <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-6 leading-tight">
+                Designed to simplify your learning journey
+              </h2>
+              <p className="text-slate-500 mb-8 text-base sm:text-lg leading-relaxed">
+                Unlock peer discussions, subject-specific chat rooms, and notes curated for your branch. No more scrambling for study materials right before the exams.
+              </p>
+              
+              <div className="space-y-4">
+                {[
+                  { title: "Dynamic Discuss Channels", desc: "Every subject has a dedicated workspace where you can ask doubts, share links, and send voice notes." },
+                  { title: "Syllabus Aligned Material", desc: "Access verified notes and previous year papers categorized by your degree and semester." },
+                  { title: "Instant Mobile Access", desc: "Clean responsive interface designed to work perfectly on your phone, tablet, or desktop." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 items-start text-left">
+                    <div className="w-5 h-5 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
+                      <div className="w-2 h-2 bg-brand-600 rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base">{item.title}</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works + Image Section */}
       <section className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
