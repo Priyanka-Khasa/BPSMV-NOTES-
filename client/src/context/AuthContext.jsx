@@ -39,8 +39,8 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
-  const register = async (name, email, password) => {
-    const res = await axios.post('/auth/register', { name, email, password });
+  const register = async (name, email, password, rollNumber) => {
+    const res = await axios.post('/auth/register', { name, email, password, rollNumber });
     setUser(res.data.user);
     return res.data.user;
   };

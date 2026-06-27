@@ -23,7 +23,13 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  avatar: {
+  rollNumber: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    uppercase: true
+  },
     type: String
   },
   degree: {

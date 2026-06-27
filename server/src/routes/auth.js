@@ -48,22 +48,30 @@ if (passport.googleEnabled) {
 // Email/Password Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email and password are required' });
+    const { name, email, password, rollNumber } = req.body;
+    if (!name || !email || !password || !rollNumber) {
+      return res.status(400).json({ message: 'Name, email, password and roll number are required' });
     }
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
+    if (!rollNumber.trim()) {
+      return res.status(400).json({ message: 'Roll number is required' });
+    }
 
-    const existing = await User.findOne({ email: email.toLowerCase() });
-    if (existing) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
-    const user = await User.create({ name, email: email.toLowerCase(), password, onboarded: false });
+    const existingRoll = await User.findOne({ rollNumber: rollNumber.trim().toUpperCase() });
+    if (existingRoll) {
+      return res.status(409).json({ message: 'Roll number already registered' });
+    }
+
+    const user = await User.create({ name, email: email.toLowerCase(), password, rollNumber: rollNumber.trim().toUpperCase(), onboarded: false });
     setAuthCookie(res, user);
-    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
+    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, rollNumber: user.rollNumber, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Register error FULL:', error);
     res.status(500).json({ message: 'Server error during registration', details: error.message, stack: error.stack });
@@ -89,7 +97,7 @@ router.post('/login', async (req, res) => {
     }
 
     setAuthCookie(res, user);
-    res.json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
+    res.json({ user: { _id: user._id, name: user.name, email: user.email, rollNumber: user.rollNumber, onboarded: user.onboarded, role: user.role, degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
@@ -124,12 +132,29 @@ router.get('/me', verifyToken, async (req, res) => {
 // Update Profile (Onboarding + general update)
 router.post('/onboard', verifyToken, async (req, res) => {
   try {
-    const { degree, branch, yearOfStudy, semester } = req.body;
+    const { degree, branch, yearOfStudy, semester, rollNumber } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
     const updates = { degree, branch, yearOfStudy, semester, onboarded: true };
-    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
-    setAuthCookie(res, user);
-    res.json(user);
+
+    // If user doesn't have a rollNumber (e.g., Google OAuth), require it
+    if (!user.rollNumber) {
+      if (!rollNumber || !rollNumber.trim()) {
+        return res.status(400).json({ message: 'Roll number is required to complete onboarding' });
+      }
+      const existingRoll = await User.findOne({ rollNumber: rollNumber.trim().toUpperCase() });
+      if (existingRoll) {
+        return res.status(409).json({ message: 'Roll number already registered' });
+      }
+      updates.rollNumber = rollNumber.trim().toUpperCase();
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
+    setAuthCookie(res, updatedUser);
+    res.json(updatedUser);
   } catch (error) {
+    console.error('Onboard error:', error);
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
@@ -138,13 +163,23 @@ router.post('/onboard', verifyToken, async (req, res) => {
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { name, degree, branch, yearOfStudy, semester } = req.body;
-    const user = await User.findByIdAndUpdate(
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Only admins can update rollNumber
+    let updates = { name, degree, branch, yearOfStudy, semester };
+    if (req.body.rollNumber !== undefined && user.role === 'admin') {
+      updates.rollNumber = req.body.rollNumber.trim().toUpperCase();
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { name, degree, branch, yearOfStudy, semester },
+      updates,
       { new: true, runValidators: true }
     ).select('-googleId');
-    res.json(user);
+    res.json(updatedUser);
   } catch (error) {
+    console.error('Profile update error:', error);
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
@@ -161,15 +196,20 @@ router.post('/guest', async (req, res) => {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 10);
     const email = `guest-${timestamp}-${randomStr}@bpsmv.local`;
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const rollNumber = `GST-${dateStr}-${random}`;
     const user = await User.create({
       name: 'Guest Student',
       email: email.toLowerCase(),
+      rollNumber,
       password: randomStr + timestamp + Math.random().toString(36),
       role: 'student',
       onboarded: true
     });
     setAuthCookie(res, user);
-    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, onboarded: true, role: 'student', degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
+    res.status(201).json({ user: { _id: user._id, name: user.name, email: user.email, rollNumber: user.rollNumber, onboarded: true, role: 'student', degree: user.degree, branch: user.branch, yearOfStudy: user.yearOfStudy, semester: user.semester, avatar: user.avatar } });
   } catch (error) {
     console.error('Guest login error:', error);
     res.status(500).json({ message: 'Guest login failed', details: error.message });

@@ -52,4 +52,20 @@ const audioUpload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB max
 });
 
-module.exports = { upload, uploadDir, audioUpload };
+// Feedback upload filter: images only, 5MB max
+const feedbackFileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files (JPEG, PNG, WebP, GIF) are allowed for screenshots'), false);
+  }
+};
+
+const feedbackUpload = multer({
+  storage,
+  fileFilter: feedbackFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5 MB max
+});
+
+module.exports = { upload, uploadDir, audioUpload, feedbackUpload };

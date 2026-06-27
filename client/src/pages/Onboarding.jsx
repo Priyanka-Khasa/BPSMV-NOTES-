@@ -4,21 +4,24 @@ import { useAuth } from '../context/AuthContext';
 import { ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
 
 const Onboarding = () => {
+  const { onboard, user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     degree: '',
     branch: '',
     yearOfStudy: '',
-    semester: ''
+    semester: '',
+    rollNumber: ''
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { onboard, user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login', { replace: true });
     } else if (user?.onboarded) {
       navigate('/dashboard', { replace: true });
+    } else if (user?.rollNumber) {
+      setFormData(prev => ({ ...prev, rollNumber: user.rollNumber }));
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -70,6 +73,21 @@ const Onboarding = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Roll Number</label>
+              <input
+                name="rollNumber"
+                type="text"
+                placeholder="e.g., BTECH2024001"
+                value={formData.rollNumber}
+                onChange={handleChange}
+                className="input-field"
+                required
+                disabled={!!user?.rollNumber}
+              />
+              <p className="text-xs text-slate-400 mt-1">{user?.rollNumber ? 'Your roll number is already registered' : 'Required for Google sign-up users'}</p>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Degree</label>
               <select name="degree" value={formData.degree} onChange={handleChange} className="input-field" required>

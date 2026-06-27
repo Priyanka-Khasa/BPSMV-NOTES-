@@ -36,6 +36,8 @@ const { router: authRouter } = require('./routes/auth');
 app.use('/api/auth', authRouter);
 app.use('/api/resources', require('./routes/resources'));
 app.use('/api/comments', require('./routes/comments'));
+app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 const PORT = process.env.PORT || 5000;
 

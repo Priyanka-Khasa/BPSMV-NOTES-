@@ -25,6 +25,7 @@ const Chat = () => {
   const [sending, setSending] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   // Voice recording states
   const [recording, setRecording] = useState(false);
@@ -74,6 +75,10 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
+    fetchSubjects();
+  }, [showAll]);
+
+  useEffect(() => {
     if (!selectedSubject) return;
 
     fetchComments(selectedSubject);
@@ -84,26 +89,47 @@ const Chat = () => {
     }
     discardPreview();
 
-    // Start polling for new messages every 4 seconds (Real-time updates)
-    const interval = setInterval(() => {
+    // Start polling for new messages every 3.5 seconds
+    let interval = setInterval(() => {
       fetchCommentsSilent(selectedSubject);
-    }, 4000);
+    }, 3500);
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(interval);
+      } else {
+        clearInterval(interval);
+        interval = setInterval(() => {
+          fetchCommentsSilent(selectedSubject);
+        }, 3500);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [selectedSubject]);
 
   const fetchCommentsSilent = async (subjectId) => {
     try {
-      const res = await axios.get(`/comments/${subjectId}`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const res = await axios.get(`/comments/${subjectId}`, { signal: controller.signal });
+      clearTimeout(timeout);
       setComments(res.data);
     } catch (error) {
-      console.error('Error polling comments:', error);
+      if (error.name !== 'CanceledError' && error.name !== 'AbortError') {
+        console.error('Error polling comments:', error);
+      }
     }
   };
 
   const fetchSubjects = async () => {
     try {
-      const res = await axios.get(`/resources/subjects`);
+      const params = user?.role === 'admin' ? { showAll: showAll.toString() } : {};
+      const res = await axios.get(`/resources/subjects`, { params });
       setSubjects(res.data);
       if (!selectedSubject && res.data.length > 0) {
         setSelectedSubject(res.data[0]._id);
@@ -297,6 +323,48 @@ const Chat = () => {
     return `${m}:${s}`;
   };
 
+  // Group subjects based on user role and showAll toggle
+  const groupedSubjects = () => {
+    if (user?.role === 'admin' && showAll) {
+      // Group by Degree -> Branch -> Semester
+      const grouped = {};
+      subjects.forEach(sub => {
+        const deg = sub.degree || 'Other';
+        const br = sub.branch || 'General';
+        const sem = sub.semester || 0;
+        if (!grouped[deg]) grouped[deg] = {};
+        if (!grouped[deg][br]) grouped[deg][br] = {};
+        if (!grouped[deg][br][sem]) grouped[deg][br][sem] = [];
+        grouped[deg][br][sem].push(sub);
+      });
+      return { type: 'nested', data: grouped };
+    } else {
+      // Group by Semester
+      const grouped = {};
+      subjects.forEach(sub => {
+        const sem = sub.semester || 0;
+        if (!grouped[sem]) grouped[sem] = [];
+        grouped[sem].push(sub);
+      });
+      return { type: 'semester', data: grouped };
+    }
+  };
+
+  const renderSubjectItem = (sub) => (
+    <button
+      key={sub._id}
+      onClick={() => { setSelectedSubject(sub._id); setMobileSidebarOpen(false); }}
+      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${
+        selectedSubject === sub._id
+          ? 'bg-brand-50 text-brand-700 font-medium shadow-sm ring-1 ring-brand-200/50'
+          : 'text-slate-600 hover:bg-slate-50 hover:translate-x-0.5'
+      }`}
+    >
+      <div className="font-medium">{sub.name}</div>
+      <div className="text-xs text-slate-400">{sub.degree} · {sub.branch} · Sem {sub.semester}</div>
+    </button>
+  );
+
   const selectedSubjectObj = subjects.find(s => s._id === selectedSubject);
 
   return (
@@ -311,21 +379,57 @@ const Chat = () => {
             <ArrowLeft size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {subjects.map(sub => (
-            <button
-              key={sub._id}
-              onClick={() => { setSelectedSubject(sub._id); setMobileSidebarOpen(false); }}
-              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-300 ${
-                selectedSubject === sub._id
-                  ? 'bg-brand-50 text-brand-700 font-medium shadow-sm ring-1 ring-brand-200/50'
-                  : 'text-slate-600 hover:bg-slate-50 hover:translate-x-0.5'
-              }`}
-            >
-              <div className="font-medium">{sub.name}</div>
-              <div className="text-xs text-slate-400">{sub.degree} · {sub.branch} · Sem {sub.semester}</div>
-            </button>
-          ))}
+        {user?.role === 'admin' && (
+          <div className="px-4 py-2 border-b border-slate-200/80 bg-slate-50/50">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showAll}
+                onChange={(e) => setShowAll(e.target.checked)}
+                className="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500"
+              />
+              <span className="text-sm text-slate-700 font-medium">Show All Subjects</span>
+            </label>
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          {(() => {
+            const { type, data } = groupedSubjects();
+            if (type === 'semester') {
+              return Object.keys(data).sort((a,b) => parseInt(a) - parseInt(b)).map(sem => (
+                <div key={sem}>
+                  <div className="px-3 py-1 text-xs font-bold text-slate-500 uppercase tracking-wider">Semester {sem}</div>
+                  <div className="space-y-1">
+                    {data[sem].map(sub => renderSubjectItem(sub))}
+                  </div>
+                </div>
+              ));
+            }
+            if (type === 'nested') {
+              return Object.keys(data).sort().map(deg => (
+                <div key={deg}>
+                  <div className="px-3 py-1 text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100 rounded-lg">{deg}</div>
+                  {Object.keys(data[deg]).sort().map(br => (
+                    <div key={br} className="mt-1">
+                      <div className="px-3 py-0.5 text-xs font-semibold text-slate-500">{br}</div>
+                      {Object.keys(data[deg][br]).sort((a,b) => parseInt(a) - parseInt(b)).map(sem => (
+                        <div key={sem} className="mb-1">
+                          <div className="px-3 py-0.5 text-[10px] font-medium text-slate-400 uppercase">Sem {sem}</div>
+                          <div className="space-y-1">
+                            {data[deg][br][sem].map(sub => renderSubjectItem(sub))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ));
+            }
+            return null;
+          })()}
+          {subjects.length === 0 && (
+            <div className="text-center text-sm text-slate-400 py-8">No subjects found</div>
+          )}
         </div>
       </div>
 
