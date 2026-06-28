@@ -58,13 +58,17 @@ const Home = () => {
     setReviewSubmitting(true);
     setReviewMessage('');
     try {
-      await axios.post('/reviews', {
+      const res = await axios.post('/reviews', {
         fullName: reviewForm.fullName.trim(),
         rating: parseInt(reviewForm.rating),
         review: reviewForm.review.trim()
       });
+      // Optimistic UI: add the new review immediately to the list
+      const newReview = res.data;
+      setReviews(prev => [newReview, ...prev].slice(0, 6));
+      setReviewsTotal(prev => prev + 1);
       setReviewForm({ fullName: '', rating: 5, review: '' });
-      setReviewMessage('Thank you! Your review has been submitted for approval.');
+      setReviewMessage('Thank you! Your review has been submitted successfully.');
       setTimeout(() => setReviewMessage(''), 5000);
     } catch (err) {
       setReviewMessage(err.response?.data?.message || 'Failed to submit review. Please try again.');
