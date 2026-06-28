@@ -1,0 +1,7 @@
+◇ injected env (10) from .env // tip: ⌘ suppress logs { quiet: true }
+[Auth] Google OAuth credentials missing or appear invalid. Email/password login will still work.
+Server running on port 5000
+Uploads served at http://localhost:5000/uploads
+MongoDB Connected: localhost
+(node:808) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
