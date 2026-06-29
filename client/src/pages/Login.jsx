@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Eye, EyeOff, ArrowRight, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, User, AlertCircle, Sparkles } from 'lucide-react';
+import BrandLogo from '../components/BrandLogo';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -58,13 +59,18 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <div className="w-full max-w-md">
-        <div className="card p-8 sm:p-10 animate-scale-in">
+    <div className="relative flex items-center justify-center min-h-[82vh] overflow-hidden">
+      <div className="orb -left-24 top-12 w-72 h-72 bg-amber-300/20 animate-drift"></div>
+      <div className="orb -right-24 bottom-8 w-80 h-80 bg-emerald-300/16 animate-spotlight"></div>
+      <div className="w-full max-w-md relative z-10">
+        <div className="cinematic-card p-8 sm:p-10 animate-cinematic-rise">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl flex items-center justify-center text-white font-bold text-xl mx-auto mb-5 shadow-lg shadow-brand-500/25">
-              <BookOpen size={28} />
+            <div className="flex justify-center mb-5">
+              <BrandLogo size="md" showText={false} className="scale-125" />
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold mb-4 ring-1 ring-brand-100">
+              <Sparkles size={13} /> BPSMV Resource Hub
             </div>
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2">
               {mode === 'login' ? 'Welcome back' : 'Create account'}
@@ -75,16 +81,16 @@ const Login = () => {
           </div>
 
           {/* Toggle */}
-          <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
+          <div className="flex bg-white/65 rounded-xl p-1 mb-6 ring-1 ring-white/80 shadow-inner">
             <button
               onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'login' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'login' ? 'bg-white text-slate-900 shadow-sm shadow-brand-500/10' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Log in
             </button>
             <button
               onClick={() => { setMode('signup'); setError(''); }}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'signup' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'signup' ? 'bg-white text-slate-900 shadow-sm shadow-brand-500/10' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Sign up
             </button>
@@ -147,7 +153,7 @@ const Login = () => {
                 <input
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   value={form.password}
                   onChange={handleChange}
                   className="input-field pr-10"
@@ -230,3 +236,4 @@ const Login = () => {
 };
 
 export default Login;
+

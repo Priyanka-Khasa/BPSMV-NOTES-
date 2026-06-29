@@ -11,7 +11,6 @@ import PDFViewer from './pages/PDFViewer';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
-import Feedback from './pages/Feedback';
 import Gift from './pages/Gift';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -61,8 +60,8 @@ function App() {
             <Admin />
           </ProtectedRoute>
         } />
-        <Route path="/feedback" element={<Feedback />} />
         <Route path="/gift" element={<Gift />} />
+        <Route path="/feedback" element={<Navigate to="/gift" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

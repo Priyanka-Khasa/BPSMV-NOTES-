@@ -10,9 +10,36 @@ import {
 } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
+const REVIEW_STORAGE_KEY = 'bpsmvSubmittedReview';
+const REVIEW_VISITOR_KEY = 'bpsmvReviewVisitorKey';
+
+const getStoredSubmittedReview = () => {
+  try {
+    const saved = localStorage.getItem(REVIEW_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getVisitorReviewKey = () => {
+  let key = localStorage.getItem(REVIEW_VISITOR_KEY);
+  if (!key) {
+    key = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem(REVIEW_VISITOR_KEY, key);
+  }
+  return `visitor:${key}`;
+};
+
+const mergeOwnReview = (list, ownReview) => {
+  if (!ownReview?._id) return list;
+  if (list.some((review) => review._id === ownReview._id)) return list;
+  return [ownReview, ...list];
+};
+
 const Home = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const containerRef = useScrollAnimation('.scroll-reveal');
 
   const [stats, setStats] = useState({ totalResources: 0, totalSubjects: 0, totalStudents: 0, totalNotes: 0, totalPYQs: 0, totalBranches: 0, totalCourses: 0 });
@@ -26,8 +53,12 @@ const Home = () => {
   const [reviewForm, setReviewForm] = useState({ fullName: '', rating: 5, review: '' });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewMessage, setReviewMessage] = useState('');
+  const [submittedReview, setSubmittedReview] = useState(null);
 
   useEffect(() => {
+    const savedReview = getStoredSubmittedReview();
+    if (savedReview) setSubmittedReview(savedReview);
+
     // Fetch stats
     axios.get('/resources/public/stats').then(res => {
       setStats(res.data);
@@ -38,11 +69,18 @@ const Home = () => {
     fetchReviews(1);
   }, []);
 
+  useEffect(() => {
+    if (user?.name && !submittedReview && !reviewForm.fullName.trim()) {
+      setReviewForm((current) => ({ ...current, fullName: user.name }));
+    }
+  }, [user, submittedReview, reviewForm.fullName]);
+
   const fetchReviews = async (page) => {
     setReviewsLoading(true);
     try {
       const res = await axios.get(`/reviews/approved?page=${page}&limit=6`);
-      setReviews(res.data.reviews || []);
+      const savedReview = getStoredSubmittedReview();
+      setReviews(mergeOwnReview(res.data.reviews || [], savedReview));
       setReviewsTotal(res.data.total || 0);
       setReviewsPage(res.data.page || 1);
     } catch (err) {
@@ -54,24 +92,33 @@ const Home = () => {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    if (submittedReview) return;
     if (!reviewForm.fullName.trim() || !reviewForm.review.trim()) return;
     setReviewSubmitting(true);
     setReviewMessage('');
     try {
+      const reviewerKey = user?._id ? `user:${user._id}` : getVisitorReviewKey();
       const res = await axios.post('/reviews', {
         fullName: reviewForm.fullName.trim(),
         rating: parseInt(reviewForm.rating),
-        review: reviewForm.review.trim()
+        review: reviewForm.review.trim(),
+        reviewerKey
       });
       // Optimistic UI: add the new review immediately to the list
       const newReview = res.data;
-      setReviews(prev => [newReview, ...prev].slice(0, 6));
+      localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(newReview));
+      setSubmittedReview(newReview);
+      setReviews(prev => mergeOwnReview(prev, newReview).slice(0, 6));
       setReviewsTotal(prev => prev + 1);
       setReviewForm({ fullName: '', rating: 5, review: '' });
       setReviewMessage('Thank you! Your review has been submitted successfully.');
-      setTimeout(() => setReviewMessage(''), 5000);
     } catch (err) {
-      setReviewMessage(err.response?.data?.message || 'Failed to submit review. Please try again.');
+      const message = err.response?.data?.message || 'Failed to submit review. Please try again.';
+      setReviewMessage(message);
+      if (err.response?.status === 409) {
+        const savedReview = getStoredSubmittedReview();
+        if (savedReview) setSubmittedReview(savedReview);
+      }
     } finally {
       setReviewSubmitting(false);
     }
@@ -130,41 +177,45 @@ const Home = () => {
   return (
     <div ref={containerRef} className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-brand-50/30 to-parchment-light min-h-[90vh] flex items-center justify-center hero-pattern">
+      <section className="relative overflow-hidden cinematic-hero min-h-[92vh] flex items-center justify-center hero-pattern">
         {/* Background blobs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-brand-300/15 rounded-full blur-3xl animate-float-slow"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-brand-400/15 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-200/10 rounded-full blur-3xl animate-pulse-slow"></div>
+          <div className="orb top-16 left-4 w-80 h-80 bg-amber-300/25 animate-drift"></div>
+          <div className="orb bottom-14 right-8 w-[28rem] h-[28rem] bg-emerald-300/18 animate-spotlight"></div>
+          <div className="orb top-1/3 left-1/2 w-[38rem] h-[38rem] -translate-x-1/2 bg-brand-300/16 animate-pulse-slow"></div>
+          <div className="absolute left-1/2 top-0 h-full w-px bg-gradient-to-b from-transparent via-white/80 to-transparent rotate-12 opacity-60"></div>
+          <div className="absolute -left-20 top-24 h-56 w-[140%] bg-white/20 blur-3xl rotate-[-8deg] animate-spotlight"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
-            <div className="text-center lg:text-left">
+            <div className="text-center lg:text-left animate-cinematic-rise">
               <div className="scroll-reveal scroll-reveal-delay-1">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur text-brand-700 rounded-full text-sm font-medium mb-8 shadow-sm ring-1 ring-brand-200/50 animate-float-y">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl text-brand-700 rounded-full text-sm font-semibold mb-8 shadow-lg shadow-brand-500/10 ring-1 ring-white/80 animate-float-y">
                   <Sparkles size={16} className="text-brand-500" />
-                  For BPSMV Students
+                  Built for focused BPSMV students
                 </div>
               </div>
 
-              <h1 className="scroll-reveal scroll-reveal-delay-2 text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-slate-900 mb-6 leading-tight tracking-tight hero-title">
+              <h1 className="scroll-reveal scroll-reveal-delay-2 text-4xl sm:text-5xl lg:text-7xl font-display font-bold text-slate-900 mb-6 leading-tight tracking-tight hero-title hero-title-glow">
                 Your Academic<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700">
+                <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-amber-500 to-emerald-600">
                   Resource Hub
+                  <span className="absolute left-0 -bottom-2 h-1.5 w-full rounded-full bg-gradient-to-r from-brand-400 via-amber-300 to-emerald-300 opacity-70"></span>
                 </span>
               </h1>
 
-              <p className="scroll-reveal scroll-reveal-delay-3 text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed">
-                Access subject-wise notes, previous year question papers, and external resources — all in one beautifully organized place.
+              <p className="scroll-reveal scroll-reveal-delay-3 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed">
+                Access subject-wise notes, previous year question papers, discussions, and uploads in one polished study space designed to feel fast, calm, and premium.
               </p>
 
               <div className="scroll-reveal scroll-reveal-delay-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
                 <button
                   onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
-                  className="btn btn-primary text-lg px-8 py-4 shadow-xl shadow-brand-500/25 hover:shadow-2xl hover:shadow-brand-500/30 hover:-translate-y-1 transition-all duration-300 animate-subtle-pulse"
+                  className="btn btn-primary relative overflow-hidden text-lg px-8 py-4 shadow-xl shadow-brand-500/25 hover:shadow-2xl hover:shadow-brand-500/30 hover:-translate-y-1 transition-all duration-300 animate-subtle-pulse"
                 >
+                  <span className="absolute inset-y-0 left-0 w-12 bg-white/25 blur-xl animate-sheen"></span>
                   {isAuthenticated ? 'Open Dashboard' : 'Get Started'}
                   <ArrowRight size={18} className="animate-bounce-x" />
                 </button>
@@ -182,7 +233,7 @@ const Home = () => {
                 {statItems.map((s, i) => (
                   <div
                     key={i}
-                    className="text-center p-4 rounded-2xl bg-white/70 backdrop-blur border border-slate-200/60 hover:scale-105 hover:shadow-lg hover:shadow-brand-500/5 transition-all duration-500"
+                    className="cinematic-panel text-center p-4 rounded-2xl hover:scale-105 transition-all duration-500"
                   >
                     <s.icon size={22} className="mx-auto mb-2 text-brand-600" />
                     <p className="text-xl font-bold text-slate-900">{statsLoading ? '...' : s.value}+</p>
@@ -194,17 +245,18 @@ const Home = () => {
 
             {/* Right: Hero Image */}
             <div className="scroll-reveal scroll-reveal-delay-3 hidden lg:flex justify-center items-center relative">
-              <div className="relative">
+              <div className="relative image-stage">
                 {/* Decorative rings behind image */}
-                <div className="absolute -inset-8 bg-gradient-to-br from-brand-100/40 to-brand-200/30 rounded-[2.5rem] blur-2xl"></div>
-                <div className="absolute -inset-4 border-2 border-brand-200/30 rounded-[2rem] animate-pulse-slow"></div>
+                <div className="absolute -inset-10 bg-gradient-to-br from-amber-200/55 via-brand-200/35 to-emerald-200/40 rounded-[2.5rem] blur-2xl animate-spotlight"></div>
+                <div className="absolute -inset-5 border border-white/70 rounded-[2.2rem] animate-pulse-slow"></div>
+                <div className="absolute -right-8 top-10 w-24 h-24 rounded-full bg-white/70 blur-md animate-float"></div>
                 <img
                   src="/image1.jpeg"
                   alt="Student studying with laptop and books"
-                  className="relative w-[420px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/50 animate-float-slow"
+                  className="relative w-[440px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 animate-float-slow"
                 />
                 {/* Floating badge */}
-                <div className="absolute -bottom-4 -left-4 bg-white rounded-xl px-4 py-3 shadow-lg shadow-brand-500/10 border border-brand-100 animate-float-y">
+                <div className="absolute -bottom-4 -left-4 cinematic-panel rounded-xl px-4 py-3 animate-float-y">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
                       <BookOpen size={16} className="text-brand-600" />
@@ -216,7 +268,7 @@ const Home = () => {
                   </div>
                 </div>
                 {/* Floating badge top right */}
-                <div className="absolute -top-4 -right-4 bg-white rounded-xl px-4 py-3 shadow-lg shadow-brand-500/10 border border-brand-100 animate-float" style={{ animationDelay: '1s' }}>
+                <div className="absolute -top-4 -right-4 cinematic-panel rounded-xl px-4 py-3 animate-float" style={{ animationDelay: '1s' }}>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                       <GraduationCap size={16} className="text-emerald-600" />
@@ -242,7 +294,9 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 sm:py-28 bg-white/50">
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-white/80 to-parchment-light/70 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-200 to-transparent"></div>
+        <div className="orb -right-20 top-20 w-80 h-80 bg-sky-200/20 animate-drift"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 scroll-reveal">
             <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Features</span>
@@ -256,10 +310,10 @@ const Home = () => {
               return (
                 <div
                   key={i}
-                  className="scroll-reveal group card p-8 text-center hover:-translate-y-3 hover:shadow-2xl hover:shadow-brand-500/5 transition-all duration-500 hover-glow-brand"
+                  className="scroll-reveal group cinematic-card p-8 text-center hover-glow-brand"
                   style={{ transitionDelay: `${0.1 * i}s` }}
                 >
-                  <div className={`w-16 h-16 bg-gradient-to-br ${f.color} ${f.text} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                  <div className={`w-16 h-16 bg-gradient-to-br ${f.color} ${f.text} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-brand-500/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
                     <Icon size={28} />
                   </div>
                   <h3 className="text-xl font-semibold text-slate-900 mb-3">{f.title}</h3>
@@ -272,24 +326,25 @@ const Home = () => {
       </section>
 
       {/* Premium Interactive Workspace Section (Using Image 5) */}
-      <section className="py-20 sm:py-28 bg-gradient-to-b from-parchment-light to-white">
+      <section className="py-20 sm:py-28 bg-gradient-to-b from-parchment-light to-white relative overflow-hidden">
+        <div className="orb left-10 bottom-16 w-80 h-80 bg-emerald-200/18 animate-spotlight"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Study Desk Illustration with image 5 */}
             <div className="scroll-reveal relative flex justify-center order-last lg:order-first">
               <div className="relative group">
                 {/* Decorative gradients */}
-                <div className="absolute -inset-6 bg-gradient-to-tr from-brand-200/40 to-emerald-200/35 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-[750ms]"></div>
-                <div className="absolute -inset-2 border-2 border-brand-200/30 rounded-[2.2rem] animate-pulse-slow"></div>
+                <div className="absolute -inset-8 bg-gradient-to-tr from-brand-200/45 via-amber-100/35 to-emerald-200/40 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-[750ms]"></div>
+                <div className="absolute -inset-2 border border-white/80 rounded-[2.2rem] animate-pulse-slow"></div>
                 
                 <img
                   src="/image5.jpeg"
                   alt="Students collaborating and studying"
-                  className="relative w-[400px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/50 transition-all duration-700 hover:scale-[1.03] hover:rotate-1"
+                  className="relative w-[400px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-all duration-700 hover:scale-[1.03] hover:rotate-1"
                 />
                 
                 {/* Floating badge */}
-                <div className="absolute -top-6 -left-6 bg-white/95 backdrop-blur rounded-2xl p-4 shadow-xl shadow-brand-500/5 border border-brand-100 animate-float">
+                <div className="absolute -top-6 -left-6 cinematic-panel rounded-2xl p-4 animate-float">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
                       <Users size={18} />
@@ -302,7 +357,7 @@ const Home = () => {
                 </div>
 
                 {/* Floating badge bottom right */}
-                <div className="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur rounded-2xl p-4 shadow-xl shadow-brand-500/5 border border-brand-100 animate-float" style={{ animationDelay: '1.2s' }}>
+                <div className="absolute -bottom-6 -right-6 cinematic-panel rounded-2xl p-4 animate-float" style={{ animationDelay: '1.2s' }}>
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                       <Sparkles size={18} />
@@ -349,7 +404,8 @@ const Home = () => {
       </section>
 
       {/* How It Works + Image Section */}
-      <section className="py-20 sm:py-28">
+      <section className="py-20 sm:py-28 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-1/2 h-72 -translate-y-1/2 bg-gradient-to-r from-transparent via-white/55 to-transparent blur-2xl"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 scroll-reveal">
             <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">How It Works</span>
@@ -364,7 +420,7 @@ const Home = () => {
                 const Icon = step.icon;
                 return (
                   <div key={i} className="scroll-reveal relative text-center group">
-                    <div className="w-20 h-20 bg-gradient-to-br from-white to-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-brand-500/10 group-hover:scale-110 group-hover:shadow-brand-500/20 transition-all duration-500 ring-1 ring-brand-100">
+                    <div className="w-20 h-20 bg-gradient-to-br from-white via-brand-50 to-amber-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-brand-500/10 group-hover:scale-110 group-hover:shadow-brand-500/20 group-hover:-rotate-3 transition-all duration-500 ring-1 ring-white/80">
                       <Icon size={32} />
                     </div>
                     <div className="absolute top-10 left-1/2 w-full hidden sm:block">
@@ -382,11 +438,11 @@ const Home = () => {
             {/* Right: Study Desk Image */}
             <div className="scroll-reveal relative hidden lg:flex justify-center">
               <div className="relative group">
-                <div className="absolute -inset-6 bg-gradient-to-br from-brand-100/50 to-amber-100/40 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-700"></div>
+                <div className="absolute -inset-8 bg-gradient-to-br from-brand-100/55 via-amber-100/45 to-emerald-100/25 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-700"></div>
                 <img
                   src="/image2.png"
                   alt="Cozy study desk setup with motivational notes"
-                  className="relative w-[380px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/50 transition-transform duration-700 group-hover:scale-[1.02]"
+                  className="relative w-[380px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-transform duration-700 group-hover:scale-[1.02]"
                 />
                 {/* Decorative elements */}
                 <div className="absolute -top-4 -right-4 w-20 h-20 bg-brand-200/40 rounded-full blur-xl animate-float"></div>
@@ -398,7 +454,7 @@ const Home = () => {
       </section>
 
       {/* Reviews + Submit Section */}
-      <section className="py-20 sm:py-28 bg-white/60 relative overflow-hidden">
+      <section className="py-20 sm:py-28 bg-white/70 relative overflow-hidden">
         {/* Decorative gradient blobs */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-200/20 rounded-full blur-3xl"></div>
@@ -415,72 +471,103 @@ const Home = () => {
 
           {/* Submit Review Form */}
           <div className="max-w-xl mx-auto mb-16 scroll-reveal">
-            <div className="card p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Star size={18} className="text-amber-500" /> Submit a Review
-              </h3>
-              {reviewMessage && (
-                <div className={`mb-4 p-3 rounded-xl text-sm border animate-fade-in ${reviewMessage.includes('Thank you') ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                  {reviewMessage}
-                </div>
-              )}
-              <form onSubmit={handleReviewSubmit} className="space-y-4">
+            <div className="cinematic-card p-6 sm:p-8">
+              {submittedReview ? (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    value={reviewForm.fullName}
-                    onChange={(e) => setReviewForm({ ...reviewForm, fullName: e.target.value })}
-                    className="input-field"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Rating</label>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                        className="p-1 transition-transform hover:scale-110"
-                      >
-                        <Star
-                          size={24}
-                          className={star <= reviewForm.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Your Review</label>
-                  <textarea
-                    placeholder="Share your experience..."
-                    value={reviewForm.review}
-                    onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
-                    className="input-field min-h-[100px]"
-                    required
-                    maxLength={2000}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={reviewSubmitting}
-                  className="btn btn-primary w-full shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  {reviewSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 size={16} className="animate-spin" /> Submitting...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Send size={16} /> Submit Review
-                    </span>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <Star size={18} className="text-amber-500 fill-amber-500" /> Your Review
+                  </h3>
+                  {reviewMessage && (
+                    <div className="mb-4 p-3 rounded-xl text-sm border animate-fade-in bg-brand-50 text-brand-700 border-brand-200">
+                      {reviewMessage}
+                    </div>
                   )}
-                </button>
-              </form>
+                  <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-4">
+                    <div className="flex gap-1 mb-3">
+                      {Array.from({ length: 5 }).map((_, si) => (
+                        <Star
+                          key={si}
+                          size={16}
+                          className={si < submittedReview.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-slate-700 leading-relaxed italic">"{submittedReview.review}"</p>
+                    <p className="text-xs font-semibold text-slate-900 mt-3">{submittedReview.fullName}</p>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-4">
+                    You have already submitted your review. You can now read your review and reviews from other students below.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <Star size={18} className="text-amber-500" /> Submit a Review
+                  </h3>
+                  {reviewMessage && (
+                    <div className="mb-4 p-3 rounded-xl text-sm border animate-fade-in bg-red-50 text-red-700 border-red-200">
+                      {reviewMessage}
+                    </div>
+                  )}
+                  <form onSubmit={handleReviewSubmit} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="Your name"
+                        value={reviewForm.fullName}
+                        onChange={(e) => setReviewForm({ ...reviewForm, fullName: e.target.value })}
+                        className="input-field"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Rating</label>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                            className="p-1 transition-transform hover:scale-110"
+                          >
+                            <Star
+                              size={24}
+                              className={star <= reviewForm.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Your Review</label>
+                      <textarea
+                        placeholder="Share your experience..."
+                        value={reviewForm.review}
+                        onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
+                        className="input-field min-h-[100px]"
+                        required
+                        maxLength={2000}
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={reviewSubmitting}
+                      className="btn btn-primary w-full shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
+                    >
+                      {reviewSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 size={16} className="animate-spin" /> Submitting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Send size={16} /> Submit Review
+                        </span>
+                      )}
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
 
@@ -499,7 +586,7 @@ const Home = () => {
               reviews.map((r, i) => (
                 <div
                   key={r._id}
-                  className="scroll-reveal card p-8 hover:-translate-y-2 hover:shadow-xl transition-all duration-500 bg-white/80 backdrop-blur-sm"
+                  className="scroll-reveal cinematic-card p-8 bg-white/80 backdrop-blur-sm"
                   style={{ transitionDelay: `${0.15 * i}s` }}
                 >
                   <div className="flex gap-1 mb-4">
@@ -554,9 +641,10 @@ const Home = () => {
       {/* Final CTA with Image */}
       <section className="py-20 sm:py-28 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-600/10 via-transparent to-brand-700/10"></div>
-        <div className="absolute top-0 left-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-700/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-600/20 via-transparent to-emerald-500/10"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl animate-drift"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-400/12 rounded-full blur-3xl animate-spotlight"></div>
+        <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -622,3 +710,4 @@ function UserPlus({ size, className }) {
 }
 
 export default Home;
+

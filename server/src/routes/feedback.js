@@ -16,7 +16,7 @@ const createTransporter = () => {
     return null;
   }
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
@@ -30,7 +30,7 @@ const buildFileUrl = (req, filename) => {
   return `${baseUrl}/uploads/${filename}`;
 };
 
-// POST /api/feedback - Submit feedback with optional screenshot
+// POST /api/feedback - Submit Gift form data with a required screenshot
 router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
   try {
     const { fullName, email, phone, issueType, description, additionalComments } = req.body;
@@ -60,7 +60,7 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <h2 style="color: #c17a5c; margin-bottom: 20px;">New Feedback / Bug Report</h2>
+        <h2 style="color: #c17a5c; margin-bottom: 20px;">New Gift Submission</h2>
         <table style="width: 100%; border-collapse: collapse;">
           <tr><td style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-weight: bold; width: 120px;">Name</td><td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${fullName}</td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">Email</td><td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${email}</td></tr>
@@ -75,9 +75,9 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
 
     const confirmationHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-        <h2 style="color: #c17a5c; margin-bottom: 20px;">Thank you for your feedback!</h2>
+        <h2 style="color: #c17a5c; margin-bottom: 20px;">Thank you for your submission!</h2>
         <p>Hi ${fullName},</p>
-        <p>We have received your ${issueType.toLowerCase()} report and our team will review it shortly.</p>
+        <p>We have received your ${issueType.toLowerCase()} message and our team will review it shortly.</p>
         <p style="margin-top: 20px; color: #666; font-size: 12px;">If you need further assistance, please contact us at ${adminEmail}.</p>
       </div>
     `;
@@ -87,7 +87,7 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
         await transporter.sendMail({
           from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
           to: adminEmail,
-          subject: `New Feedback: ${issueType} from ${fullName}`,
+          subject: `New Gift Submission: ${issueType} from ${fullName}`,
           html: emailHtml,
           attachments: [{
             filename: req.file.originalname,
@@ -98,26 +98,26 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
         await transporter.sendMail({
           from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
           to: email,
-          subject: 'Thank you for your feedback',
+          subject: 'Thank you for your Gift submission',
           html: confirmationHtml
         });
       } catch (emailErr) {
         console.error('Email sending failed:', emailErr);
       }
     } else {
-      console.log('--- FEEDBACK EMAIL (Admin) ---');
+      console.log('--- GIFT EMAIL (Admin) ---');
       console.log(`To: ${adminEmail}`);
-      console.log(`Subject: New Feedback: ${issueType} from ${fullName}`);
+      console.log(`Subject: New Gift Submission: ${issueType} from ${fullName}`);
       console.log(emailHtml);
       console.log('--- CONFIRMATION EMAIL ---');
       console.log(`To: ${email}`);
       console.log(confirmationHtml);
     }
 
-    res.status(201).json({ message: 'Feedback submitted successfully', feedback });
+    res.status(201).json({ message: 'Gift submitted successfully', feedback });
   } catch (error) {
-    console.error('Feedback submission error:', error);
-    res.status(500).json({ message: 'Error submitting feedback' });
+    console.error('Gift submission error:', error);
+    res.status(500).json({ message: 'Error submitting Gift form' });
   }
 });
 

@@ -1,6 +1,6 @@
-# BPSMV Resource Hub 🎓
+# BPSMV Resource Hub
 
-A professional, responsive university resource hub for BPSMV students. Upload, discover, and discuss subject-wise PDFs, notes, links, and previous year question papers.
+A responsive university resource hub for BPSMV students. Students can upload, discover, view, and discuss subject-wise PDFs, notes, links, syllabi, and previous year question papers.
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
@@ -8,71 +8,72 @@ A professional, responsive university resource hub for BPSMV students. Upload, d
 ![Database](https://img.shields.io/badge/database-MongoDB-47A248)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## 🚀 Features
+## Features
 
-- **Dual Authentication**: Google OAuth OR email/password login.
-- **Guest Mode**: One-click "Enter as Guest" — no registration needed.
-- **Personalized Dashboard**: Filters subjects by your degree and branch.
-- **Resource Explorer**: Search & filter by degree, branch, semester, year, type, and subject.
-- **Upload System**: Upload PDF notes, question papers, external links, and syllabi.
-- **PDF Viewer**: Clean, responsive iframe preview with download capability.
-- **Subject Discussion Board**: Public chat/comments for every subject.
-- **Admin Panel**: Moderate resources (admin role).
-- **Fully Responsive**: Mobile, tablet, laptop, and desktop.
-- **Modern Light Theme**: Professional UI with Tailwind CSS.
+- Dual authentication with Google OAuth or email/password login.
+- Guest mode for quick access without registration.
+- Personalized dashboard filtered by degree and branch.
+- Resource explorer with search and filters for degree, branch, semester, year, type, and subject.
+- Upload system for PDFs, notes, question papers, external links, and syllabi.
+- PDF viewer with preview and download support.
+- Subject discussion board for student comments.
+- Student reviews with one review allowed per person.
+- Gift section for reporting real bugs and genuine issues.
+- Accepted genuine issues are eligible for a Rs. 10 gift.
+- Gift submissions are saved and emailed to `priyankakhasa937@gmail.com`.
+- Admin panel for resource moderation.
+- Fully responsive layout for mobile, tablet, laptop, and desktop.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Stack |
 |---|---|
-| Frontend | React.js 19 (Vite), React Router, Tailwind CSS, Lucide React |
-| Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs |
-| Database | MongoDB (Mongoose ODM) |
-| File Storage | Local disk (`server/uploads/`) — no Cloudinary required |
+| Frontend | React 19, Vite, React Router, Tailwind CSS, Lucide React |
+| Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs, Nodemailer |
+| Database | MongoDB with Mongoose |
+| File Storage | Local disk in `server/uploads/` |
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 bpsmv-resource-hub/
-├── client/                  # React Frontend (Vite)
-│   ├── src/
-│   │   ├── components/      # Navbar, Layout, ProtectedRoute
-│   │   ├── context/         # AuthContext (global auth state)
-│   │   ├── pages/           # All pages
-│   │   │   ├── Home.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Onboarding.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Resources.jsx
-│   │   │   ├── UploadPage.jsx
-│   │   │   ├── PDFViewer.jsx
-│   │   │   ├── Chat.jsx
-│   │   │   ├── Profile.jsx
-│   │   │   └── Admin.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css        # Tailwind + custom theme
-│   ├── index.html
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── postcss.config.js
-│
-├── server/                  # Node/Express Backend
-│   ├── src/
-│   │   ├── config/          # DB, Passport, Local Storage
-│   │   ├── models/          # User, Resource, Subject, Comment
-│   │   ├── routes/          # Auth, Resources, Comments
-│   │   └── app.js           # Server entry point
-│   ├── uploads/             # Local file storage
-│   ├── .env
-│   ├── package.json
-│   ├── seedSubjects.js      # Seed database with subjects
-│   └── fixDB.js             # Fix MongoDB index issues
+|-- client/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- context/
+|   |   |-- pages/
+|   |   |   |-- Admin.jsx
+|   |   |   |-- Chat.jsx
+|   |   |   |-- Dashboard.jsx
+|   |   |   |-- Gift.jsx
+|   |   |   |-- Home.jsx
+|   |   |   |-- Login.jsx
+|   |   |   |-- Onboarding.jsx
+|   |   |   |-- PDFViewer.jsx
+|   |   |   |-- Profile.jsx
+|   |   |   |-- Resources.jsx
+|   |   |   |-- UploadPage.jsx
+|   |   |-- App.jsx
+|   |   |-- main.jsx
+|   |   |-- index.css
+|   |-- package.json
+|   |-- tailwind.config.js
+|
+|-- server/
+|   |-- src/
+|   |   |-- config/
+|   |   |-- models/
+|   |   |-- routes/
+|   |   |-- app.js
+|   |-- uploads/
+|   |-- package.json
+|   |-- seedSubjects.js
+|   |-- fixDB.js
 ```
 
-## ⚙️ Environment Setup
+## Environment Setup
 
-Create a `.env` file inside `server/` (if not already present):
+Create a `.env` file inside `server/`:
 
 ```env
 PORT=5000
@@ -80,123 +81,123 @@ MONGO_URI=mongodb://localhost:27017/bpsmv-resource-hub
 JWT_SECRET=your_jwt_secret_here
 CLIENT_URL=http://localhost:5173
 
-# Optional — only if you have valid Google OAuth credentials
+# Gift submission email destination
+ADMIN_EMAIL=priyankakhasa937@gmail.com
+
+# Required for real email delivery
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_sender_email@gmail.com
+SMTP_PASS=your_app_password
+
+# Optional Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 SESSION_SECRET=your_session_secret_here
 ```
 
-> **Note**: Google OAuth is **optional**. The app works fully with email/password, guest mode, and local file storage.
+If SMTP credentials are not configured, Gift submissions are still saved in MongoDB and the email content is printed in the server console.
 
-## 💻 How to Run Locally
+## Run Locally
 
-### Prerequisites
-- Node.js (v18+)
-- MongoDB running locally or MongoDB Atlas URI
+### Backend
 
-### 1. Backend Setup
 ```bash
 cd bpsmv-resource-hub/server
 npm install
-```
-
-Ensure MongoDB is running, then start the server:
-```bash
 node src/app.js
 ```
 
-Server will run on `http://localhost:5000`.
+The backend runs on `http://localhost:5000`.
 
-### 2. Fix MongoDB Indexes (If registration fails)
-If you see "Server error during registration", run:
-```bash
-node fixDB.js
-```
-Then restart the server.
+### Frontend
 
-### 3. Seed Subjects (First Time Only)
-```bash
-node seedSubjects.js
-```
-
-### 4. Frontend Setup
 ```bash
 cd bpsmv-resource-hub/client
 npm install
 npm run dev
 ```
 
-Frontend will run on `http://localhost:5173`.
+The frontend runs on `http://localhost:5173`.
 
-### 5. Create an Admin User (Optional)
-After signing up via email or guest mode, manually update the user's role in MongoDB:
-```js
-db.users.updateOne({ email: "your@email.com" }, { $set: { role: "admin" } })
+### Seed Subjects
+
+Run this once after the database is connected:
+
+```bash
+cd bpsmv-resource-hub/server
+node seedSubjects.js
 ```
 
-## 🎨 Design System
+### Fix MongoDB Indexes
 
-- **Background**: `#f8fafc` (slate-50)
-- **Headings/Text**: `#111827` (slate-900) / `#1e293b` (slate-800)
-- **Primary Accent**: `#2563eb` (brand-600)
-- **Cards**: White with subtle border and shadow
-- **Font**: Inter (body) + Outfit (headings)
+If registration fails because of an old index, run:
 
-## 🔐 Auth & Security
+```bash
+cd bpsmv-resource-hub/server
+node fixDB.js
+```
 
-- JWT tokens stored in HTTP-only cookies
-- Passwords hashed with bcryptjs
-- All upload/delete/comment routes protected
-- Ownership checks before delete operations
-- Only uploader or admin can delete a resource
-- Only comment owner or admin can delete a comment
-- Guest accounts are real users with auto-generated credentials
-
-## 📄 API Endpoints
+## API Endpoints
 
 ### Auth
-- `GET /api/auth/google` — Initiate Google Login (optional)
-- `GET /api/auth/google/callback` — Google Callback (optional)
-- `POST /api/auth/register` — Email Register
-- `POST /api/auth/login` — Email Login
-- `POST /api/auth/logout` — Logout
-- `GET /api/auth/me` — Get current user
-- `POST /api/auth/onboard` — Complete onboarding
-- `PUT /api/auth/profile` — Update profile
+
+- `GET /api/auth/google` - Start Google login.
+- `GET /api/auth/google/callback` - Google login callback.
+- `POST /api/auth/register` - Register with email and password.
+- `POST /api/auth/login` - Log in with email and password.
+- `POST /api/auth/logout` - Log out.
+- `GET /api/auth/me` - Get the current user.
+- `POST /api/auth/onboard` - Complete onboarding.
+- `PUT /api/auth/profile` - Update profile.
 
 ### Resources
-- `GET /api/resources/all` — List all resources (with search/filter)
-- `GET /api/resources/subjects` — List subjects
-- `GET /api/resources/filter-options` — Get degrees/branches for filters
-- `GET /api/resources/subject/:id` — Get resources for a subject
-- `GET /api/resources/:id` — Get single resource
-- `POST /api/resources/add` — Upload resource (auth + file upload)
-- `DELETE /api/resources/:id` — Delete resource (auth + ownership check)
+
+- `GET /api/resources/all` - List resources with search and filters.
+- `GET /api/resources/subjects` - List subjects.
+- `GET /api/resources/filter-options` - Get degree and branch filter options.
+- `GET /api/resources/subject/:id` - Get resources for a subject.
+- `GET /api/resources/:id` - Get one resource.
+- `POST /api/resources/add` - Upload a resource.
+- `DELETE /api/resources/:id` - Delete a resource.
 
 ### Comments
-- `GET /api/comments/:subjectId` — Get comments for a subject
-- `POST /api/comments/:subjectId` — Add comment (auth)
-- `DELETE /api/comments/:id` — Delete comment (auth + ownership check)
 
-## 🗺️ Roadmap
+- `GET /api/comments/:subjectId` - Get comments for a subject.
+- `POST /api/comments/:subjectId` - Add a comment.
+- `DELETE /api/comments/:id` - Delete a comment.
 
-- [x] Enterprise-grade authentication system
-- [x] Google OAuth with duplicate account prevention
-- [x] Production-ready error handling
-- [x] Glassmorphism login/signup pages
-- [x] Chat with message grouping, auto-scroll, and typing indicators
-- [x] Skeleton loaders and loading states
-- [x] Code splitting and lazy loading
-- [ ] Admin view for managing subjects/resources without direct DB access
-- [ ] Pagination for subjects/resources at scale
-- [ ] Real-time WebSocket chat
+### Reviews
 
-## 🤝 Contributing
+- `GET /api/reviews/approved` - Show approved student reviews.
+- `POST /api/reviews` - Submit one review per person. After submission, the form is hidden and the student can see their own review with other reviews.
 
-This is currently an academic project. Issues and suggestions are welcome.
+### Gift
 
-## 📄 License
+- `POST /api/feedback` - Submit Gift issue report data with a required screenshot. Accepted genuine bugs or issues are eligible for a Rs. 10 gift. The submission is stored in MongoDB and emailed to `ADMIN_EMAIL`, which defaults to `priyankakhasa937@gmail.com`.
 
-MIT — free to use and adapt with attribution.
+## Auth & Security
 
-*Developed for BPSMV University Students.*
+- Passwords are hashed with bcryptjs.
+- JWT tokens are stored in HTTP-only cookies.
+- Upload, delete, and comment routes are protected where needed.
+- Resource deletion checks ownership or admin role.
+- Guest accounts are real users with generated credentials.
+
+## Roadmap
+
+- [x] Authentication system.
+- [x] Google OAuth with duplicate account prevention.
+- [x] Guest mode.
+- [x] Resource upload and viewer.
+- [x] Subject discussion board.
+- [x] Gift form for genuine bugs/issues, with Rs. 10 reward messaging.
+- [ ] Admin view for managing subjects without direct database access.
+- [ ] Pagination for subjects and resources at scale.
+- [ ] Real-time chat.
+
+## License
+
+MIT - free to use and adapt with attribution.
+
+Developed for BPSMV University students.

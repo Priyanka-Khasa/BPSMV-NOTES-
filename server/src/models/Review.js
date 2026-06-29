@@ -23,6 +23,14 @@ const reviewSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  reviewerKey: {
+    type: String,
+    trim: true,
+    index: true,
+    unique: true,
+    sparse: true,
+    select: false
+  },
   isApproved: {
     type: Boolean,
     default: true
