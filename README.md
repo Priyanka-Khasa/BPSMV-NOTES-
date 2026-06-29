@@ -1,12 +1,33 @@
-# BPSMV Resource Hub
+<div align="center">
+  <img src="client/public/vite.svg" alt="BPSMV Resource Hub logo" width="96" />
 
-A responsive university resource hub for BPSMV students. Students can upload, discover, view, and discuss subject-wise PDFs, notes, links, syllabi, and previous year question papers.
+  # BPSMV Resource Hub
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
-![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)
-![Database](https://img.shields.io/badge/database-MongoDB-47A248)
-![License](https://img.shields.io/badge/license-MIT-blue)
+  <p>
+    A cinematic, responsive university resource hub for BPSMV students.
+  </p>
+
+  ![Status](https://img.shields.io/badge/status-in%20development-yellow)
+  ![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
+  ![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)
+  ![Database](https://img.shields.io/badge/database-MongoDB-47A248)
+  ![License](https://img.shields.io/badge/license-MIT-blue)
+</div>
+
+Students can upload, discover, view, and discuss subject-wise PDFs, notes, links, syllabi, and previous year question papers in one clean academic workspace.
+
+## Preview
+
+<p align="center">
+  <img src="client/public/assets/image1.jpeg" alt="Student studying with laptop and books" width="32%" />
+  <img src="client/public/assets/image5.jpeg" alt="Students collaborating and studying" width="32%" />
+  <img src="client/public/assets/image4.jpeg" alt="Aesthetic study desk" width="32%" />
+</p>
+
+<p align="center">
+  <img src="client/public/assets/image2.png" alt="Study workspace illustration" width="48%" />
+  <img src="client/public/assets/image3.png" alt="Motivational study collage" width="48%" />
+</p>
 
 ## Features
 
