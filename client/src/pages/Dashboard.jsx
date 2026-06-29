@@ -70,23 +70,25 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+    <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
+      <div className="orb -left-24 top-10 w-72 h-72 bg-amber-300/16 animate-drift"></div>
+      <div className="orb right-0 top-1/3 w-96 h-96 bg-emerald-300/12 animate-spotlight"></div>
       {/* Sidebar */}
-      <div className="lg:col-span-3 space-y-4">
+      <div className="relative z-10 lg:col-span-3 space-y-4">
         {/* Profile Card */}
-        <div className="card p-5 hover:shadow-lg transition-all duration-500">
+        <div className="cinematic-card p-5">
           <div className="flex items-center gap-3 mb-4">
             <div className="relative">
               <img
                 src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
                 alt=""
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-brand-100 shadow-sm"
+                className="w-12 h-12 rounded-full object-cover ring-4 ring-white shadow-lg shadow-brand-500/10"
               />
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-brand-500 rounded-full border-2 border-white"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 text-sm truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user?.degree} · {user?.branch}</p>
+              <p className="text-xs text-slate-500">{user?.degree} / {user?.branch}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -101,12 +103,12 @@ const Dashboard = () => {
 
         {/* Stats mini */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="card p-3 text-center hover:scale-[1.02] transition-all duration-300">
+          <div className="cinematic-panel rounded-2xl p-3 text-center hover:scale-[1.02] transition-all duration-300">
             <Layers size={18} className="mx-auto mb-1 text-brand-500" />
             <p className="text-lg font-bold text-slate-900">{subjects.length}</p>
             <p className="text-xs text-slate-500">Subjects</p>
           </div>
-          <div className="card p-3 text-center hover:scale-[1.02] transition-all duration-300">
+          <div className="cinematic-panel rounded-2xl p-3 text-center hover:scale-[1.02] transition-all duration-300">
             <TrendingUp size={18} className="mx-auto mb-1 text-brand-500" />
             <p className="text-lg font-bold text-slate-900">{resources.length}</p>
             <p className="text-xs text-slate-500">Resources</p>
@@ -114,7 +116,7 @@ const Dashboard = () => {
         </div>
 
         {/* Subjects */}
-        <div className="card p-4">
+        <div className="cinematic-card p-4">
           <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <BookOpen size={16} className="text-brand-600" /> Your Subjects
           </h3>
@@ -131,8 +133,8 @@ const Dashboard = () => {
                       onClick={() => fetchResources(sub._id)}
                       className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
                         selectedSubject === sub._id
-                          ? 'bg-brand-50 text-brand-700 font-medium shadow-sm ring-1 ring-brand-200/50'
-                          : 'text-slate-600 hover:bg-slate-50 hover:translate-x-0.5'
+                          ? 'bg-white text-brand-700 font-semibold shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
+                          : 'text-slate-600 hover:bg-white/70 hover:translate-x-0.5 hover:shadow-sm'
                       }`}
                     >
                       {sub.name}
@@ -149,16 +151,16 @@ const Dashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="lg:col-span-9 space-y-4">
+      <div className="relative z-10 lg:col-span-9 space-y-4">
         {/* Header Card */}
-        <div className="card p-5 flex items-center justify-between flex-wrap gap-3 bg-gradient-to-r from-white to-brand-50/30">
+        <div className="cinematic-card p-5 flex items-center justify-between flex-wrap gap-3 bg-gradient-to-r from-white/90 via-brand-50/45 to-emerald-50/35">
           <div>
             <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-              {selectedSubjectObj ? selectedSubjectObj.name : 'Dashboard'}
+              {selectedSubjectObj ? selectedSubjectObj.name : `Welcome, ${user?.name?.split(' ')[0] || 'Student'}`}
               {!selectedSubject && <Sparkles size={18} className="text-brand-500 animate-wiggle" />}
             </h1>
             <p className="text-sm text-slate-500">
-              {selectedSubjectObj ? `${selectedSubjectObj.degree} · ${selectedSubjectObj.branch} · Sem ${selectedSubjectObj.semester}` : 'Select a subject to view resources'}
+              {selectedSubjectObj ? `${selectedSubjectObj.degree} / ${selectedSubjectObj.branch} / Sem ${selectedSubjectObj.semester}` : 'Choose a subject and continue your study flow'}
             </p>
           </div>
           {selectedSubject && (
@@ -174,27 +176,28 @@ const Dashboard = () => {
         </div>
 
         {!selectedSubject ? (
-          <div className="card p-8 sm:p-12 text-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-brand-100/50 rounded-full blur-3xl -z-0 group-hover:scale-150 transition-transform duration-700"></div>
+          <div className="cinematic-card p-8 sm:p-12 text-center relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-56 h-56 bg-brand-100/60 rounded-full blur-3xl -z-0 group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="absolute bottom-0 left-0 w-56 h-56 bg-emerald-100/45 rounded-full blur-3xl -z-0 animate-spotlight"></div>
             <div className="relative z-10">
               <div className="relative w-full max-w-xs mx-auto mb-6">
-                <div className="absolute -inset-3 bg-gradient-to-br from-brand-100/60 to-amber-100/40 rounded-3xl blur-xl"></div>
+                <div className="absolute -inset-5 bg-gradient-to-br from-brand-100/70 via-amber-100/50 to-emerald-100/40 rounded-3xl blur-xl"></div>
                 <img
                   src="/image4.jpeg"
                   alt="Bright aesthetic study desk"
-                  className="relative w-full h-auto rounded-2xl shadow-xl shadow-brand-500/10 object-cover ring-1 ring-brand-200/30"
+                  className="relative w-full h-auto rounded-2xl shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-transform duration-700 group-hover:scale-[1.02]"
                 />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h2>
-              <p className="text-slate-500 mb-6 max-w-md mx-auto">Select a subject from the sidebar to view notes, question papers, and shared resources.</p>
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h2>
+              <p className="text-slate-500 mb-6 max-w-md mx-auto">Your dashboard is ready. Pick a subject to open notes, question papers, discussions, and shared resources.</p>
               <button onClick={() => navigate('/resources')} className="btn btn-primary shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5">
                 Explore All Resources <ArrowRight size={16} className="animate-bounce-x" />
               </button>
             </div>
           </div>
         ) : resources.length === 0 ? (
-          <div className="card p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="cinematic-card p-12 text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-white to-brand-50 text-brand-300 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/10 ring-1 ring-white">
               <FileText size={32} />
             </div>
             <h2 className="text-lg font-semibold text-slate-900 mb-2">No resources yet</h2>
@@ -206,7 +209,7 @@ const Dashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
             {resources.map((res, idx) => (
-              <div key={res._id} className="card p-5 flex flex-col group hover:shadow-xl hover:-translate-y-1 transition-all duration-500">
+              <div key={res._id} className="cinematic-card p-5 flex flex-col group">
                 <div className="flex items-center justify-between mb-3">
                   <span className={`badge ${
                     res.resourceType === 'Note' ? 'bg-brand-50 text-brand-700 ring-1 ring-brand-200/50' :
@@ -222,7 +225,7 @@ const Dashboard = () => {
                 </div>
                 <h3 className="font-semibold text-slate-900 mb-1 line-clamp-2 group-hover:text-brand-700 transition-colors duration-300">{res.title}</h3>
                 {res.year && <p className="text-xs text-slate-500 mb-1">Year: {res.year}</p>}
-                <p className="text-xs text-slate-400 mb-4">By {res.uploaderName} · {new Date(res.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs text-slate-400 mb-4">By {res.uploaderName} / {new Date(res.createdAt).toLocaleDateString()}</p>
                 <div className="mt-auto">
                   {res.resourceType === 'Link' ? (
                     <a href={res.linkUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary w-full text-sm py-2 hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 transition-all duration-300">
@@ -358,3 +361,4 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
 };
 
 export default Dashboard;
+

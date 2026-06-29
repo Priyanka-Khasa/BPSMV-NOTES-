@@ -16,7 +16,7 @@ const reviewLimiter = rateLimit({
 // POST /api/reviews - Create a review (Public)
 router.post('/', reviewLimiter, async (req, res) => {
   try {
-    const { fullName, rating, review, profileImage } = req.body;
+    const { fullName, rating, review, profileImage, reviewerKey } = req.body;
 
     if (!fullName || !fullName.trim()) {
       return res.status(400).json({ message: 'Full name is required' });
@@ -27,18 +27,28 @@ router.post('/', reviewLimiter, async (req, res) => {
     if (!review || !review.trim()) {
       return res.status(400).json({ message: 'Review text is required' });
     }
+    if (reviewerKey) {
+      const existingReview = await Review.findOne({ reviewerKey: reviewerKey.trim() }).select('_id');
+      if (existingReview) {
+        return res.status(409).json({ message: 'You have already submitted a review.' });
+      }
+    }
 
     const newReview = await Review.create({
       fullName: fullName.trim(),
       rating: parseInt(rating),
       review: review.trim(),
       profileImage: profileImage || null,
+      reviewerKey: reviewerKey ? reviewerKey.trim() : undefined,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent']
     });
 
     res.status(201).json(newReview);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ message: 'You have already submitted a review.' });
+    }
     console.error('Review creation error:', error);
     res.status(500).json({ message: 'Error creating review' });
   }

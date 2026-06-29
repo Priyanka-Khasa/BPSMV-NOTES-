@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight, Flag, Gift } from 'lucide-react';
+import { BookOpen, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight, Gift } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -17,8 +18,7 @@ const Navbar = () => {
     { path: '/resources', label: 'Resources', icon: Search },
     { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/chat', label: 'Discussion', icon: MessageSquare },
-    { path: '/gift', label: 'Gift', icon: Gift },
-    { path: '/feedback', label: 'Feedback', icon: Flag },
+    { path: '/gift', label: 'Gift', icon: Gift, colorful: true },
   ];
 
   const adminNav = { path: '/admin', label: 'Admin', icon: Shield };
@@ -29,15 +29,12 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${isLanding ? 'bg-white/60 backdrop-blur-xl border-b border-white/20' : 'bg-white/80 backdrop-blur-md border-b border-slate-200/80'}`}>
+    <nav className={`sticky top-0 z-50 transition-all duration-300 shadow-sm shadow-brand-500/5 ${isLanding ? 'bg-white/58 backdrop-blur-2xl border-b border-white/50' : 'bg-white/78 backdrop-blur-2xl border-b border-white/60'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2 group">
-            <div className="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/20 group-hover:shadow-brand-500/30 group-hover:scale-105 transition-all duration-300 overflow-hidden">
-              <img src="/vite.svg" alt="BPSMV Hub" className="w-6 h-6 object-contain" />
-            </div>
-            <span className="font-display font-bold text-lg text-slate-900 hidden sm:block tracking-tight">BPSMV Hub</span>
+          <Link to={isAuthenticated ? '/dashboard' : '/'} className="group">
+            <BrandLogo size="md" className="transition-transform duration-300 group-hover:scale-[1.02]" />
           </Link>
 
           {/* Desktop Nav */}
@@ -46,17 +43,28 @@ const Navbar = () => {
               <>
                 {appNavLinks.map((link) => {
                   const Icon = link.icon;
+                  const active = isActive(link.path);
                   return (
                     <button
                       key={link.path}
                       onClick={() => navigate(link.path)}
                       className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                        isActive(link.path)
-                          ? 'bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-200/50'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 hover:scale-[1.02]'
+                        active
+                          ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
                       }`}
                     >
-                      <Icon size={16} />
+                      {link.colorful ? (
+                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center shadow-sm transition-all duration-300 ${
+                          active
+                            ? 'bg-gradient-to-br from-amber-300 via-pink-300 to-emerald-300 text-white shadow-amber-200/70'
+                            : 'bg-gradient-to-br from-amber-100 via-pink-100 to-emerald-100 text-amber-600 group-hover:scale-105'
+                        }`}>
+                          <Icon size={15} fill="currentColor" strokeWidth={2.4} />
+                        </span>
+                      ) : (
+                        <Icon size={16} />
+                      )}
                       {link.label}
                     </button>
                   );
@@ -66,8 +74,8 @@ const Navbar = () => {
                     onClick={() => navigate('/admin')}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                       isActive('/admin')
-                        ? 'bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-200/50'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 hover:scale-[1.02]'
+                        ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
                     }`}
                   >
                     <Shield size={16} />
@@ -81,8 +89,8 @@ const Navbar = () => {
                   onClick={() => navigate('/')}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                     isActive('/')
-                      ? 'bg-brand-50 text-brand-700 shadow-sm ring-1 ring-brand-200/50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 hover:scale-[1.02]'
+                      ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
                   }`}
                 >
                   <Home size={16} />
@@ -136,17 +144,28 @@ const Navbar = () => {
             <>
               {appNavLinks.map((link) => {
                 const Icon = link.icon;
+                const active = isActive(link.path);
                 return (
                   <button
                     key={link.path}
                     onClick={() => { navigate(link.path); setMenuOpen(false); }}
                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      isActive(link.path)
+                      active
                         ? 'bg-brand-50 text-brand-700 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <Icon size={18} />
+                    {link.colorful ? (
+                      <span className={`w-7 h-7 rounded-lg flex items-center justify-center shadow-sm ${
+                        active
+                          ? 'bg-gradient-to-br from-amber-300 via-pink-300 to-emerald-300 text-white'
+                          : 'bg-gradient-to-br from-amber-100 via-pink-100 to-emerald-100 text-amber-600'
+                      }`}>
+                        <Icon size={16} fill="currentColor" strokeWidth={2.4} />
+                      </span>
+                    ) : (
+                      <Icon size={18} />
+                    )}
                     {link.label}
                   </button>
                 );
