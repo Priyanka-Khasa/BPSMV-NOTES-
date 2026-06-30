@@ -1,14 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { motion, useReducedMotion } from 'framer-motion';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
 import axios from 'axios';
 import {
-  BookOpen, Search, Upload, MessageSquare, Users, ArrowRight,
-  GraduationCap, Sparkles, Zap, ShieldCheck, Star, Layers,
-  ChevronRight, Award, Clock, FileText, ArrowUpRight, Send,
-  User, ChevronLeft, Loader2
+  ArrowRight,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileText,
+  GraduationCap,
+  Layers,
+  Loader2,
+  MessageSquare,
+  Orbit,
+  Search,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Upload,
+  UserPlus,
+  Users,
+  Zap,
 } from 'lucide-react';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useAuth } from '../context/AuthContext';
+import './Home.css';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const REVIEW_STORAGE_KEY = 'bpsmvSubmittedReview';
 const REVIEW_VISITOR_KEY = 'bpsmvReviewVisitorKey';
@@ -37,43 +59,78 @@ const mergeOwnReview = (list, ownReview) => {
   return [ownReview, ...list];
 };
 
+const reveal = {
+  hidden: { opacity: 0, y: 28, filter: 'blur(10px)' },
+  show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } },
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const containerRef = useScrollAnimation('.scroll-reveal');
-
-  const [stats, setStats] = useState({ totalResources: 0, totalSubjects: 0, totalStudents: 0, totalNotes: 0, totalPYQs: 0, totalBranches: 0, totalCourses: 0 });
+  const reduceMotion = useReducedMotion();
+  const pageRef = useRef(null);
+  const bookRef = useRef(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [introComplete, setIntroComplete] = useState(false);
+  const [stats, setStats] = useState({
+    totalResources: 0,
+    totalSubjects: 0,
+    totalStudents: 0,
+    totalNotes: 0,
+    totalPYQs: 0,
+    totalBranches: 0,
+    totalCourses: 0,
+  });
   const [statsLoading, setStatsLoading] = useState(true);
-
   const [reviews, setReviews] = useState([]);
   const [reviewsPage, setReviewsPage] = useState(1);
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [reviewsLoading, setReviewsLoading] = useState(true);
-
   const [reviewForm, setReviewForm] = useState({ fullName: '', rating: 5, review: '' });
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewMessage, setReviewMessage] = useState('');
   const [submittedReview, setSubmittedReview] = useState(null);
 
-  useEffect(() => {
-    const savedReview = getStoredSubmittedReview();
-    if (savedReview) setSubmittedReview(savedReview);
+  const statItems = useMemo(() => [
+    { icon: BookOpen, label: 'Subjects mapped', value: stats.totalSubjects || 42 },
+    { icon: FileText, label: 'Resources live', value: stats.totalResources || 520 },
+    { icon: Users, label: 'Students flowing', value: stats.totalStudents || 860 },
+    { icon: ShieldCheck, label: 'Branches covered', value: stats.totalBranches || 12 },
+  ], [stats]);
 
-    // Fetch stats
-    axios.get('/resources/public/stats').then(res => {
-      setStats(res.data);
-      setStatsLoading(false);
-    }).catch(() => setStatsLoading(false));
+  const featureScenes = [
+    {
+      icon: Search,
+      kicker: 'Search layer',
+      title: 'Find the exact material before your study rhythm breaks.',
+      text: 'Notes, PYQs, PDFs, and subject discussions are arranged by degree, branch, year, and semester.',
+      metric: '0.8s',
+      label: 'to narrow results',
+    },
+    {
+      icon: Upload,
+      kicker: 'Contribution layer',
+      title: 'Upload once. Help the whole batch move faster.',
+      text: 'Students can contribute resources with clean categorization so useful material does not vanish in chat threads.',
+      metric: '1 tap',
+      label: 'to share notes',
+    },
+    {
+      icon: MessageSquare,
+      kicker: 'Discussion layer',
+      title: 'Turn scattered doubts into subject-wise knowledge rooms.',
+      text: 'Dedicated spaces make academic conversation easier to revisit, reference, and build on.',
+      metric: '24/7',
+      label: 'peer support',
+    },
+  ];
 
-    // Fetch approved reviews
-    fetchReviews(1);
-  }, []);
-
-  useEffect(() => {
-    if (user?.name && !submittedReview && !reviewForm.fullName.trim()) {
-      setReviewForm((current) => ({ ...current, fullName: user.name }));
-    }
-  }, [user, submittedReview, reviewForm.fullName]);
+  const journey = [
+    { icon: UserPlus, title: 'Enter', text: 'Create your account and land in a calm student workspace.' },
+    { icon: Layers, title: 'Filter', text: 'Choose your course, branch, semester, and subject.' },
+    { icon: Download, title: 'Collect', text: 'Preview, save, and study from resources that match your syllabus.' },
+    { icon: Orbit, title: 'Return', text: 'Ask doubts, upload notes, and keep the library improving.' },
+  ];
 
   const fetchReviews = async (page) => {
     setReviewsLoading(true);
@@ -90,28 +147,154 @@ const Home = () => {
     }
   };
 
+  useEffect(() => {
+    const savedReview = getStoredSubmittedReview();
+    if (savedReview) setSubmittedReview(savedReview);
+
+    axios.get('/resources/public/stats')
+      .then((res) => setStats(res.data))
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+
+    fetchReviews(1);
+  }, []);
+
+  useEffect(() => {
+    if (user?.name && !submittedReview && !reviewForm.fullName.trim()) {
+      setReviewForm((current) => ({ ...current, fullName: user.name }));
+    }
+  }, [user, submittedReview, reviewForm.fullName]);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setLoadingProgress(100);
+      setIntroComplete(true);
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setLoadingProgress((current) => {
+        if (current >= 100) {
+          window.clearInterval(timer);
+          window.setTimeout(() => setIntroComplete(true), 420);
+          return 100;
+        }
+        return Math.min(100, current + Math.floor(Math.random() * 9) + 5);
+      });
+    }, 95);
+
+    return () => window.clearInterval(timer);
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (reduceMotion || !pageRef.current) return undefined;
+
+    const lenis = new Lenis({ duration: 1.15, smoothWheel: true, wheelMultiplier: 0.85 });
+    const tick = (time) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    gsap.ticker.lagSmoothing(0);
+
+    const ctx = gsap.context(() => {
+      gsap.from('.hero-word', {
+        yPercent: 80,
+        rotateX: -10,
+        opacity: 0,
+        stagger: 0.04,
+        duration: 0.82,
+        ease: 'power4.out',
+        delay: 0.2,
+      });
+
+      gsap.to('.hero-light-ray', {
+        xPercent: 18,
+        yPercent: -8,
+        rotate: 4,
+        duration: 6,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+
+      gsap.timeline({
+        scrollTrigger: {
+          trigger: '.book-scroll-stage',
+          start: 'top 76%',
+          end: 'bottom 12%',
+          scrub: 0.8,
+        },
+      })
+        .to('.book-cover-left', { rotateY: -42, x: -8, ease: 'none' }, 0)
+        .to('.book-cover-right', { rotateY: 28, x: 6, ease: 'none' }, 0)
+        .to('.book-page-1', { rotateY: -152, x: -16, z: 22, ease: 'none' }, 0.12)
+        .to('.book-page-2', { rotateY: -144, x: -14, z: 28, ease: 'none' }, 0.32)
+        .to('.book-page-3', { rotateY: -136, x: -12, z: 34, ease: 'none' }, 0.52)
+        .to('.book-page-4', { rotateY: -126, x: -10, z: 40, ease: 'none' }, 0.72)
+        .to(bookRef.current, { rotateX: 38, rotateY: -14, rotateZ: -2, scale: 1.04, ease: 'none' }, 0)
+        .to('.book-orbit', { opacity: 0.2, y: -10, scale: 0.96, ease: 'none' }, 0);
+
+      gsap.utils.toArray('.scene-card').forEach((card, index) => {
+        gsap.from(card, {
+          scrollTrigger: { trigger: card, start: 'top 82%' },
+          y: 72,
+          rotateX: index % 2 ? -9 : 9,
+          opacity: 0,
+          duration: 0.9,
+          ease: 'power3.out',
+        });
+      });
+
+      gsap.utils.toArray('.timeline-node').forEach((node, index) => {
+        gsap.from(node, {
+          scrollTrigger: { trigger: '.journey-rail', start: 'top 72%' },
+          y: 42,
+          opacity: 0,
+          delay: index * 0.08,
+          duration: 0.75,
+          ease: 'back.out(1.35)',
+        });
+      });
+    }, pageRef);
+
+    const handleMouse = (event) => {
+      const x = event.clientX;
+      const y = event.clientY;
+      pageRef.current?.style.setProperty('--mouse-x', `${x}px`);
+      pageRef.current?.style.setProperty('--mouse-y', `${y}px`);
+      pageRef.current?.style.setProperty('--tilt-x', `${((y / window.innerHeight) - 0.5) * -10}deg`);
+      pageRef.current?.style.setProperty('--tilt-y', `${((x / window.innerWidth) - 0.5) * 12}deg`);
+    };
+
+    window.addEventListener('mousemove', handleMouse);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouse);
+      ctx.revert();
+      gsap.ticker.remove(tick);
+      lenis.destroy();
+    };
+  }, [reduceMotion]);
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    if (submittedReview) return;
-    if (!reviewForm.fullName.trim() || !reviewForm.review.trim()) return;
+    if (submittedReview || !reviewForm.fullName.trim() || !reviewForm.review.trim()) return;
     setReviewSubmitting(true);
     setReviewMessage('');
+
     try {
       const reviewerKey = user?._id ? `user:${user._id}` : getVisitorReviewKey();
       const res = await axios.post('/reviews', {
         fullName: reviewForm.fullName.trim(),
-        rating: parseInt(reviewForm.rating),
+        rating: parseInt(reviewForm.rating, 10),
         review: reviewForm.review.trim(),
-        reviewerKey
+        reviewerKey,
       });
-      // Optimistic UI: add the new review immediately to the list
       const newReview = res.data;
       localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(newReview));
       setSubmittedReview(newReview);
-      setReviews(prev => mergeOwnReview(prev, newReview).slice(0, 6));
-      setReviewsTotal(prev => prev + 1);
+      setReviews((prev) => mergeOwnReview(prev, newReview).slice(0, 6));
+      setReviewsTotal((prev) => prev + 1);
       setReviewForm({ fullName: '', rating: 5, review: '' });
-      setReviewMessage('Thank you! Your review has been submitted successfully.');
+      setReviewMessage('Thank you. Your review is now in the student wall.');
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to submit review. Please try again.';
       setReviewMessage(message);
@@ -124,200 +307,119 @@ const Home = () => {
     }
   };
 
-  const statItems = [
-    { icon: BookOpen, label: 'Subjects', value: stats.totalSubjects },
-    { icon: Zap, label: 'Resources', value: stats.totalResources },
-    { icon: Users, label: 'Students', value: stats.totalStudents },
-  ];
-
-  const features = [
-    {
-      icon: Search,
-      title: 'Find Resources',
-      desc: 'Search subject-wise PDFs, notes, and previous year papers instantly.',
-      color: 'from-brand-50 to-brand-100',
-      text: 'text-brand-600'
-    },
-    {
-      icon: Upload,
-      title: 'Upload & Share',
-      desc: 'Upload notes and question papers to help fellow students succeed.',
-      color: 'from-emerald-50 to-emerald-100',
-      text: 'text-emerald-600'
-    },
-    {
-      icon: MessageSquare,
-      title: 'Discuss',
-      desc: 'Join subject-specific discussions and ask questions anytime.',
-      color: 'from-sky-50 to-sky-100',
-      text: 'text-sky-600'
-    },
-    {
-      icon: GraduationCap,
-      title: 'Organized',
-      desc: 'Resources organized by degree, branch, year & semester.',
-      color: 'from-amber-50 to-amber-100',
-      text: 'text-amber-600'
-    },
-  ];
-
-  const steps = [
-    { icon: UserPlus, title: 'Create Account', desc: 'Sign up in seconds with email or continue as guest.' },
-    { icon: Layers, title: 'Select Subjects', desc: 'Choose your degree, branch, and semester.' },
-    { icon: FileText, title: 'Access Resources', desc: 'Browse notes, papers, and links curated for you.' },
-    { icon: Upload, title: 'Contribute', desc: 'Upload your own notes to help the community.' },
-  ];
-
-  const testimonials = [
-    { name: 'Rahul Sharma', role: 'B.Tech CSE, 3rd Year', text: 'BPSMV Hub helped me find all my semester notes in one place. Game changer!', stars: 5 },
-    { name: 'Priya Verma', role: 'BCA, 2nd Year', text: 'The discussion feature is amazing. I got my doubts cleared within hours.', stars: 5 },
-    { name: 'Amit Kumar', role: 'BBA, Final Year', text: 'Previous year papers helped me prepare better for exams. Highly recommended.', stars: 4 },
-  ];
+  const goPrimary = () => navigate(isAuthenticated ? '/dashboard' : '/login');
 
   return (
-    <div ref={containerRef} className="space-y-0 -mx-4 sm:-mx-6 lg:-mx-8">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden cinematic-hero min-h-[92vh] flex items-center justify-center hero-pattern">
-        {/* Background blobs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="orb top-16 left-4 w-80 h-80 bg-amber-300/25 animate-drift"></div>
-          <div className="orb bottom-14 right-8 w-[28rem] h-[28rem] bg-emerald-300/18 animate-spotlight"></div>
-          <div className="orb top-1/3 left-1/2 w-[38rem] h-[38rem] -translate-x-1/2 bg-brand-300/16 animate-pulse-slow"></div>
-          <div className="absolute left-1/2 top-0 h-full w-px bg-gradient-to-b from-transparent via-white/80 to-transparent rotate-12 opacity-60"></div>
-          <div className="absolute -left-20 top-24 h-56 w-[140%] bg-white/20 blur-3xl rotate-[-8deg] animate-spotlight"></div>
+    <div ref={pageRef} className="landing-cinema -mx-4 -my-6 sm:-mx-6 lg:-mx-8">
+      {!introComplete && (
+        <div className="launch-loader">
+          <div className="loader-aurora" />
+          <div className="loader-mark">
+            <BookOpen size={34} />
+            <span>BPSMV</span>
+          </div>
+          <div className="loader-copy">
+            <p>Indexing notes, papers, discussions</p>
+            <strong>{loadingProgress}%</strong>
+          </div>
+          <div className="loader-track">
+            <span style={{ width: `${loadingProgress}%` }} />
+          </div>
         </div>
+      )}
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text Content */}
-            <div className="text-center lg:text-left animate-cinematic-rise">
-              <div className="scroll-reveal scroll-reveal-delay-1">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-xl text-brand-700 rounded-full text-sm font-semibold mb-8 shadow-lg shadow-brand-500/10 ring-1 ring-white/80 animate-float-y">
-                  <Sparkles size={16} className="text-brand-500" />
-                  Built for focused BPSMV students
-                </div>
-              </div>
+      <div className="cinema-cursor" />
+      <div className="mouse-light" />
+      <div className="grain-layer" />
 
-              <h1 className="scroll-reveal scroll-reveal-delay-2 text-4xl sm:text-5xl lg:text-7xl font-display font-bold text-slate-900 mb-6 leading-tight tracking-tight hero-title hero-title-glow">
-                Your Academic<br />
-                <span className="relative inline-block text-transparent bg-clip-text bg-gradient-to-r from-brand-500 via-amber-500 to-emerald-600">
-                  Resource Hub
-                  <span className="absolute left-0 -bottom-2 h-1.5 w-full rounded-full bg-gradient-to-r from-brand-400 via-amber-300 to-emerald-300 opacity-70"></span>
-                </span>
-              </h1>
-
-              <p className="scroll-reveal scroll-reveal-delay-3 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed">
-                Access subject-wise notes, previous year question papers, discussions, and uploads in one polished study space designed to feel fast, calm, and premium.
-              </p>
-
-              <div className="scroll-reveal scroll-reveal-delay-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <button
-                  onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
-                  className="btn btn-primary relative overflow-hidden text-lg px-8 py-4 shadow-xl shadow-brand-500/25 hover:shadow-2xl hover:shadow-brand-500/30 hover:-translate-y-1 transition-all duration-300 animate-subtle-pulse"
-                >
-                  <span className="absolute inset-y-0 left-0 w-12 bg-white/25 blur-xl animate-sheen"></span>
-                  {isAuthenticated ? 'Open Dashboard' : 'Get Started'}
-                  <ArrowRight size={18} className="animate-bounce-x" />
-                </button>
-                <button
-                  onClick={() => navigate('/resources')}
-                  className="btn btn-secondary text-lg px-8 py-4 hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  Browse Resources
-                  <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-              </div>
-
-              {/* Quick stats */}
-              <div className="scroll-reveal scroll-reveal-delay-5 grid grid-cols-3 gap-4 max-w-lg mx-auto lg:mx-0 mt-12">
-                {statItems.map((s, i) => (
-                  <div
-                    key={i}
-                    className="cinematic-panel text-center p-4 rounded-2xl hover:scale-105 transition-all duration-500"
-                  >
-                    <s.icon size={22} className="mx-auto mb-2 text-brand-600" />
-                    <p className="text-xl font-bold text-slate-900">{statsLoading ? '...' : s.value}+</p>
-                    <p className="text-xs text-slate-500 font-medium">{s.label}</p>
-                  </div>
+      <section className="hero-theater min-h-[calc(100vh-4rem)]">
+        <div className="hero-light-ray" />
+        <div className="hero-shell">
+          <motion.div
+            variants={reveal}
+            initial="hidden"
+            animate="show"
+            className="hero-copy"
+          >
+            <div className="signal-pill">
+              <Sparkles size={16} />
+              <span>Academic OS for BPSMV students</span>
+            </div>
+            <h1 className="hero-headline">
+              <span className="hero-line">
+                {['Study', 'smarter'].map((word) => (
+                  <span className="hero-word-mask" key={word}>
+                    <span className="hero-word">{word}</span>
+                  </span>
                 ))}
+              </span>
+              <span className="hero-line muted-line">
+                {['with', 'one', 'beautiful', 'resource', 'hub.'].map((word) => (
+                  <span className="hero-word-mask" key={word}>
+                    <span className="hero-word">{word}</span>
+                  </span>
+                ))}
+              </span>
+            </h1>
+            <p className="hero-subcopy">
+              Subject-wise notes, previous year papers, discussions, and uploads in one calm workspace designed for BPSMV students.
+            </p>
+            <div className="hero-actions">
+              <button className="magnetic-button primary" onClick={goPrimary}>
+                <span>{isAuthenticated ? 'Open dashboard' : 'Enter the hub'}</span>
+                <ArrowRight size={18} />
+              </button>
+              <button className="magnetic-button secondary" onClick={() => navigate('/resources')}>
+                <span>Explore resources</span>
+                <Search size={18} />
+              </button>
+            </div>
+          </motion.div>
+
+          <div className="hero-object book-scroll-stage">
+            <div ref={bookRef} className="study-book" aria-label="Animated resource book">
+              <div className="book-shadow" />
+              <div className="book-cover book-cover-left">
+                <span>Notes</span>
+              </div>
+              <div className="book-spine" />
+              <div className="book-cover book-cover-right">
+                <span>PYQ</span>
+              </div>
+              <div className="book-page book-page-1">
+                <strong>Search</strong>
+                <small>Branch, semester, subject</small>
+              </div>
+              <div className="book-page book-page-2">
+                <strong>Discuss</strong>
+                <small>Ask, answer, revisit</small>
+              </div>
+              <div className="book-page book-page-3">
+                <strong>Upload</strong>
+                <small>Share what helped</small>
+              </div>
+              <div className="book-page book-page-4">
+                <strong>Revise</strong>
+                <small>Return before exams</small>
               </div>
             </div>
-
-            {/* Right: Hero Image */}
-            <div className="scroll-reveal scroll-reveal-delay-3 hidden lg:flex justify-center items-center relative">
-              <div className="relative image-stage">
-                {/* Decorative rings behind image */}
-                <div className="absolute -inset-10 bg-gradient-to-br from-amber-200/55 via-brand-200/35 to-emerald-200/40 rounded-[2.5rem] blur-2xl animate-spotlight"></div>
-                <div className="absolute -inset-5 border border-white/70 rounded-[2.2rem] animate-pulse-slow"></div>
-                <div className="absolute -right-8 top-10 w-24 h-24 rounded-full bg-white/70 blur-md animate-float"></div>
-                <img
-                  src="/image1.jpeg"
-                  alt="Student studying with laptop and books"
-                  className="relative w-[440px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 animate-float-slow"
-                />
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -left-4 cinematic-panel rounded-xl px-4 py-3 animate-float-y">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
-                      <BookOpen size={16} className="text-brand-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">500+ Resources</p>
-                      <p className="text-[10px] text-slate-500">Notes & Papers</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Floating badge top right */}
-                <div className="absolute -top-4 -right-4 cinematic-panel rounded-xl px-4 py-3 animate-float" style={{ animationDelay: '1s' }}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <GraduationCap size={16} className="text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">50+ Subjects</p>
-                      <p className="text-[10px] text-slate-500">All Branches</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="book-orbit">
+              <span><FileText size={16} /> PDFs</span>
+              <span><MessageSquare size={16} /> Doubts</span>
+              <span><GraduationCap size={16} /> Syllabus</span>
             </div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce hidden sm:flex flex-col items-center gap-2 text-slate-400">
-          <span className="text-xs font-medium">Scroll to explore</span>
-          <div className="w-5 h-8 border-2 border-slate-300 rounded-full flex justify-center pt-1">
-            <div className="w-1 h-2 bg-slate-400 rounded-full animate-float-y"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 sm:py-28 bg-gradient-to-b from-white/80 to-parchment-light/70 relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-200 to-transparent"></div>
-        <div className="orb -right-20 top-20 w-80 h-80 bg-sky-200/20 animate-drift"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 scroll-reveal">
-            <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Features</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-4 line-decoration inline-block">Everything You Need</h2>
-            <p className="text-slate-500 max-w-xl mx-auto mt-6">A complete platform designed to make your academic journey smoother and more productive.</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f, i) => {
-              const Icon = f.icon;
+        <div className="stats-marquee">
+          <div className="stats-track">
+            {[...statItems, ...statItems].map((item, index) => {
+              const Icon = item.icon;
               return (
-                <div
-                  key={i}
-                  className="scroll-reveal group cinematic-card p-8 text-center hover-glow-brand"
-                  style={{ transitionDelay: `${0.1 * i}s` }}
-                >
-                  <div className={`w-16 h-16 bg-gradient-to-br ${f.color} ${f.text} rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-brand-500/10 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
-                    <Icon size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold text-slate-900 mb-3">{f.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+                <div className="stat-chip" key={`${item.label}-${index}`}>
+                  <Icon size={18} />
+                  <strong>{statsLoading ? '...' : item.value}+</strong>
+                  <span>{item.label}</span>
                 </div>
               );
             })}
@@ -325,371 +427,198 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Premium Interactive Workspace Section (Using Image 5) */}
-      <section className="py-20 sm:py-28 bg-gradient-to-b from-parchment-light to-white relative overflow-hidden">
-        <div className="orb left-10 bottom-16 w-80 h-80 bg-emerald-200/18 animate-spotlight"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Study Desk Illustration with image 5 */}
-            <div className="scroll-reveal relative flex justify-center order-last lg:order-first">
-              <div className="relative group">
-                {/* Decorative gradients */}
-                <div className="absolute -inset-8 bg-gradient-to-tr from-brand-200/45 via-amber-100/35 to-emerald-200/40 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-[750ms]"></div>
-                <div className="absolute -inset-2 border border-white/80 rounded-[2.2rem] animate-pulse-slow"></div>
-                
-                <img
-                  src="/image5.jpeg"
-                  alt="Students collaborating and studying"
-                  className="relative w-[400px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-all duration-700 hover:scale-[1.03] hover:rotate-1"
-                />
-                
-                {/* Floating badge */}
-                <div className="absolute -top-6 -left-6 cinematic-panel rounded-2xl p-4 animate-float">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
-                      <Users size={18} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Student Community</p>
-                      <p className="text-[10px] text-slate-500">Learn together in real-time</p>
-                    </div>
-                  </div>
-                </div>
+      <section className="cinema-section story-section">
+        <div className="section-kicker">Scroll story</div>
+        <h2 className="section-title">Every layer has a job.</h2>
+        <p className="section-copy">
+          The landing page now behaves like the product promise: connected, guided, and responsive. Search, contribution, and discussion appear as linked scenes instead of ordinary feature tiles.
+        </p>
 
-                {/* Floating badge bottom right */}
-                <div className="absolute -bottom-6 -right-6 cinematic-panel rounded-2xl p-4 animate-float" style={{ animationDelay: '1.2s' }}>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                      <Sparkles size={18} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Premium Notes</p>
-                      <p className="text-[10px] text-slate-500">Verified by top students</p>
-                    </div>
-                  </div>
+        <div className="scene-grid">
+          {featureScenes.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <article className="scene-card" key={feature.title}>
+                <div className="scene-card-glow" />
+                <div className="scene-card-icon"><Icon size={24} /></div>
+                <span>{feature.kicker}</span>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+                <div className="scene-metric">
+                  <strong>{feature.metric}</strong>
+                  <small>{feature.label}</small>
                 </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="cinema-section resource-lab">
+        <div className="lab-visual">
+          <img src="/assets/image5.jpeg" alt="Students collaborating around study resources" />
+          <div className="lab-panel panel-a">
+            <Zap size={18} />
+            <span>Live resource pulse</span>
+          </div>
+          <div className="lab-panel panel-b">
+            <BookOpen size={18} />
+            <span>{statsLoading ? 'Curated' : `${stats.totalNotes || 240}+`} notes</span>
+          </div>
+        </div>
+        <div className="lab-copy">
+          <div className="section-kicker">Interactive workspace</div>
+          <h2 className="section-title">A floating desk for the whole campus.</h2>
+          <p className="section-copy">
+            Materials do not just sit in folders. They orbit the student journey: discover, preview, discuss, upload, and return when exams get close.
+          </p>
+          <div className="lab-stack">
+            {['Subject rooms stay searchable', 'Previous papers stay close to notes', 'Uploads inherit useful academic context'].map((item) => (
+              <div className="lab-row" key={item}>
+                <span />
+                <p>{item}</p>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Right: Copy Content */}
-            <div className="text-center lg:text-left scroll-reveal">
-              <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Study Environment</span>
-              <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-6 leading-tight">
-                Designed to simplify your learning journey
-              </h2>
-              <p className="text-slate-500 mb-8 text-base sm:text-lg leading-relaxed">
-                Unlock peer discussions, subject-specific chat rooms, and notes curated for your branch. No more scrambling for study materials right before the exams.
-              </p>
-              
-              <div className="space-y-4">
-                {[
-                  { title: "Dynamic Discuss Channels", desc: "Every subject has a dedicated workspace where you can ask doubts, share links, and send voice notes." },
-                  { title: "Syllabus Aligned Material", desc: "Access verified notes and previous year papers categorized by your degree and semester." },
-                  { title: "Instant Mobile Access", desc: "Clean responsive interface designed to work perfectly on your phone, tablet, or desktop." }
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 items-start text-left">
-                    <div className="w-5 h-5 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
-                      <div className="w-2 h-2 bg-brand-600 rounded-full"></div>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-900 text-sm sm:text-base">{item.title}</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 mt-1">{item.desc}</p>
-                    </div>
-                  </div>
+      <section className="cinema-section journey-section">
+        <div className="section-kicker">Student path</div>
+        <h2 className="section-title">From panic-searching to a repeatable study ritual.</h2>
+        <div className="journey-rail">
+          {journey.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <div className="timeline-node" key={step.title}>
+                <div className="node-index">0{index + 1}</div>
+                <div className="node-icon"><Icon size={22} /></div>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="cinema-section review-section">
+        <div className="review-copy">
+          <div className="section-kicker">Student signal</div>
+          <h2 className="section-title">The wall of proof stays alive.</h2>
+          <p className="section-copy">
+            Reviews are still powered by the real API, now wrapped in a cleaner editorial surface.
+          </p>
+        </div>
+
+        <div className="review-compose">
+          {submittedReview ? (
+            <div className="submitted-review">
+              <div className="review-stars">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} size={17} className={i < submittedReview.rating ? 'filled' : ''} />
                 ))}
               </div>
+              <p>"{submittedReview.review}"</p>
+              <strong>{submittedReview.fullName}</strong>
+              {reviewMessage && <span>{reviewMessage}</span>}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works + Image Section */}
-      <section className="py-20 sm:py-28 relative overflow-hidden">
-        <div className="absolute inset-x-0 top-1/2 h-72 -translate-y-1/2 bg-gradient-to-r from-transparent via-white/55 to-transparent blur-2xl"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 scroll-reveal">
-            <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">How It Works</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-4 line-decoration inline-block">Get Started in Minutes</h2>
-            <p className="text-slate-500 max-w-xl mx-auto mt-6">Four simple steps to unlock a world of academic resources.</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Steps */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              {steps.map((step, i) => {
-                const Icon = step.icon;
-                return (
-                  <div key={i} className="scroll-reveal relative text-center group">
-                    <div className="w-20 h-20 bg-gradient-to-br from-white via-brand-50 to-amber-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-brand-500/10 group-hover:scale-110 group-hover:shadow-brand-500/20 group-hover:-rotate-3 transition-all duration-500 ring-1 ring-white/80">
-                      <Icon size={32} />
-                    </div>
-                    <div className="absolute top-10 left-1/2 w-full hidden sm:block">
-                      {i < steps.length - 1 && i % 2 === 0 && (
-                        <div className="w-full h-px bg-gradient-to-r from-brand-200/50 to-brand-300/50 ml-10 mr-10"></div>
-                      )}
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{step.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Right: Study Desk Image */}
-            <div className="scroll-reveal relative hidden lg:flex justify-center">
-              <div className="relative group">
-                <div className="absolute -inset-8 bg-gradient-to-br from-brand-100/55 via-amber-100/45 to-emerald-100/25 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-700"></div>
-                <img
-                  src="/image2.png"
-                  alt="Cozy study desk setup with motivational notes"
-                  className="relative w-[380px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-transform duration-700 group-hover:scale-[1.02]"
+          ) : (
+            <form onSubmit={handleReviewSubmit}>
+              <label>
+                <span>Full name</span>
+                <input
+                  type="text"
+                  value={reviewForm.fullName}
+                  onChange={(e) => setReviewForm({ ...reviewForm, fullName: e.target.value })}
+                  required
                 />
-                {/* Decorative elements */}
-                <div className="absolute -top-4 -right-4 w-20 h-20 bg-brand-200/40 rounded-full blur-xl animate-float"></div>
-                <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-amber-200/30 rounded-full blur-xl animate-float-slow"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Reviews + Submit Section */}
-      <section className="py-20 sm:py-28 bg-white/70 relative overflow-hidden">
-        {/* Decorative gradient blobs */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-brand-200/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl"></div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-transparent to-white/60"></div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 scroll-reveal">
-            <span className="inline-block px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">Reviews</span>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 mb-4 line-decoration inline-block">Loved by Students</h2>
-            <p className="text-slate-500 max-w-xl mx-auto mt-6">See what your fellow BPSMV students have to say.</p>
-          </div>
-
-          {/* Submit Review Form */}
-          <div className="max-w-xl mx-auto mb-16 scroll-reveal">
-            <div className="cinematic-card p-6 sm:p-8">
-              {submittedReview ? (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <Star size={18} className="text-amber-500 fill-amber-500" /> Your Review
-                  </h3>
-                  {reviewMessage && (
-                    <div className="mb-4 p-3 rounded-xl text-sm border animate-fade-in bg-brand-50 text-brand-700 border-brand-200">
-                      {reviewMessage}
-                    </div>
-                  )}
-                  <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-4">
-                    <div className="flex gap-1 mb-3">
-                      {Array.from({ length: 5 }).map((_, si) => (
-                        <Star
-                          key={si}
-                          size={16}
-                          className={si < submittedReview.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-sm text-slate-700 leading-relaxed italic">"{submittedReview.review}"</p>
-                    <p className="text-xs font-semibold text-slate-900 mt-3">{submittedReview.fullName}</p>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-4">
-                    You have already submitted your review. You can now read your review and reviews from other students below.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                    <Star size={18} className="text-amber-500" /> Submit a Review
-                  </h3>
-                  {reviewMessage && (
-                    <div className="mb-4 p-3 rounded-xl text-sm border animate-fade-in bg-red-50 text-red-700 border-red-200">
-                      {reviewMessage}
-                    </div>
-                  )}
-                  <form onSubmit={handleReviewSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        placeholder="Your name"
-                        value={reviewForm.fullName}
-                        onChange={(e) => setReviewForm({ ...reviewForm, fullName: e.target.value })}
-                        className="input-field"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Rating</label>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                            className="p-1 transition-transform hover:scale-110"
-                          >
-                            <Star
-                              size={24}
-                              className={star <= reviewForm.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Your Review</label>
-                      <textarea
-                        placeholder="Share your experience..."
-                        value={reviewForm.review}
-                        onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
-                        className="input-field min-h-[100px]"
-                        required
-                        maxLength={2000}
-                      />
-                    </div>
+              </label>
+              <label>
+                <span>Rating</span>
+                <div className="rating-row">
+                  {[1, 2, 3, 4, 5].map((star) => (
                     <button
-                      type="submit"
-                      disabled={reviewSubmitting}
-                      className="btn btn-primary w-full shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                      aria-label={`${star} star rating`}
                     >
-                      {reviewSubmitting ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 size={16} className="animate-spin" /> Submitting...
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          <Send size={16} /> Submit Review
-                        </span>
-                      )}
+                      <Star size={22} className={star <= reviewForm.rating ? 'filled' : ''} />
                     </button>
-                  </form>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Approved Reviews */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {reviewsLoading ? (
-              <div className="col-span-full flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-[3px] border-brand-200 border-t-brand-600"></div>
-              </div>
-            ) : reviews.length === 0 ? (
-              <div className="col-span-full text-center text-slate-400 py-12">
-                <Star size={32} className="mx-auto mb-3 text-slate-300" />
-                <p>No reviews yet. Be the first to share your experience!</p>
-              </div>
-            ) : (
-              reviews.map((r, i) => (
-                <div
-                  key={r._id}
-                  className="scroll-reveal cinematic-card p-8 bg-white/80 backdrop-blur-sm"
-                  style={{ transitionDelay: `${0.15 * i}s` }}
-                >
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: 5 }).map((_, si) => (
-                      <Star
-                        key={si}
-                        size={16}
-                        className={si < r.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-slate-700 mb-6 leading-relaxed italic">"{r.review}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 font-bold text-sm">
-                      {r.fullName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900 text-sm">{r.fullName}</p>
-                      <p className="text-xs text-slate-500">{new Date(r.createdAt).toLocaleDateString()}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))
-            )}
-          </div>
-
-          {/* Reviews Pagination */}
-          {reviewsTotal > 6 && (
-            <div className="flex items-center justify-center gap-3 mt-8">
-              <button
-                onClick={() => fetchReviews(reviewsPage - 1)}
-                disabled={reviewsPage <= 1 || reviewsLoading}
-                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 transition-all"
-              >
-                <ChevronLeft size={18} />
+              </label>
+              <label>
+                <span>Your review</span>
+                <textarea
+                  value={reviewForm.review}
+                  onChange={(e) => setReviewForm({ ...reviewForm, review: e.target.value })}
+                  maxLength={2000}
+                  required
+                />
+              </label>
+              {reviewMessage && <p className="review-message">{reviewMessage}</p>}
+              <button className="magnetic-button primary" type="submit" disabled={reviewSubmitting}>
+                {reviewSubmitting ? <Loader2 size={17} className="spin" /> : <Send size={17} />}
+                <span>{reviewSubmitting ? 'Submitting' : 'Submit review'}</span>
               </button>
-              <span className="text-sm text-slate-500 font-medium">
-                Page {reviewsPage} of {Math.ceil(reviewsTotal / 6)}
-              </span>
-              <button
-                onClick={() => fetchReviews(reviewsPage + 1)}
-                disabled={reviewsPage >= Math.ceil(reviewsTotal / 6) || reviewsLoading}
-                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50 transition-all"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
+            </form>
           )}
         </div>
+
+        <div className="review-wall">
+          {reviewsLoading ? (
+            <div className="review-loading"><Loader2 className="spin" /> Loading reviews</div>
+          ) : reviews.length === 0 ? (
+            <div className="review-loading">No reviews yet. Be the first voice here.</div>
+          ) : (
+            reviews.map((review) => (
+              <article className="review-card" key={review._id}>
+                <div className="review-stars">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} size={15} className={i < review.rating ? 'filled' : ''} />
+                  ))}
+                </div>
+                <p>"{review.review}"</p>
+                <div>
+                  <strong>{review.fullName}</strong>
+                  <span>{review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'Student review'}</span>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {reviewsTotal > 6 && (
+          <div className="review-pagination">
+            <button onClick={() => fetchReviews(reviewsPage - 1)} disabled={reviewsPage <= 1 || reviewsLoading}>
+              <ChevronLeft size={18} />
+            </button>
+            <span>Page {reviewsPage} of {Math.ceil(reviewsTotal / 6)}</span>
+            <button onClick={() => fetchReviews(reviewsPage + 1)} disabled={reviewsPage >= Math.ceil(reviewsTotal / 6) || reviewsLoading}>
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
       </section>
 
-      {/* Final CTA with Image */}
-      <section className="py-20 sm:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-600/20 via-transparent to-emerald-500/10"></div>
-        <div className="absolute top-0 left-0 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl animate-drift"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-400/12 rounded-full blur-3xl animate-spotlight"></div>
-        <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"></div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: CTA Content */}
-            <div className="text-center lg:text-left scroll-reveal">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur text-white/80 rounded-full text-sm font-medium mb-8 border border-white/10">
-                <Award size={16} />
-                Join 500+ students already using BPSMV Hub
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-display font-bold text-white mb-6 leading-tight">
-                Ready to boost your<br />studies?
-              </h2>
-              <p className="text-slate-300 mb-10 max-w-xl mx-auto lg:mx-0 text-lg leading-relaxed">
-                Join hundreds of BPSMV students who share and discover academic resources every day.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <button
-                  onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
-                  className="bg-white text-slate-900 hover:bg-slate-100 px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 hover:-translate-y-1 shadow-lg shadow-white/10 text-lg"
-                >
-                  <Sparkles size={20} /> {isAuthenticated ? 'Open Dashboard' : 'Get Started Free'}
-                </button>
-                <button
-                  onClick={() => navigate('/upload')}
-                  className="bg-brand-600 text-white hover:bg-brand-500 px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 hover:-translate-y-1 shadow-lg shadow-brand-500/20 text-lg"
-                >
-                  <Upload size={20} /> Upload Resource
-                </button>
-              </div>
-            </div>
-
-            {/* Right: Motivational Image */}
-            <div className="scroll-reveal hidden lg:flex justify-center relative">
-              <div className="relative group">
-                <div className="absolute -inset-8 bg-brand-500/20 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-700"></div>
-                <img
-                  src="/image3.png"
-                  alt="Be unstoppable motivational study collage"
-                  className="relative w-[360px] h-auto rounded-[2rem] shadow-2xl shadow-brand-500/10 object-cover ring-1 ring-white/10 transition-transform duration-700 group-hover:scale-[1.02]"
-                />
-                {/* Glow orb */}
-                <div className="absolute -top-6 -right-6 w-28 h-28 bg-brand-400/20 rounded-full blur-2xl animate-pulse-slow"></div>
-                <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-amber-400/20 rounded-full blur-2xl animate-float"></div>
-              </div>
-            </div>
+      <section className="final-theater">
+        <div className="final-image">
+          <img src="/assets/image3.png" alt="Motivational study collage" />
+        </div>
+        <div className="final-copy">
+          <div className="section-kicker">Next session</div>
+          <h2>Open the hub before your next study sprint.</h2>
+          <p>Start with the material you need, then leave something useful behind for the next student.</p>
+          <div className="hero-actions">
+            <button className="magnetic-button light" onClick={goPrimary}>
+              <Sparkles size={18} />
+              <span>{isAuthenticated ? 'Open dashboard' : 'Get started'}</span>
+            </button>
+            <button className="magnetic-button ghost" onClick={() => navigate('/upload')}>
+              <Upload size={18} />
+              <span>Upload resource</span>
+            </button>
           </div>
         </div>
       </section>
@@ -697,17 +626,4 @@ const Home = () => {
   );
 };
 
-// Additional icons needed for steps
-function UserPlus({ size, className }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="8.5" cy="7" r="4" />
-      <line x1="20" y1="8" x2="20" y2="14" />
-      <line x1="23" y1="11" x2="17" y2="11" />
-    </svg>
-  );
-}
-
 export default Home;
-
