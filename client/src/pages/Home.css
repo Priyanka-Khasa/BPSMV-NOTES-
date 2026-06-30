@@ -745,17 +745,109 @@
   perspective: 1100px;
 }
 
-.lab-visual img {
+.lab-logo-stage {
   position: absolute;
   inset: 6% auto auto 8%;
   width: min(34rem, 80vw);
   aspect-ratio: 4 / 3;
   border: 1px solid rgba(255,255,255,0.68);
   border-radius: 1.4rem;
-  object-fit: cover;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,0.86), rgba(255,248,236,0.48) 38%, transparent 62%),
+    linear-gradient(135deg, rgba(255,255,255,0.5), rgba(193,122,92,0.1));
   box-shadow: 0 2rem 6rem rgba(61, 53, 44, 0.18);
   transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
   transition: transform 0.25s ease-out;
+}
+
+.lab-logo-stage::before {
+  content: '';
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid rgba(143,82,57,0.09);
+  border-radius: 1rem;
+  background-image:
+    linear-gradient(rgba(143,82,57,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143,82,57,0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle, black, transparent 72%);
+}
+
+.lab-logo-ring {
+  position: absolute;
+  border: 1px solid rgba(143,82,57,0.16);
+  border-radius: 999px;
+}
+
+.ring-one {
+  width: 15rem;
+  height: 15rem;
+}
+
+.ring-two {
+  width: 22rem;
+  height: 22rem;
+  border-color: rgba(97,197,166,0.16);
+  transform: rotate(18deg);
+}
+
+.lab-logo-core,
+.final-logo-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.68);
+  box-shadow: 0 1.8rem 5rem rgba(61,53,44,0.14), inset 0 1px 0 rgba(255,255,255,0.88);
+  backdrop-filter: blur(18px);
+}
+
+.lab-logo-core {
+  width: 8.5rem;
+  height: 8.5rem;
+  border-radius: 2rem;
+}
+
+.lab-logo-core img,
+.final-logo-mark img {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+}
+
+.lab-resource-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid rgba(255,255,255,0.68);
+  border-radius: 999px;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255,255,255,0.72);
+  color: #5c3425;
+  font-size: 0.82rem;
+  font-weight: 800;
+  box-shadow: 0 1rem 2.6rem rgba(61,53,44,0.1);
+  backdrop-filter: blur(16px);
+}
+
+.chip-notes {
+  left: 12%;
+  top: 22%;
+}
+
+.chip-papers {
+  right: 12%;
+  top: 28%;
+}
+
+.chip-chat {
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
 }
 
 .lab-visual::before {
@@ -978,12 +1070,14 @@
     linear-gradient(135deg, #171311, #2d211b 54%, #131918);
 }
 
-.final-image img {
+.final-logo-mark {
   width: min(28rem, 85vw);
   aspect-ratio: 1 / 1;
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 1.4rem;
-  object-fit: cover;
+  border-color: rgba(255,255,255,0.16);
+  border-radius: 2.2rem;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,0.92), rgba(255,248,236,0.2) 52%, transparent 72%),
+    rgba(255,255,255,0.08);
   box-shadow: 0 2rem 6rem rgba(0,0,0,0.34);
   transform: rotate(-4deg);
 }
@@ -1167,6 +1261,32 @@
     min-height: 24rem;
   }
 
+  .lab-logo-stage {
+    inset: 3% auto auto 0;
+    width: 100%;
+  }
+
+  .lab-logo-core {
+    width: 6.4rem;
+    height: 6.4rem;
+    border-radius: 1.5rem;
+  }
+
+  .ring-one {
+    width: 11rem;
+    height: 11rem;
+  }
+
+  .ring-two {
+    width: 16rem;
+    height: 16rem;
+  }
+
+  .lab-resource-chip {
+    font-size: 0.75rem;
+    padding: 0.48rem 0.62rem;
+  }
+
   .lab-panel {
     position: relative;
     margin: 0.7rem 0;
@@ -1187,7 +1307,7 @@
     gap: 1.5rem;
   }
 
-  .final-image img {
+  .final-logo-mark {
     width: min(18rem, 78vw);
     margin: 0 auto;
     display: block;
