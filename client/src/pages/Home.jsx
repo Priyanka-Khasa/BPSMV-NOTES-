@@ -70,6 +70,8 @@ const Home = () => {
   const reduceMotion = useReducedMotion();
   const pageRef = useRef(null);
   const bookRef = useRef(null);
+  const bookStageRef = useRef(null);
+  const pageRefs = useRef([]);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [introComplete, setIntroComplete] = useState(false);
   const [stats, setStats] = useState({
@@ -97,6 +99,16 @@ const Home = () => {
     { icon: Users, label: 'Students flowing', value: stats.totalStudents || 860 },
     { icon: ShieldCheck, label: 'Branches covered', value: stats.totalBranches || 12 },
   ], [stats]);
+
+  const bookFeatures = [
+    { title: 'Notes', text: 'Clean semester notes sorted by subject.', icon: BookOpen },
+    { title: 'PYQs', text: 'Previous year questions in one place.', icon: GraduationCap },
+    { title: 'Question Papers', text: 'Exam papers mapped to courses.', icon: FileText },
+    { title: 'Resources', text: 'PDFs, links, and helpful references.', icon: Search },
+    { title: 'Discussions', text: 'Subject rooms for doubts and answers.', icon: MessageSquare },
+    { title: 'AI Assistant', text: 'Study help for faster revision.', icon: Sparkles },
+    { title: 'Uploads', text: 'Share notes that helped you prepare.', icon: Upload },
+  ];
 
   const featureScenes = [
     {
@@ -193,6 +205,7 @@ const Home = () => {
     const tick = (time) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
+    let cleanupBookInteraction = () => {};
 
     const ctx = gsap.context(() => {
       gsap.from('.hero-word', {
@@ -215,22 +228,192 @@ const Home = () => {
         ease: 'sine.inOut',
       });
 
-      gsap.timeline({
-        scrollTrigger: {
-          trigger: '.book-scroll-stage',
-          start: 'top 76%',
-          end: 'bottom 12%',
-          scrub: 0.8,
+      const pages = pageRefs.current.filter(Boolean).length
+        ? pageRefs.current.filter(Boolean)
+        : Array.from(pageRef.current.querySelectorAll('.physics-page'));
+      const coverLeft = pageRef.current.querySelector('.book-cover-left');
+      const coverRight = pageRef.current.querySelector('.book-cover-right');
+      const bookOrbit = pageRef.current.querySelector('.book-orbit');
+      const bookGlow = pageRef.current.querySelector('.book-ambient-glow');
+      const bookShadow = pageRef.current.querySelector('.book-shadow');
+      const storySection = pageRef.current.querySelector('.story-section');
+      const initialTargets = [bookRef.current, coverLeft, coverRight, ...pages].filter(Boolean);
+      const physics = {
+        current: 0,
+        target: 0,
+        scrollTarget: 0,
+        hoverTarget: 0,
+        hoverX: 0,
+        hoverY: 0,
+        hovering: false,
+        settledPage: -1,
+        raf: 0,
+      };
+      const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+      const easeOut = (value) => 1 - Math.pow(1 - value, 3);
+
+      gsap.set(initialTargets, {
+        force3D: true,
+        transformStyle: 'preserve-3d',
+      });
+
+      const setPageTransforms = () => {
+        if (!bookRef.current || !coverLeft || !coverRight || pages.length === 0) {
+          physics.raf = requestAnimationFrame(setPageTransforms);
+          return;
+        }
+
+        const sourceTarget = physics.hovering ? physics.hoverTarget : physics.scrollTarget;
+        physics.target = sourceTarget;
+        physics.current += (physics.target - physics.current) * 0.045;
+        if (Math.abs(physics.target - physics.current) < 0.001) physics.current = physics.target;
+
+        const progress = clamp(physics.current);
+        const open = clamp(progress * 1.2);
+        const hoverLift = physics.hovering ? 1 : 0;
+        const ambient = 0.18 + progress * 0.42 + hoverLift * 0.12;
+
+        pageRef.current?.style.setProperty('--book-ambient', ambient.toFixed(3));
+        pageRef.current?.style.setProperty('--book-page-shadow', (0.12 + progress * 0.24).toFixed(3));
+
+        gsap.set(bookRef.current, {
+          y: -18 * hoverLift,
+          scale: 1 + hoverLift * 0.035 + open * 0.012,
+          rotationX: 42 - open * 7 - hoverLift * 4 + physics.hoverY * 2,
+          rotationY: -10 - open * 7 + physics.hoverX * 6,
+          rotationZ: -6 + physics.hoverX * 1.3,
+        });
+
+        gsap.set(coverLeft, {
+          rotationY: -18 - open * 122,
+          x: -open * 11,
+          z: open * 18,
+        });
+
+        gsap.set(coverRight, {
+          rotationY: 7 + open * 20,
+          x: open * 5,
+        });
+
+        pages.forEach((page, index) => {
+          const start = index / (pages.length + 1.6);
+          const span = 1 / (pages.length - 0.8);
+          const local = clamp((progress - start) / span);
+          const eased = easeOut(local);
+          const bend = Math.sin(local * Math.PI) * 10;
+          const flutter = local > 0.92 ? Math.sin((local - 0.92) * Math.PI * 9) * (1 - local) * 6 : 0;
+          const lifted = Math.sin(local * Math.PI) * 18;
+          const turn = -eased * 166 + flutter;
+          const z = 26 - index * 2 + lifted;
+          const pageShade = 0.18 + Math.sin(local * Math.PI) * 0.32;
+          const isTurned = local > 0.98;
+
+          page.style.setProperty('--page-curl', `${bend.toFixed(2)}deg`);
+          page.style.setProperty('--page-shade', pageShade.toFixed(3));
+          gsap.set(page, {
+            zIndex: isTurned ? 3 + index : 40 - index,
+            rotationY: turn,
+            rotationX: -bend * 0.18,
+            rotationZ: bend * 0.12,
+            x: -eased * 18 + index * 0.9,
+            z,
+            skewY: bend * 0.13,
+          });
+        });
+
+        const activePage = Math.round(progress * (pages.length - 1));
+        if (activePage !== physics.settledPage && Math.abs(physics.target - physics.current) < 0.02) {
+          physics.settledPage = activePage;
+          const landingPage = pages[activePage];
+          if (landingPage) {
+            gsap.fromTo(
+              landingPage,
+              { rotationZ: '+=1.8' },
+              { rotationZ: '-=1.8', duration: 0.34, ease: 'elastic.out(1, 0.55)', overwrite: 'auto' }
+            );
+          }
+        }
+
+        if (bookOrbit) {
+          gsap.set(bookOrbit, {
+            opacity: physics.hovering ? 0.1 : 0.7 - open * 0.48,
+            y: -open * 12,
+            scale: 1 - open * 0.04,
+          });
+        }
+
+        if (bookGlow) {
+          gsap.set(bookGlow, {
+            opacity: ambient,
+            scale: 0.92 + open * 0.22,
+          });
+        }
+
+        if (bookShadow) {
+          gsap.set(bookShadow, {
+            opacity: 0.32 + open * 0.24 + hoverLift * 0.08,
+            scaleX: 1 + open * 0.18,
+            scaleY: 1 + open * 0.08,
+          });
+        }
+
+        const finalProgress = clamp((progress - 0.86) / 0.14);
+        if (storySection) {
+          gsap.set(storySection, {
+            '--story-reveal': finalProgress,
+          });
+        }
+
+        physics.raf = requestAnimationFrame(setPageTransforms);
+      };
+
+      physics.raf = requestAnimationFrame(setPageTransforms);
+
+      const handleBookMove = (event) => {
+        const bounds = bookStageRef.current?.getBoundingClientRect();
+        if (!bounds) return;
+        const x = clamp((event.clientX - bounds.left) / bounds.width);
+        const y = clamp((event.clientY - bounds.top) / bounds.height);
+        physics.hovering = true;
+        physics.hoverTarget = clamp(1 - y);
+        physics.hoverX = (x - 0.5) * 2;
+        physics.hoverY = (0.5 - y) * 2;
+      };
+
+      const handleBookEnter = () => {
+        physics.hovering = true;
+      };
+
+      const handleBookLeave = () => {
+        physics.hovering = false;
+        physics.hoverTarget = 0;
+        physics.hoverX = 0;
+        physics.hoverY = 0;
+        physics.scrollTarget = 0;
+      };
+
+      const stageEl = bookStageRef.current;
+      stageEl?.addEventListener('pointerenter', handleBookEnter);
+      stageEl?.addEventListener('pointermove', handleBookMove);
+      stageEl?.addEventListener('pointerleave', handleBookLeave);
+      cleanupBookInteraction = () => {
+        stageEl?.removeEventListener('pointerenter', handleBookEnter);
+        stageEl?.removeEventListener('pointermove', handleBookMove);
+        stageEl?.removeEventListener('pointerleave', handleBookLeave);
+        cancelAnimationFrame(physics.raf);
+      };
+
+      ScrollTrigger.create({
+        trigger: '.book-scroll-stage',
+        start: 'top 76%',
+        end: 'bottom 10%',
+        scrub: true,
+        onUpdate: (self) => {
+          if (!physics.hovering) {
+            physics.scrollTarget = self.progress;
+          }
         },
-      })
-        .to('.book-cover-left', { rotateY: -42, x: -8, ease: 'none' }, 0)
-        .to('.book-cover-right', { rotateY: 28, x: 6, ease: 'none' }, 0)
-        .to('.book-page-1', { rotateY: -152, x: -16, z: 22, ease: 'none' }, 0.12)
-        .to('.book-page-2', { rotateY: -144, x: -14, z: 28, ease: 'none' }, 0.32)
-        .to('.book-page-3', { rotateY: -136, x: -12, z: 34, ease: 'none' }, 0.52)
-        .to('.book-page-4', { rotateY: -126, x: -10, z: 40, ease: 'none' }, 0.72)
-        .to(bookRef.current, { rotateX: 38, rotateY: -14, rotateZ: -2, scale: 1.04, ease: 'none' }, 0)
-        .to('.book-orbit', { opacity: 0.2, y: -10, scale: 0.96, ease: 'none' }, 0);
+      });
 
       gsap.utils.toArray('.scene-card').forEach((card, index) => {
         gsap.from(card, {
@@ -268,6 +451,7 @@ const Home = () => {
 
     return () => {
       window.removeEventListener('mousemove', handleMouse);
+      cleanupBookInteraction();
       ctx.revert();
       gsap.ticker.remove(tick);
       lenis.destroy();
@@ -376,32 +560,36 @@ const Home = () => {
             </div>
           </motion.div>
 
-          <div className="hero-object book-scroll-stage">
+          <div ref={bookStageRef} className="hero-object book-scroll-stage">
             <div ref={bookRef} className="study-book" aria-label="Animated resource book">
+              <div className="book-ambient-glow" />
               <div className="book-shadow" />
               <div className="book-cover book-cover-left">
-                <span>Notes</span>
+                <span>BPSMV</span>
               </div>
               <div className="book-spine" />
               <div className="book-cover book-cover-right">
-                <span>PYQ</span>
+                <span>Hub</span>
               </div>
-              <div className="book-page book-page-1">
-                <strong>Search</strong>
-                <small>Branch, semester, subject</small>
-              </div>
-              <div className="book-page book-page-2">
-                <strong>Discuss</strong>
-                <small>Ask, answer, revisit</small>
-              </div>
-              <div className="book-page book-page-3">
-                <strong>Upload</strong>
-                <small>Share what helped</small>
-              </div>
-              <div className="book-page book-page-4">
-                <strong>Revise</strong>
-                <small>Return before exams</small>
-              </div>
+              {bookFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.title}
+                    ref={(node) => {
+                      pageRefs.current[index] = node;
+                    }}
+                    className={`book-page physics-page book-page-${index + 1}`}
+                    style={{ '--page-index': index }}
+                  >
+                    <div className="book-page-back" />
+                    <div className="page-feature-icon"><Icon size={18} /></div>
+                    <strong>{feature.title}</strong>
+                    <small>{feature.text}</small>
+                    <div className="page-number">0{index + 1}</div>
+                  </div>
+                );
+              })}
             </div>
             <div className="book-orbit">
               <span><FileText size={16} /> PDFs</span>
