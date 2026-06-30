@@ -644,16 +644,7 @@ const Home = () => {
 
       <section className="cinema-section resource-lab">
         <div className="lab-visual">
-          <div className="lab-logo-stage" aria-hidden="true">
-            <div className="lab-logo-ring ring-one" />
-            <div className="lab-logo-ring ring-two" />
-            <div className="lab-logo-core">
-              <img src="/vite.svg" alt="" />
-            </div>
-            <div className="lab-resource-chip chip-notes"><BookOpen size={15} /> Notes</div>
-            <div className="lab-resource-chip chip-papers"><FileText size={15} /> Papers</div>
-            <div className="lab-resource-chip chip-chat"><MessageSquare size={15} /> Discuss</div>
-          </div>
+          <img src="/assets/image5.jpeg" alt="Students collaborating around study resources" />
           <div className="lab-panel panel-a">
             <Zap size={18} />
             <span>Live resource pulse</span>
@@ -801,9 +792,7 @@ const Home = () => {
 
       <section className="final-theater">
         <div className="final-image">
-          <div className="final-logo-mark" aria-hidden="true">
-            <img src="/vite.svg" alt="" />
-          </div>
+          <img src="/assets/image3.png" alt="Motivational study collage" />
         </div>
         <div className="final-copy">
           <div className="section-kicker">Next session</div>
