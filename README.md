@@ -16,19 +16,6 @@
 
 Students can upload, discover, view, and discuss subject-wise PDFs, notes, links, syllabi, and previous year question papers in one clean academic workspace.
 
-## Preview
-
-<p align="center">
-  <img src="client/public/assets/image1.jpeg" alt="Student studying with laptop and books" width="32%" />
-  <img src="client/public/assets/image5.jpeg" alt="Students collaborating and studying" width="32%" />
-  <img src="client/public/assets/image4.jpeg" alt="Aesthetic study desk" width="32%" />
-</p>
-
-<p align="center">
-  <img src="client/public/assets/image2.png" alt="Study workspace illustration" width="48%" />
-  <img src="client/public/assets/image3.png" alt="Motivational study collage" width="48%" />
-</p>
-
 ## Features
 
 - Dual authentication with Google OAuth or email/password login.
@@ -44,12 +31,13 @@ Students can upload, discover, view, and discuss subject-wise PDFs, notes, links
 - Gift submissions are saved and emailed to `priyankakhasa937@gmail.com`.
 - Admin panel for resource moderation.
 - Fully responsive layout for mobile, tablet, laptop, and desktop.
+- Premium logo-led landing page with interactive book motion, smooth scrolling, and responsive storytelling.
 
 ## Tech Stack
 
 | Layer | Stack |
 |---|---|
-| Frontend | React 19, Vite, React Router, Tailwind CSS, Lucide React |
+| Frontend | React 19, Vite, React Router, Tailwind CSS, GSAP, Lenis, Framer Motion, Lucide React |
 | Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs, Nodemailer |
 | Database | MongoDB with Mongoose |
 | File Storage | Local disk in `server/uploads/` |
