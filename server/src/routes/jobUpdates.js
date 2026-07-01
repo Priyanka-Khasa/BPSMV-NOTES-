@@ -112,10 +112,14 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid update ID' });
     }
 
-    const update = await JobUpdate.findById(req.params.id);
+    const [update, user] = await Promise.all([
+      JobUpdate.findById(req.params.id),
+      User.findById(req.user.id)
+    ]);
     if (!update) return res.status(404).json({ message: 'Job update not found' });
+    if (!user) return res.status(401).json({ message: 'User not found' });
 
-    if (!canDelete(req.user, update)) {
+    if (!canDelete(user, update)) {
       return res.status(403).json({ message: 'Not authorized to delete this update' });
     }
 

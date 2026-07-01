@@ -8,9 +8,6 @@ const connectDB = require('./config/db');
 // Initialize express app
 const app = express();
 
-// Connect to database
-connectDB();
-
 const passport = require('./config/passport');
 
 // Middleware
@@ -42,7 +39,9 @@ app.use('/api/job-updates', require('./routes/jobUpdates'));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Uploads served at http://localhost:${PORT}/uploads`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Uploads served at http://localhost:${PORT}/uploads`);
+  });
 });

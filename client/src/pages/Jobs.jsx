@@ -18,47 +18,15 @@ import {
   Trash2,
 } from 'lucide-react';
 
-const LOCAL_POSTS_KEY = 'bpsmvCareerPosts';
-
 const categories = ['Internship', 'Job', 'Hiring Challenge', 'Scholarship', 'Career News'];
 
 const portals = [
-  {
-    label: 'AICTE Internships',
-    text: 'Government and industry internship listings.',
-    href: 'https://internship.aicte-india.org/',
-    icon: GraduationCap,
-  },
-  {
-    label: 'NCS Jobs',
-    text: 'Fresher jobs, apprenticeships, and job fairs.',
-    href: 'https://www.ncs.gov.in/',
-    icon: BriefcaseBusiness,
-  },
-  {
-    label: 'Internshala',
-    text: 'Remote and office internships for students.',
-    href: 'https://internshala.com/internships/',
-    icon: Laptop,
-  },
-  {
-    label: 'Unstop',
-    text: 'Hackathons, hiring challenges, and competitions.',
-    href: 'https://unstop.com/',
-    icon: Code2,
-  },
-  {
-    label: 'LinkedIn Fresher Jobs',
-    text: 'Search fresher and graduate roles.',
-    href: 'https://www.linkedin.com/jobs/search/?keywords=fresher%20software%20engineer%20india',
-    icon: Building2,
-  },
-  {
-    label: 'TCS NextStep',
-    text: 'TCS fresher registration and hiring portal.',
-    href: 'https://nextstep.tcs.com/',
-    icon: ShieldCheck,
-  },
+  { label: 'AICTE Internships', text: 'Government and industry internship listings.', href: 'https://internship.aicte-india.org/', icon: GraduationCap },
+  { label: 'NCS Jobs', text: 'Fresher jobs, apprenticeships, and job fairs.', href: 'https://www.ncs.gov.in/', icon: BriefcaseBusiness },
+  { label: 'Internshala', text: 'Remote and office internships for students.', href: 'https://internshala.com/internships/', icon: Laptop },
+  { label: 'Unstop', text: 'Hackathons, hiring challenges, and competitions.', href: 'https://unstop.com/', icon: Code2 },
+  { label: 'LinkedIn Fresher Jobs', text: 'Search fresher and graduate roles.', href: 'https://www.linkedin.com/jobs/search/?keywords=fresher%20software%20engineer%20india', icon: Building2 },
+  { label: 'TCS NextStep', text: 'TCS fresher registration and hiring portal.', href: 'https://nextstep.tcs.com/', icon: ShieldCheck },
 ];
 
 const emptyForm = {
@@ -71,24 +39,12 @@ const emptyForm = {
   summary: '',
 };
 
-const readLocalPosts = () => {
-  try {
-    return JSON.parse(localStorage.getItem(LOCAL_POSTS_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
-const saveLocalPosts = (posts) => {
-  localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(posts));
-};
-
 const formatDate = (value) => {
   if (!value) return 'Rolling';
   return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const getDeadlineLabel = (deadline) => {
+const deadlineBadge = (deadline) => {
   if (!deadline) return { text: 'Rolling', className: 'bg-slate-100 text-slate-700' };
   const days = Math.ceil((new Date(deadline) - new Date()) / 86400000);
   if (days < 0) return { text: 'Expired', className: 'bg-red-50 text-red-700' };
@@ -99,26 +55,24 @@ const getDeadlineLabel = (deadline) => {
 
 const Jobs = () => {
   const [posts, setPosts] = useState([]);
+  const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
   const loadPosts = async () => {
     setLoading(true);
-    const localPosts = readLocalPosts();
-
     try {
       const res = await axios.get('/job-updates', { params: { limit: 50 } });
-      const apiPosts = res.data.updates || [];
-      const localOnly = localPosts.filter((post) => String(post._id).startsWith('local-'));
-      setPosts([...localOnly, ...apiPosts]);
+      setPosts(res.data.updates || []);
       setMessage('');
-    } catch {
-      setPosts(localPosts);
-      setMessage('Server posting is not connected right now. Your posts will still show here on this device.');
+    } catch (error) {
+      setPosts([]);
+      setMessage(error.response?.status === 401
+        ? 'Please log in again to view shared openings.'
+        : 'Backend is not connected. Start/restart the server so posts can be shared with all students.');
     } finally {
       setLoading(false);
     }
@@ -134,7 +88,7 @@ const Jobs = () => {
       .filter((post) => category === 'All' || post.category === category)
       .filter((post) => {
         if (!term) return true;
-        return [post.title, post.company, post.summary, post.location, post.category]
+        return [post.title, post.company, post.location, post.summary, post.category]
           .filter(Boolean)
           .join(' ')
           .toLowerCase()
@@ -150,51 +104,30 @@ const Jobs = () => {
     setSaving(true);
     setMessage('');
 
-    const newPost = {
-      ...form,
-      _id: `local-${Date.now()}`,
-      mode: 'Online',
-      stipend: 'Not disclosed',
-      eligibility: 'BTech students',
-      sourceName: 'Campus post',
-      tags: [],
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      const res = await axios.post('/job-updates', newPost);
-      const savedPost = res.data;
-      setPosts((current) => [savedPost, ...current]);
-      setMessage('Posted successfully. Students can now see this opening.');
-    } catch {
-      const nextPosts = [newPost, ...readLocalPosts()];
-      saveLocalPosts(nextPosts);
-      setPosts((current) => [newPost, ...current]);
-      setMessage('Added here. Restart/connect the server to make posting shared for everyone.');
-    } finally {
+      const res = await axios.post('/job-updates', {
+        ...form,
+        mode: 'Online',
+        stipend: 'Not disclosed',
+        eligibility: 'BTech students',
+        sourceName: 'Campus post',
+      });
+      setPosts((current) => [res.data, ...current]);
       setForm(emptyForm);
+      setMessage('Posted successfully. This opening is saved in the database and visible to all students.');
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Could not post. Please make sure the backend server is running.');
+    } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (post) => {
-    if (!confirm('Delete this opening?')) return;
-
-    const removeFromScreen = () => {
-      setPosts((current) => current.filter((item) => item._id !== post._id));
-      saveLocalPosts(readLocalPosts().filter((item) => item._id !== post._id));
-    };
-
-    if (String(post._id).startsWith('local-')) {
-      removeFromScreen();
-      setMessage('Deleted.');
-      return;
-    }
-
+    if (!confirm('Delete this opening for all students?')) return;
     try {
       await axios.delete(`/job-updates/${post._id}`);
-      removeFromScreen();
-      setMessage('Deleted.');
+      setPosts((current) => current.filter((item) => item._id !== post._id));
+      setMessage('Deleted successfully.');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Could not delete this opening.');
     }
@@ -202,18 +135,18 @@ const Jobs = () => {
 
   return (
     <div className="relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] bg-[#f7f3ec] sm:-mx-6 lg:-mx-8">
-      <section className="bg-white border-b border-slate-200 px-4 py-7 sm:px-6 lg:px-8">
+      <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-semibold text-brand-700">Jobs & Internships</p>
           <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-3xl font-display font-bold text-slate-950 sm:text-4xl">Career updates for BTech students</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Post openings in a simple format. Students see the latest shared updates first, and common portals stay separate below.
+                Post once, and every student can see it. Common portals are kept separate below.
               </p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-              {visiblePosts.length} active update{visiblePosts.length === 1 ? '' : 's'}
+              {visiblePosts.length} shared update{visiblePosts.length === 1 ? '' : 's'}
             </div>
           </div>
         </div>
@@ -228,14 +161,14 @@ const Jobs = () => {
         )}
 
         <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-white/80 bg-white p-5 shadow-sm lg:sticky lg:top-20 lg:self-start">
+          <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-20 lg:self-start">
             <div className="mb-4 flex items-center gap-2">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-white">
                 <Plus size={18} />
               </span>
               <div>
                 <h2 className="font-display text-lg font-bold text-slate-950">Add opening</h2>
-                <p className="text-xs text-slate-500">Fill only the useful details.</p>
+                <p className="text-xs text-slate-500">Saved to the shared database.</p>
               </div>
             </div>
 
@@ -258,7 +191,7 @@ const Jobs = () => {
           </form>
 
           <section className="space-y-4">
-            <div className="rounded-2xl border border-white/80 bg-white p-3 shadow-sm">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row">
                 <div className="relative flex-1">
                   <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -279,19 +212,19 @@ const Jobs = () => {
             {loading ? (
               <div className="rounded-2xl bg-white p-10 text-center text-slate-500">
                 <Loader2 className="mx-auto mb-3 animate-spin" />
-                Loading openings
+                Loading shared openings
               </div>
             ) : visiblePosts.length ? (
               <div className="space-y-3">
                 {visiblePosts.map((post) => {
-                  const deadline = getDeadlineLabel(post.deadline);
+                  const badge = deadlineBadge(post.deadline);
                   return (
-                    <article key={post._id} className="rounded-2xl border border-white/80 bg-white p-5 shadow-sm transition-all hover:border-brand-200 hover:shadow-md">
+                    <article key={post._id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:border-brand-200 hover:shadow-md">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap gap-2">
                             <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700">{post.category}</span>
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${deadline.className}`}>{deadline.text}</span>
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge.className}`}>{badge.text}</span>
                           </div>
                           <h2 className="mt-3 text-xl font-display font-bold text-slate-950">{post.title}</h2>
                           <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
@@ -331,20 +264,18 @@ const Jobs = () => {
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-10 text-center">
                 <BriefcaseBusiness size={36} className="mx-auto mb-3 text-slate-300" />
-                <h2 className="text-lg font-semibold text-slate-900">No openings posted yet</h2>
-                <p className="mt-1 text-sm text-slate-500">Use the form to add the first update for students.</p>
+                <h2 className="text-lg font-semibold text-slate-900">No shared openings yet</h2>
+                <p className="mt-1 text-sm text-slate-500">Use the form to add the first update for everyone.</p>
               </div>
             )}
           </section>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-white/80 bg-white p-5 shadow-sm">
-          <div className="mb-4">
-            <h2 className="font-display text-xl font-bold text-slate-950">Common portals</h2>
-            <p className="text-sm text-slate-500">Fixed links students can check anytime. These are not mixed with posted openings.</p>
-          </div>
+        <section className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+          <h2 className="font-display text-xl font-bold text-slate-950">Common portals</h2>
+          <p className="mt-1 text-sm text-slate-500">Fixed links students can check anytime. These are separate from posted openings.</p>
 
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {portals.map((portal) => {
               const Icon = portal.icon;
               return (
