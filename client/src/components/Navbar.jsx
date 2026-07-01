@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight, Gift } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, LogOut, Menu, X, User, Shield, Home, Upload, MessageSquare, Search, ArrowRight, Gift } from 'lucide-react';
 import BrandLogo from './BrandLogo';
 
 const Navbar = () => {
@@ -16,6 +16,7 @@ const Navbar = () => {
   const appNavLinks = [
     { path: '/dashboard', label: 'Dashboard', icon: BookOpen },
     { path: '/resources', label: 'Resources', icon: Search },
+    { path: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
     { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/chat', label: 'Discussion', icon: MessageSquare },
     { path: '/gift', label: 'Gift', icon: Gift, colorful: true },

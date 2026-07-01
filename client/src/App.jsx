@@ -12,6 +12,7 @@ import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 import Gift from './pages/Gift';
+import Jobs from './pages/Jobs';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -43,6 +44,11 @@ function App() {
         <Route path="/chat" element={
           <ProtectedRoute>
             <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="/jobs" element={
+          <ProtectedRoute>
+            <Jobs />
           </ProtectedRoute>
         } />
         <Route path="/upload" element={
