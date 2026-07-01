@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Download, FileText, Calendar, User, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, BookOpen, ExternalLink, ShieldCheck } from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 const getYoutubeEmbedUrl = (url) => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -57,9 +59,12 @@ const PDFViewer = () => {
 
   const isPdf = resource.fileType === 'pdf';
   const isImage = resource.fileType === 'image';
+  const hasProtectedPreview = isPdf || isImage;
+  const secureFileUrl = `${API_BASE}/resources/${id}/file`;
+  const securePdfUrl = `${secureFileUrl}#toolbar=0&navpanes=0&scrollbar=0&download=0&print=0`;
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 animate-fade-in" onContextMenu={(event) => event.preventDefault()}>
       {/* Header */}
       <div className="card p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -76,14 +81,15 @@ const PDFViewer = () => {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            {resource.fileUrl && (
-              <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary text-sm">
-                <Download size={16} /> Download
-              </a>
-            )}
+          <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
+            <ShieldCheck size={16} />
+            Protected preview
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Downloading and sharing resource PDFs is disabled. Access is session-protected and intended only for in-app reading.
       </div>
 
       {/* Viewer */}
@@ -125,27 +131,23 @@ const PDFViewer = () => {
               </div>
             );
           })()
-        ) : isPdf && resource.fileUrl ? (
+        ) : isPdf && hasProtectedPreview ? (
           <div className="w-full h-[70vh] sm:h-[80vh]">
             <iframe
-              src={resource.fileUrl}
+              src={securePdfUrl}
               title={resource.title}
               className="w-full h-full border-0"
+              sandbox="allow-same-origin allow-scripts"
             />
           </div>
-        ) : isImage && resource.fileUrl ? (
+        ) : isImage && hasProtectedPreview ? (
           <div className="p-4 flex justify-center">
-            <img src={resource.fileUrl} alt={resource.title} className="max-w-full max-h-[80vh] object-contain rounded-xl" />
+            <img src={secureFileUrl} alt={resource.title} className="max-w-full max-h-[80vh] object-contain rounded-xl" draggable="false" />
           </div>
         ) : (
           <div className="p-12 text-center">
             <FileText size={48} className="text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500">Preview not available for this file type.</p>
-            {resource.fileUrl && (
-              <a href={resource.fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-4 inline-flex">
-                <Download size={16} /> Open File
-              </a>
-            )}
           </div>
         )}
       </div>
