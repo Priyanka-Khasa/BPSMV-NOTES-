@@ -14,7 +14,7 @@
   ![License](https://img.shields.io/badge/license-MIT-blue)
 </div>
 
-Students can upload, discover, view, and discuss subject-wise PDFs, notes, links, syllabi, and previous year question papers in one clean academic workspace.
+Students can upload, discover, securely preview, and discuss subject-wise PDFs, notes, links, syllabi, previous year question papers, and career updates in one clean academic workspace.
 
 ## Features
 
@@ -23,8 +23,10 @@ Students can upload, discover, view, and discuss subject-wise PDFs, notes, links
 - Personalized dashboard filtered by degree and branch.
 - Resource explorer with search and filters for degree, branch, semester, year, type, and subject.
 - Upload system for PDFs, notes, question papers, external links, and syllabi.
-- PDF viewer with preview and download support.
+- Protected PDF preview flow with direct PDF upload URLs blocked.
 - Subject discussion board for student comments.
+- Jobs and internships board for BTech-wide openings, scholarships, hiring challenges, and career news.
+- Common career portal section for AICTE Internships, NCS, Internshala, Unstop, LinkedIn fresher jobs, and TCS NextStep.
 - Student reviews with one review allowed per person.
 - Gift section for reporting real bugs and genuine issues.
 - Accepted genuine issues are eligible for a Rs. 10 gift.
@@ -40,7 +42,7 @@ Students can upload, discover, view, and discuss subject-wise PDFs, notes, links
 | Frontend | React 19, Vite, React Router, Tailwind CSS, GSAP, Lenis, Framer Motion, Lucide React |
 | Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs, Nodemailer |
 | Database | MongoDB with Mongoose |
-| File Storage | Local disk in `server/uploads/` |
+| File Storage | Local disk in `server/uploads/`, with protected resource PDF streaming |
 
 ## Project Structure
 
@@ -56,6 +58,7 @@ bpsmv-resource-hub/
 |   |   |   |-- Dashboard.jsx
 |   |   |   |-- Gift.jsx
 |   |   |   |-- Home.jsx
+|   |   |   |-- Jobs.jsx
 |   |   |   |-- Login.jsx
 |   |   |   |-- Onboarding.jsx
 |   |   |   |-- PDFViewer.jsx
@@ -72,7 +75,9 @@ bpsmv-resource-hub/
 |   |-- src/
 |   |   |-- config/
 |   |   |-- models/
+|   |   |   |-- JobUpdate.js
 |   |   |-- routes/
+|   |   |   |-- jobUpdates.js
 |   |   |-- app.js
 |   |-- uploads/
 |   |-- package.json
@@ -114,7 +119,7 @@ If SMTP credentials are not configured, Gift submissions are still saved in Mong
 ```bash
 cd bpsmv-resource-hub/server
 npm install
-node src/app.js
+npm start
 ```
 
 The backend runs on `http://localhost:5000`.
@@ -167,8 +172,15 @@ node fixDB.js
 - `GET /api/resources/filter-options` - Get degree and branch filter options.
 - `GET /api/resources/subject/:id` - Get resources for a subject.
 - `GET /api/resources/:id` - Get one resource.
+- `GET /api/resources/:id/file` - Protected in-app resource preview stream. Requires login.
 - `POST /api/resources/add` - Upload a resource.
 - `DELETE /api/resources/:id` - Delete a resource.
+
+### Job Updates
+
+- `GET /api/job-updates` - List shared jobs, internships, scholarships, hiring challenges, and career news.
+- `POST /api/job-updates` - Add a shared career update. Requires login.
+- `DELETE /api/job-updates/:id` - Delete a career update. Requires owner or admin access.
 
 ### Comments
 
@@ -191,7 +203,13 @@ node fixDB.js
 - JWT tokens are stored in HTTP-only cookies.
 - Upload, delete, and comment routes are protected where needed.
 - Resource deletion checks ownership or admin role.
+- Direct `/uploads/*.pdf` access is blocked.
+- Resource APIs hide raw PDF file URLs and expose protected preview URLs instead.
+- PDFs are streamed through authenticated preview routes with no-store cache headers.
+- The frontend removes download/open-file actions for PDFs and uses secure in-app preview wording.
 - Guest accounts are real users with generated credentials.
+
+Important: no web app can make visible PDFs impossible to copy in every condition because screenshots, screen recording, and advanced browser tooling can still capture on-screen content. This app blocks normal direct downloads, public PDF URLs, and exposed file links, and keeps reading inside the protected app flow.
 
 ## Roadmap
 
@@ -199,7 +217,9 @@ node fixDB.js
 - [x] Google OAuth with duplicate account prevention.
 - [x] Guest mode.
 - [x] Resource upload and viewer.
+- [x] Protected PDF preview without public direct PDF URLs.
 - [x] Subject discussion board.
+- [x] Jobs and internships board for BTech students.
 - [x] Gift form for genuine bugs/issues, with Rs. 10 reward messaging.
 - [ ] Admin view for managing subjects without direct database access.
 - [ ] Pagination for subjects and resources at scale.
