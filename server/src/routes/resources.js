@@ -1,16 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 const Resource = require('../models/Resource');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
-const { upload } = require('../config/storage');
+const { upload, uploadDir } = require('../config/storage');
 
 // Helper to build public file URL from multer file
 const buildFileUrl = (req, filename) => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   return `${baseUrl}/uploads/${filename}`;
+};
+
+const getStoredFilename = (fileUrl) => {
+  if (!fileUrl) return null;
+  return path.basename(fileUrl.split('?')[0]);
+};
+
+const sanitizeResource = (resource) => {
+  if (!resource) return resource;
+  const obj = resource.toObject ? resource.toObject() : { ...resource };
+  if (obj.fileUrl) {
+    obj.secureFileUrl = `/resources/${obj._id}/file`;
+    obj.fileUrl = null;
+  }
+  return obj;
 };
 
 // Helper: check ownership or admin
@@ -48,7 +65,12 @@ router.get('/all', async (req, res) => {
       .populate('uploadedBy', 'name email');
 
     const total = await Resource.countDocuments(filter);
-    res.json({ resources, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
+    res.json({
+      resources: resources.map(sanitizeResource),
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit))
+    });
   } catch (error) {
     console.error('Error fetching resources:', error);
     res.status(500).json({ message: 'Error fetching resources' });
@@ -146,9 +168,44 @@ router.get('/subject/:subjectId', async (req, res) => {
     const filter = { subjectId: req.params.subjectId, isApproved: true };
     if (type) filter.resourceType = type;
     const resources = await Resource.find(filter).sort({ createdAt: -1 }).populate('uploadedBy', 'name email');
-    res.json(resources);
+    res.json(resources.map(sanitizeResource));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching resources' });
+  }
+});
+
+// Protected preview stream. This prevents public /uploads PDF sharing and
+// requires an authenticated session for every resource file request.
+router.get('/:id/file', verifyToken, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid resource ID' });
+    }
+
+    const resource = await Resource.findById(req.params.id);
+    if (!resource || !resource.fileUrl) return res.status(404).json({ message: 'File not found' });
+
+    const filename = getStoredFilename(resource.fileUrl);
+    const filePath = filename ? path.join(uploadDir, filename) : null;
+    const resolvedUploads = path.resolve(uploadDir);
+    const resolvedFile = filePath ? path.resolve(filePath) : null;
+
+    if (!resolvedFile || !resolvedFile.startsWith(resolvedUploads) || !fs.existsSync(resolvedFile)) {
+      return res.status(404).json({ message: 'File not found' });
+    }
+
+    res.setHeader('Content-Type', resource.fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+    res.setHeader('Content-Disposition', 'inline; filename="protected-resource"');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Accept-Ranges', 'none');
+
+    fs.createReadStream(resolvedFile).pipe(res);
+  } catch (error) {
+    console.error('Error streaming resource file:', error);
+    res.status(500).json({ message: 'Error loading resource file' });
   }
 });
 
@@ -160,7 +217,7 @@ router.get('/:id', async (req, res) => {
     }
     const resource = await Resource.findById(req.params.id).populate('uploadedBy', 'name email');
     if (!resource) return res.status(404).json({ message: 'Resource not found' });
-    res.json(resource);
+    res.json(sanitizeResource(resource));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching resource' });
   }
@@ -211,7 +268,7 @@ router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
     }
 
     const newResource = await Resource.create(resourceData);
-    res.status(201).json(newResource);
+    res.status(201).json(sanitizeResource(newResource));
   } catch (error) {
     console.error('Upload Error:', error);
     res.status(500).json({ message: 'Error creating resource' });

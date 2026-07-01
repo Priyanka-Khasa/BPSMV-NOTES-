@@ -233,7 +233,7 @@ const Dashboard = () => {
                     </a>
                   ) : (
                     <button onClick={() => navigate(`/viewer/${res._id}`)} className="btn btn-primary w-full text-sm py-2 shadow-brand-500/15 hover:shadow-brand-500/25 hover:-translate-y-0.5 transition-all duration-300">
-                      <FileText size={14} /> View PDF
+                      <FileText size={14} /> Secure View
                     </button>
                   )}
                 </div>

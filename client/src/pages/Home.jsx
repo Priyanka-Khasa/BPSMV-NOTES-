@@ -10,7 +10,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Download,
+  Eye,
   FileText,
   GraduationCap,
   Layers,
@@ -140,7 +140,7 @@ const Home = () => {
   const journey = [
     { icon: UserPlus, title: 'Enter', text: 'Create your account and land in a calm student workspace.' },
     { icon: Layers, title: 'Filter', text: 'Choose your course, branch, semester, and subject.' },
-    { icon: Download, title: 'Collect', text: 'Preview, save, and study from resources that match your syllabus.' },
+    { icon: Eye, title: 'Preview', text: 'Read protected resources inside the hub without download access.' },
     { icon: Orbit, title: 'Return', text: 'Ask doubts, upload notes, and keep the library improving.' },
   ];
 
