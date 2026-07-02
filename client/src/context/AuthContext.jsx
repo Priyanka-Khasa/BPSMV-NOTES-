@@ -33,6 +33,25 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (err) => {
+        const message = err.response?.data?.message || '';
+        const signedInElsewhere = err.response?.status === 401 && message.includes('active on another device');
+        if (signedInElsewhere) {
+          setUser(null);
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login?session=ended';
+          }
+        }
+        return Promise.reject(err);
+      }
+    );
+
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
+
   const login = async (email, password) => {
     const res = await axios.post('/auth/login', { email, password });
     setUser(res.data.user);

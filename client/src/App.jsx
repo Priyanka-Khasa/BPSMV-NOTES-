@@ -10,6 +10,7 @@ import UploadPage from './pages/UploadPage';
 import PDFViewer from './pages/PDFViewer';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
+import PublicProfile from './pages/PublicProfile';
 import Admin from './pages/Admin';
 import Gift from './pages/Gift';
 import Jobs from './pages/Jobs';
@@ -61,6 +62,7 @@ function App() {
             <Profile />
           </ProtectedRoute>
         } />
+        <Route path="/u/:id" element={<PublicProfile />} />
         <Route path="/admin" element={
           <ProtectedRoute adminOnly>
             <Admin />
