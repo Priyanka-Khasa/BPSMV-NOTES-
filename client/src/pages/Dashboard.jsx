@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, FileText, ExternalLink, Trash2, Upload, ArrowRight, MessageSquare, Sparkles, TrendingUp, Clock, Layers } from 'lucide-react';
+import { BookOpen, FileText, ExternalLink, Trash2, Upload, ArrowRight, MessageSquare, TrendingUp, Clock, Layers, Search, UserRound } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [activeSemester, setActiveSemester] = useState('');
 
   useEffect(() => {
     if (user?.degree && user?.branch) {
@@ -54,12 +55,27 @@ const Dashboard = () => {
 
   const selectedSubjectObj = subjects.find(s => s._id === selectedSubject);
 
-  const groupedSubjects = subjects.reduce((acc, s) => {
+  const groupedSubjects = useMemo(() => subjects.reduce((acc, s) => {
     const sem = `Semester ${s.semester}`;
     if (!acc[sem]) acc[sem] = [];
     acc[sem].push(s);
     return acc;
-  }, {});
+  }, {}), [subjects]);
+
+  const semesterKeys = Object.keys(groupedSubjects).sort((a, b) => {
+    const aNumber = Number(a.replace(/\D/g, ''));
+    const bNumber = Number(b.replace(/\D/g, ''));
+    return aNumber - bNumber;
+  });
+
+  useEffect(() => {
+    if (!activeSemester && semesterKeys.length > 0) {
+      setActiveSemester(semesterKeys[0]);
+    }
+  }, [activeSemester, semesterKeys]);
+
+  const visibleSubjects = activeSemester ? groupedSubjects[activeSemester] || [] : subjects;
+  const firstName = user?.name?.split(' ')[0] || 'Student';
 
   if (loading) {
     return (
@@ -70,129 +86,150 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in">
-      <div className="orb -left-24 top-10 w-72 h-72 bg-amber-300/16 animate-drift"></div>
-      <div className="orb right-0 top-1/3 w-96 h-96 bg-emerald-300/12 animate-spotlight"></div>
-      {/* Sidebar */}
-      <div className="relative z-10 lg:col-span-3 space-y-4">
-        {/* Profile Card */}
-        <div className="cinematic-card p-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative">
-              <img
-                src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
-                alt=""
-                className="w-12 h-12 rounded-full object-cover ring-4 ring-white shadow-lg shadow-brand-500/10"
-              />
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-sm"></div>
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-slate-900 text-sm truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500">{user?.degree} / {user?.branch}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => setUploadOpen(true)} className="btn btn-primary text-sm py-2 shadow-brand-500/20 hover:shadow-brand-500/30">
-              <Upload size={14} /> Upload
-            </button>
-            <button onClick={() => navigate('/resources')} className="btn btn-secondary text-sm py-2">
-              Browse
-            </button>
-          </div>
-        </div>
-
-        {/* Stats mini */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="cinematic-panel rounded-2xl p-3 text-center hover:scale-[1.02] transition-all duration-300">
-            <Layers size={18} className="mx-auto mb-1 text-brand-500" />
-            <p className="text-lg font-bold text-slate-900">{subjects.length}</p>
-            <p className="text-xs text-slate-500">Subjects</p>
-          </div>
-          <div className="cinematic-panel rounded-2xl p-3 text-center hover:scale-[1.02] transition-all duration-300">
-            <TrendingUp size={18} className="mx-auto mb-1 text-brand-500" />
-            <p className="text-lg font-bold text-slate-900">{resources.length}</p>
-            <p className="text-xs text-slate-500">Resources</p>
-          </div>
-        </div>
-
-        {/* Subjects */}
-        <div className="cinematic-card p-4">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-            <BookOpen size={16} className="text-brand-600" /> Your Subjects
-          </h3>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-            {Object.entries(groupedSubjects).map(([sem, items]) => (
-              <div key={sem} className="animate-slide-up">
-                <p className="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <Clock size={10} /> {sem}
-                </p>
-                <div className="space-y-1">
-                  {items.map(sub => (
-                    <button
-                      key={sub._id}
-                      onClick={() => fetchResources(sub._id)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
-                        selectedSubject === sub._id
-                          ? 'bg-white text-brand-700 font-semibold shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
-                          : 'text-slate-600 hover:bg-white/70 hover:translate-x-0.5 hover:shadow-sm'
-                      }`}
-                    >
-                      {sub.name}
-                    </button>
-                  ))}
-                </div>
+    <div className="relative animate-fade-in">
+      <div className="relative z-10 grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)] gap-4 lg:gap-6">
+        <section className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+          <div className="cinematic-card p-4 sm:p-5">
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                <img
+                  src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
+                  alt=""
+                  className="h-12 w-12 rounded-xl object-cover ring-2 ring-white shadow-md shadow-brand-500/10 sm:h-14 sm:w-14"
+                />
+                <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm"></div>
               </div>
-            ))}
-            {subjects.length === 0 && (
-              <p className="text-sm text-slate-400 italic">No subjects found for your branch.</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 lg:col-span-9 space-y-4">
-        {/* Header Card */}
-        <div className="cinematic-card p-5 flex items-center justify-between flex-wrap gap-3 bg-gradient-to-r from-white/90 via-brand-50/45 to-emerald-50/35">
-          <div>
-            <h1 className="text-xl font-display font-bold text-slate-900 flex items-center gap-2">
-              {selectedSubjectObj ? selectedSubjectObj.name : `Welcome, ${user?.name?.split(' ')[0] || 'Student'}`}
-              {!selectedSubject && <Sparkles size={18} className="text-brand-500 animate-wiggle" />}
-            </h1>
-            <p className="text-sm text-slate-500">
-              {selectedSubjectObj ? `${selectedSubjectObj.degree} / ${selectedSubjectObj.branch} / Sem ${selectedSubjectObj.semester}` : 'Choose a subject and continue your study flow'}
-            </p>
-          </div>
-          {selectedSubject && (
-            <div className="flex gap-2">
-              <button onClick={() => setUploadOpen(true)} className="btn btn-primary text-sm py-2 shadow-brand-500/20 hover:shadow-brand-500/30">
-                <Upload size={14} /> Upload
-              </button>
-              <button onClick={() => navigate(`/chat?subject=${selectedSubject}`)} className="btn btn-secondary text-sm py-2 flex items-center gap-1.5">
-                <MessageSquare size={14} /> Discussion
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold text-slate-900">Hi, {firstName}</p>
+                <p className="truncate text-xs font-medium text-slate-500">{user?.degree} / {user?.branch}</p>
+              </div>
+              <button
+                onClick={() => navigate('/profile')}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/80 text-slate-600 shadow-sm ring-1 ring-white/80 transition-all hover:bg-white hover:text-brand-700"
+                title="Profile"
+                aria-label="Profile"
+              >
+                <UserRound size={18} />
               </button>
             </div>
-          )}
-        </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button onClick={() => setUploadOpen(true)} className="btn btn-primary min-h-11 px-3 py-2 text-sm shadow-brand-500/20 hover:shadow-brand-500/30">
+                <Upload size={15} /> Upload
+              </button>
+              <button onClick={() => navigate('/resources')} className="btn btn-secondary min-h-11 px-3 py-2 text-sm">
+                <Search size={15} /> Browse
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-white/70 p-3 text-center ring-1 ring-white/80">
+                <Layers size={16} className="mx-auto mb-1 text-brand-600" />
+                <p className="text-lg font-bold leading-none text-slate-900">{subjects.length}</p>
+                <p className="mt-1 text-[11px] font-medium text-slate-500">Subjects</p>
+              </div>
+              <div className="rounded-xl bg-white/70 p-3 text-center ring-1 ring-white/80">
+                <Clock size={16} className="mx-auto mb-1 text-brand-600" />
+                <p className="text-lg font-bold leading-none text-slate-900">{semesterKeys.length}</p>
+                <p className="mt-1 text-[11px] font-medium text-slate-500">Semesters</p>
+              </div>
+              <div className="rounded-xl bg-white/70 p-3 text-center ring-1 ring-white/80">
+                <TrendingUp size={16} className="mx-auto mb-1 text-brand-600" />
+                <p className="text-lg font-bold leading-none text-slate-900">{resources.length}</p>
+                <p className="mt-1 text-[11px] font-medium text-slate-500">Open</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="cinematic-card p-4 sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                <BookOpen size={17} className="text-brand-600" /> Subjects
+              </h2>
+              <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                {activeSemester || 'All'}
+              </span>
+            </div>
+
+            <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
+              {semesterKeys.map((sem) => (
+                <button
+                  key={sem}
+                  onClick={() => setActiveSemester(sem)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                    activeSemester === sem
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
+                      : 'bg-white/75 text-slate-600 ring-1 ring-white/80 hover:bg-white'
+                  }`}
+                >
+                  {sem.replace('Semester', 'Sem')}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 xl:max-h-[360px] xl:grid-cols-1">
+              {visibleSubjects.map(sub => (
+                <button
+                  key={sub._id}
+                  onClick={() => fetchResources(sub._id)}
+                  className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-300 ${
+                    selectedSubject === sub._id
+                      ? 'bg-white text-brand-700 font-semibold shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/70'
+                      : 'bg-white/45 text-slate-600 ring-1 ring-white/60 hover:bg-white/80 hover:shadow-sm'
+                  }`}
+                >
+                  <span className="line-clamp-2 leading-snug">{sub.name}</span>
+                </button>
+              ))}
+              {subjects.length === 0 && (
+                <p className="rounded-xl bg-white/60 p-3 text-sm italic text-slate-400">No subjects found for your branch.</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="cinematic-card bg-gradient-to-r from-white/92 via-brand-50/40 to-emerald-50/35 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="min-w-0">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">
+                  {selectedSubjectObj ? `Semester ${selectedSubjectObj.semester}` : 'Dashboard'}
+                </p>
+                <h1 className="line-clamp-2 text-xl font-display font-bold text-slate-900 sm:text-2xl">
+                  {selectedSubjectObj ? selectedSubjectObj.name : 'Pick a subject to start'}
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  {selectedSubjectObj ? `${selectedSubjectObj.degree} / ${selectedSubjectObj.branch}` : 'Notes, papers, uploads, and discussion stay focused after you choose one subject.'}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <button onClick={() => setUploadOpen(true)} className="btn btn-primary min-h-11 px-3 py-2 text-sm shadow-brand-500/20 hover:shadow-brand-500/30">
+                  <Upload size={15} /> Upload
+                </button>
+                <button onClick={() => selectedSubject ? navigate(`/chat?subject=${selectedSubject}`) : navigate('/resources')} className="btn btn-secondary min-h-11 px-3 py-2 text-sm">
+                  {selectedSubject ? <MessageSquare size={15} /> : <ArrowRight size={15} />}
+                  {selectedSubject ? 'Discussion' : 'Explore'}
+                </button>
+              </div>
+            </div>
+          </div>
 
         {!selectedSubject ? (
-          <div className="cinematic-card p-8 sm:p-12 text-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-56 h-56 bg-brand-100/60 rounded-full blur-3xl -z-0 group-hover:scale-150 transition-transform duration-700"></div>
-            <div className="absolute bottom-0 left-0 w-56 h-56 bg-emerald-100/45 rounded-full blur-3xl -z-0 animate-spotlight"></div>
-            <div className="relative z-10">
-              <div className="relative w-full max-w-xs mx-auto mb-6">
-                <div className="absolute -inset-5 bg-gradient-to-br from-brand-100/70 via-amber-100/50 to-emerald-100/40 rounded-3xl blur-xl"></div>
-                <img
-                  src="/image4.jpeg"
-                  alt="Bright aesthetic study desk"
-                  className="relative w-full h-auto rounded-2xl shadow-2xl shadow-brand-500/20 object-cover ring-1 ring-white/80 transition-transform duration-700 group-hover:scale-[1.02]"
-                />
+          <div className="cinematic-card overflow-hidden">
+            <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_300px]">
+              <div className="p-5 sm:p-7">
+                <p className="mb-2 text-sm font-semibold text-brand-700">Welcome back, {firstName}</p>
+                <h2 className="max-w-xl text-2xl font-display font-bold text-slate-900 sm:text-3xl">Choose one subject and the dashboard becomes a focused study desk.</h2>
+                <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">Start from the semester tabs on the left. You will see uploaded notes, papers, links, and discussion for the selected subject here.</p>
+                <button onClick={() => navigate('/resources')} className="btn btn-primary mt-5 min-h-11 px-4 py-2.5 text-sm shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30">
+                  Explore All Resources <ArrowRight size={16} />
+                </button>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2">Welcome back, {user?.name?.split(' ')[0]}!</h2>
-              <p className="text-slate-500 mb-6 max-w-md mx-auto">Your dashboard is ready. Pick a subject to open notes, question papers, discussions, and shared resources.</p>
-              <button onClick={() => navigate('/resources')} className="btn btn-primary shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5">
-                Explore All Resources <ArrowRight size={16} className="animate-bounce-x" />
-              </button>
+              <img
+                src="/image4.jpeg"
+                alt="Bright study desk"
+                className="hidden h-full min-h-[260px] w-full object-cover md:block"
+              />
             </div>
           </div>
         ) : resources.length === 0 ? (
@@ -241,6 +278,7 @@ const Dashboard = () => {
             ))}
           </div>
         )}
+        </section>
       </div>
 
       {/* Upload Modal */}
