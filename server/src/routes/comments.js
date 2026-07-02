@@ -13,7 +13,7 @@ const buildFileUrl = (req, filename) => {
 };
 
 // Get comments for a subject
-router.get('/:subjectId', async (req, res) => {
+router.get('/:subjectId', verifyToken, async (req, res) => {
   try {
     const { subjectId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
@@ -81,7 +81,7 @@ router.post('/:subjectId/voice', verifyToken, audioUpload.single('audio'), async
     if (!user) return res.status(401).json({ message: 'User not found' });
 
     const comment = await Comment.create({
-      text: '🎤 Voice message',
+      text: 'Voice message',
       type: 'voice',
       audioUrl: buildFileUrl(req, req.file.filename),
       userId: user._id,

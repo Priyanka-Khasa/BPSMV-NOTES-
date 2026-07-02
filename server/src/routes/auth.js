@@ -8,7 +8,7 @@ const User = require('../models/User');
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  sameSite: process.env.COOKIE_SAME_SITE || 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
@@ -52,6 +52,8 @@ const startSingleDeviceSession = async (res, user) => {
   return sessionId;
 };
 
+const getClientUrl = () => (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+
 // Google OAuth routes (only if credentials are valid)
 if (passport.googleEnabled) {
   router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
@@ -61,9 +63,9 @@ if (passport.googleEnabled) {
     async (req, res) => {
       await startSingleDeviceSession(res, req.user);
       if (req.user.onboarded) {
-        res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+        res.redirect(`${getClientUrl()}/dashboard`);
       } else {
-        res.redirect(`${process.env.CLIENT_URL}/onboarding`);
+        res.redirect(`${getClientUrl()}/onboarding`);
       }
     }
   );
@@ -105,7 +107,10 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ user: publicUser(user) });
   } catch (error) {
     console.error('Register error FULL:', error);
-    res.status(500).json({ message: 'Server error during registration', details: error.message, stack: error.stack });
+    res.status(500).json({
+      message: 'Server error during registration',
+      ...(process.env.NODE_ENV !== 'production' ? { details: error.message, stack: error.stack } : {})
+    });
   }
 });
 
