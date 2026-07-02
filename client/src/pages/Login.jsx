@@ -15,12 +15,16 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (searchParams.get('session') === 'ended') {
+      setError('Your account was logged in on another device, so this device was signed out.');
+    }
+
     if (isAuthenticated && user?.onboarded) {
       navigate('/dashboard', { replace: true });
     } else if (isAuthenticated && !user?.onboarded) {
       navigate('/onboarding', { replace: true });
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, searchParams]);
 
   const [form, setForm] = useState({ name: '', email: '', password: '', rollNumber: '' });
 

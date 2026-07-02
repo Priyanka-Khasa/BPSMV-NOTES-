@@ -133,6 +133,14 @@ const Jobs = () => {
     }
   };
 
+  const recordApplication = async (post) => {
+    try {
+      await axios.post(`/activity/job-apply/${post._id}`);
+    } catch (error) {
+      console.error('Could not record application activity:', error);
+    }
+  };
+
   return (
     <div className="relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] bg-[#f7f3ec] sm:-mx-6 lg:-mx-8">
       <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 lg:px-8">
@@ -252,7 +260,7 @@ const Jobs = () => {
 
                       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
                         <p className="text-xs text-slate-400">Posted {formatDate(post.createdAt)}</p>
-                        <a href={post.applyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-700">
+                        <a href={post.applyUrl} target="_blank" rel="noreferrer" onClick={() => recordApplication(post)} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-700">
                           Apply
                           <ArrowUpRight size={15} />
                         </a>

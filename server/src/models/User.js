@@ -33,6 +33,47 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String
   },
+  bio: {
+    type: String,
+    trim: true,
+    maxlength: 500,
+    default: ''
+  },
+  socialLinks: {
+    github: { type: String, trim: true, default: '' },
+    linkedin: { type: String, trim: true, default: '' },
+    instagram: { type: String, trim: true, default: '' },
+    facebook: { type: String, trim: true, default: '' },
+    leetcode: { type: String, trim: true, default: '' },
+    portfolio: { type: String, trim: true, default: '' },
+    hackerrank: { type: String, trim: true, default: '' },
+    website: { type: String, trim: true, default: '' }
+  },
+  semesterCgpa: [{
+    semester: {
+      type: Number,
+      min: 1,
+      max: 8,
+      required: true
+    },
+    cgpa: {
+      type: Number,
+      min: 0,
+      max: 10,
+      default: null
+    },
+    completedMonth: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    completedYear: {
+      type: Number,
+      min: 2000,
+      max: 2100,
+      default: null
+    }
+  }],
   degree: {
     type: String,
     enum: ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'BBA', 'MBA', 'B.Sc', 'M.Sc', 'B.A', 'M.A', 'Other'],
@@ -59,6 +100,13 @@ const userSchema = new mongoose.Schema({
   onboarded: {
     type: Boolean,
     default: false
+  },
+  activeSessionId: {
+    type: String,
+    select: false
+  },
+  lastLoginAt: {
+    type: Date
   }
 }, {
   timestamps: true

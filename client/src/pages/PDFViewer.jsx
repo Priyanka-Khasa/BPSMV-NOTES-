@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, FileText, Calendar, User, BookOpen, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, BookOpen, ExternalLink, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -19,6 +19,8 @@ const PDFViewer = () => {
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [completeSaving, setCompleteSaving] = useState(false);
+  const [completeMessage, setCompleteMessage] = useState('');
 
   useEffect(() => {
     fetchResource();
@@ -28,10 +30,27 @@ const PDFViewer = () => {
     try {
       const res = await axios.get(`/resources/${id}`);
       setResource(res.data);
+      if (res.data.fileType === 'pdf') {
+        axios.post(`/activity/pdf-open/${id}`).catch(() => {});
+      }
     } catch (err) {
       setError('Resource not found or could not be loaded.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const markCompleted = async () => {
+    setCompleteSaving(true);
+    setCompleteMessage('');
+    try {
+      await axios.post(`/activity/pdf-complete/${id}`);
+      setCompleteMessage('Marked completed. Your profile activity is updated.');
+      setTimeout(() => setCompleteMessage(''), 3000);
+    } catch (err) {
+      setCompleteMessage(err.response?.data?.message || 'Could not mark this PDF completed.');
+    } finally {
+      setCompleteSaving(false);
     }
   };
 
@@ -88,9 +107,26 @@ const PDFViewer = () => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Downloading and sharing resource PDFs is disabled. Access is session-protected and intended only for in-app reading.
+      <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
+        <span>Downloading and sharing resource PDFs is disabled. Access is session-protected and intended only for in-app reading.</span>
+        {isPdf && (
+          <button
+            type="button"
+            onClick={markCompleted}
+            disabled={completeSaving}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {completeSaving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
+            Mark completed
+          </button>
+        )}
       </div>
+
+      {completeMessage && (
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${completeMessage.includes('updated') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+          {completeMessage}
+        </div>
+      )}
 
       {/* Viewer */}
       <div className="card overflow-hidden">
