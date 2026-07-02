@@ -36,7 +36,7 @@ const canDelete = (user, resource) => {
 };
 
 // Get all resources with search & filter
-router.get('/all', async (req, res) => {
+router.get('/all', verifyToken, async (req, res) => {
   try {
     const { degree, branch, semester, year, subjectId, resourceType, search, page = 1, limit = 20 } = req.query;
     const filter = {};
@@ -76,8 +76,6 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ message: 'Error fetching resources' });
   }
 });
-
-const jwt = require('jsonwebtoken');
 
 // Public stats route
 router.get('/public/stats', async (req, res) => {
@@ -149,7 +147,7 @@ router.get('/subjects', verifyToken, async (req, res) => {
 });
 
 // Get unique degrees, branches for filter dropdowns
-router.get('/filter-options', async (req, res) => {
+router.get('/filter-options', verifyToken, async (req, res) => {
   try {
     const [degrees, branches] = await Promise.all([
       Subject.distinct('degree'),
@@ -162,7 +160,7 @@ router.get('/filter-options', async (req, res) => {
 });
 
 // Get resources for a specific subject
-router.get('/subject/:subjectId', async (req, res) => {
+router.get('/subject/:subjectId', verifyToken, async (req, res) => {
   try {
     const { type } = req.query;
     const filter = { subjectId: req.params.subjectId, isApproved: true };
@@ -210,7 +208,7 @@ router.get('/:id/file', verifyToken, async (req, res) => {
 });
 
 // Get single resource
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ message: 'Invalid resource ID' });
