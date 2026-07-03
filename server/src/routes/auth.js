@@ -198,28 +198,55 @@ router.post('/onboard', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const updates = { degree, branch, yearOfStudy, semester, onboarded: true };
+    if (!degree || !branch || !yearOfStudy || !semester) {
+      return res.status(400).json({ message: 'Degree, branch, year and semester are required' });
+    }
+
+    const numericYear = Number(yearOfStudy);
+    const numericSemester = Number(semester);
+    if (!Number.isInteger(numericYear) || numericYear < 1 || numericYear > 5) {
+      return res.status(400).json({ message: 'Please select a valid year of study' });
+    }
+    if (!Number.isInteger(numericSemester) || numericSemester < 1 || numericSemester > 10) {
+      return res.status(400).json({ message: 'Please select a valid semester' });
+    }
+
+    const updates = {
+      degree,
+      branch,
+      yearOfStudy: numericYear,
+      semester: numericSemester,
+      onboarded: true
+    };
 
     // If user doesn't have a rollNumber (e.g., Google OAuth), require it
     if (!user.rollNumber) {
       if (!rollNumber || !rollNumber.trim()) {
         return res.status(400).json({ message: 'Roll number is required to complete onboarding' });
       }
+      const normalizedRollNumber = rollNumber.trim().toUpperCase();
       const existingRoll = await User.findOne({
-        rollNumber: rollNumber.trim().toUpperCase(),
+        rollNumber: normalizedRollNumber,
         _id: { $ne: user._id }
       });
       if (existingRoll) {
         return res.status(409).json({ message: 'Roll number already registered' });
       }
-      updates.rollNumber = rollNumber.trim().toUpperCase();
+      updates.rollNumber = normalizedRollNumber;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, updates, { new: true, runValidators: true });
     setAuthCookie(res, updatedUser, req.user.sessionId);
-    res.json(updatedUser);
+    res.json(publicUser(updatedUser));
   } catch (error) {
     console.error('Onboard error:', error);
+    if (error.code === 11000 && error.keyPattern?.rollNumber) {
+      return res.status(409).json({ message: 'Roll number already registered' });
+    }
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors)[0]?.message || 'Invalid profile details';
+      return res.status(400).json({ message });
+    }
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
