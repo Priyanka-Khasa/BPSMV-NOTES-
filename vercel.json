@@ -4,6 +4,10 @@
   "outputDirectory": "client/dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://bpsmv-resource-hub-api.onrender.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
