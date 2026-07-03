@@ -12,6 +12,14 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
+const clearAuthCookie = (res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.COOKIE_SAME_SITE || 'lax'
+  });
+};
+
 const publicUser = (user) => ({
   _id: user._id,
   name: user.name,
@@ -148,18 +156,18 @@ const verifyToken = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'bpsmv_fallback_secret_2026');
     if (!decoded.sessionId) {
-      res.clearCookie('token');
+      clearAuthCookie(res);
       return res.status(401).json({ message: 'Session expired. Please log in again.' });
     }
 
     const user = await User.findById(decoded.id).select('+activeSessionId');
     if (!user) {
-      res.clearCookie('token');
+      clearAuthCookie(res);
       return res.status(401).json({ message: 'User not found' });
     }
 
     if (user.activeSessionId !== decoded.sessionId) {
-      res.clearCookie('token');
+      clearAuthCookie(res);
       return res.status(401).json({ message: 'This account is active on another device. Please log in again on this device.' });
     }
 
@@ -167,7 +175,7 @@ const verifyToken = async (req, res, next) => {
     req.authUser = user;
     next();
   } catch (err) {
-    res.clearCookie('token');
+    clearAuthCookie(res);
     res.status(401).json({ message: 'Invalid token' });
   }
 };
@@ -197,7 +205,10 @@ router.post('/onboard', verifyToken, async (req, res) => {
       if (!rollNumber || !rollNumber.trim()) {
         return res.status(400).json({ message: 'Roll number is required to complete onboarding' });
       }
-      const existingRoll = await User.findOne({ rollNumber: rollNumber.trim().toUpperCase() });
+      const existingRoll = await User.findOne({
+        rollNumber: rollNumber.trim().toUpperCase(),
+        _id: { $ne: user._id }
+      });
       if (existingRoll) {
         return res.status(409).json({ message: 'Roll number already registered' });
       }
@@ -279,12 +290,19 @@ router.put('/profile', verifyToken, async (req, res) => {
 // Logout
 router.post('/logout', verifyToken, async (req, res) => {
   await User.findByIdAndUpdate(req.user.id, { $unset: { activeSessionId: '' } });
-  res.clearCookie('token');
+  clearAuthCookie(res);
   res.json({ message: 'Logged out successfully' });
 });
 
 // Guest Login
-router.post('/guest', async (req, res) => {
+router.post('/guest', (req, res) => {
+  if (process.env.ENABLE_GUEST_LOGIN !== 'true') {
+    return res.status(404).json({ message: 'Guest login is disabled' });
+  }
+  return guestLoginHandler(req, res);
+});
+
+const guestLoginHandler = async (req, res) => {
   try {
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 10);
@@ -307,7 +325,7 @@ router.post('/guest', async (req, res) => {
     console.error('Guest login error:', error);
     res.status(500).json({ message: 'Guest login failed', details: error.message });
   }
-});
+};
 
 // Avatar upload
 const { upload: localUpload } = require('../config/storage');
