@@ -66,17 +66,23 @@ const getClientUrl = () => (process.env.CLIENT_URL || 'http://localhost:5173').r
 if (passport.googleEnabled) {
   router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-  router.get('/google/callback',
-    passport.authenticate('google', { session: false, failureRedirect: '/login-failed' }),
-    async (req, res) => {
-      await startSingleDeviceSession(res, req.user);
-      if (req.user.onboarded) {
-        res.redirect(`${getClientUrl()}/dashboard`);
-      } else {
-        res.redirect(`${getClientUrl()}/onboarding`);
+  router.get('/google/callback', (req, res, next) => {
+    passport.authenticate('google', { session: false }, async (error, user, info) => {
+      const clientUrl = getClientUrl();
+      if (error || !user) {
+        console.error('Google callback error:', error || info || 'No user returned');
+        return res.redirect(`${clientUrl}/login?error=google_auth_failed`);
       }
-    }
-  );
+
+      try {
+        await startSingleDeviceSession(res, user);
+        return res.redirect(user.onboarded ? `${clientUrl}/dashboard` : `${clientUrl}/onboarding`);
+      } catch (sessionError) {
+        console.error('Google session error:', sessionError);
+        return res.redirect(`${clientUrl}/login?error=session_failed`);
+      }
+    })(req, res, next);
+  });
 } else {
   router.get('/google', (req, res) => {
     res.status(503).json({ message: 'Google OAuth is not configured. Please use email/password login.' });
