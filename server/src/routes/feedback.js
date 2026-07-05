@@ -132,6 +132,10 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
     res.status(201).json({ message: 'Gift submitted successfully', feedback });
   } catch (error) {
     console.error('Gift submission error:', error);
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors)[0]?.message || 'Invalid Gift submission';
+      return res.status(400).json({ message });
+    }
     res.status(500).json({ message: 'Error submitting Gift form' });
   }
 });
