@@ -20,7 +20,7 @@ const feedbackSchema = new mongoose.Schema({
   },
   issueType: {
     type: String,
-    enum: ['Bug', 'Feature Request', 'Content Issue', 'Other'],
+    enum: ['Bug', 'Genuine Issue', 'Feature Request', 'Content Issue', 'Other'],
     required: true
   },
   description: {
