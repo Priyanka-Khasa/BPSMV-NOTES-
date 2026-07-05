@@ -7,13 +7,30 @@ const fixDB = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
-    // Drop the old googleId index (it was unique but not sparse, blocking null values)
     const collection = mongoose.connection.collection('users');
+    const indexes = await collection.indexes();
+
+    const dropIfNotSparse = async (name) => {
+      const index = indexes.find((item) => item.name === name);
+      if (!index) {
+        console.log(`${name} index does not exist yet`);
+        return;
+      }
+
+      if (index.sparse) {
+        console.log(`${name} index is already sparse`);
+        return;
+      }
+
+      await collection.dropIndex(name);
+      console.log(`Dropped old non-sparse ${name} index`);
+    };
+
     try {
-      await collection.dropIndex('googleId_1');
-      console.log('Dropped old googleId_1 index');
-    } catch (e) {
-      console.log('googleId_1 index did not exist or already fixed');
+      await dropIfNotSparse('googleId_1');
+      await dropIfNotSparse('rollNumber_1');
+    } catch (error) {
+      console.warn('Index cleanup warning:', error.message);
     }
 
     // Recreate indexes from the current schema
@@ -21,8 +38,8 @@ const fixDB = async () => {
     console.log('Synced indexes successfully');
 
     // Check current indexes
-    const indexes = await collection.indexes();
-    console.log('Current indexes:', indexes.map(i => i.name));
+    const updatedIndexes = await collection.indexes();
+    console.log('Current indexes:', updatedIndexes.map((i) => `${i.name}${i.sparse ? ' (sparse)' : ''}`));
 
     console.log('Done! You can now restart the server and register.');
     process.exit(0);
