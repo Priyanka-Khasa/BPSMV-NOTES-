@@ -18,6 +18,12 @@ const Login = () => {
     if (searchParams.get('session') === 'ended') {
       setError('Your account was logged in on another device, so this device was signed out.');
     }
+    if (searchParams.get('error') === 'google_auth_failed') {
+      setError('Google sign-in failed. Please check the Google OAuth redirect URI and try again.');
+    }
+    if (searchParams.get('error') === 'session_failed') {
+      setError('Google sign-in succeeded, but the login session could not be saved. Please try again.');
+    }
 
     if (isAuthenticated && user?.onboarded) {
       navigate('/dashboard', { replace: true });
