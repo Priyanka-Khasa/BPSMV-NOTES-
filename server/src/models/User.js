@@ -25,8 +25,9 @@ const userSchema = new mongoose.Schema({
   },
   rollNumber: {
     type: String,
-    required: true,
+    required: function() { return this.onboarded === true; },
     unique: true,
+    sparse: true,
     trim: true,
     uppercase: true
   },

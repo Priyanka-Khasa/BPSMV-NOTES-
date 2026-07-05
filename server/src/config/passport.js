@@ -22,15 +22,29 @@ if (hasValidGoogleCreds) {
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        const email = profile.emails?.[0]?.value?.toLowerCase();
+        if (!email) {
+          return done(new Error('Google account did not provide an email address'), null);
+        }
+
         let user = await User.findOne({ googleId: profile.id });
         if (user) {
           return done(null, user);
         }
+
+        user = await User.findOne({ email });
+        if (user) {
+          user.googleId = profile.id;
+          user.avatar = user.avatar || profile.photos?.[0]?.value;
+          await user.save({ validateBeforeSave: false });
+          return done(null, user);
+        }
+
         user = await User.create({
           googleId: profile.id,
-          email: profile.emails[0].value,
+          email,
           name: profile.displayName,
-          avatar: profile.photos[0].value,
+          avatar: profile.photos?.[0]?.value,
           onboarded: false
         });
         return done(null, user);

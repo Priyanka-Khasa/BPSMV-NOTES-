@@ -53,35 +53,33 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    setUser(null);
     const res = await axios.post('/auth/login', { email, password });
     setUser(res.data.user);
     return res.data.user;
   };
 
   const register = async (name, email, password, rollNumber) => {
+    setUser(null);
     const res = await axios.post('/auth/register', { name, email, password, rollNumber });
     setUser(res.data.user);
     return res.data.user;
   };
 
   const logout = async () => {
+    setUser(null);
     try {
       await axios.post('/auth/logout');
     } catch (err) {
       console.error('Logout error:', err.message);
     } finally {
       setUser(null);
-      window.location.href = '/login';
+      window.location.replace('/login');
     }
   };
 
-  const guestLogin = async () => {
-    const res = await axios.post('/auth/guest');
-    setUser(res.data.user);
-    return res.data.user;
-  };
-
   const googleLogin = () => {
+    setUser(null);
     window.location.href = `${API_BASE}/auth/google`;
   };
 
@@ -106,7 +104,6 @@ export const AuthProvider = ({ children }) => {
       register,
       logout,
       googleLogin,
-      guestLogin,
       updateProfile,
       onboard,
       fetchUser,

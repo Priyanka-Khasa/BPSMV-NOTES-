@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, ArrowRight, User, AlertCircle, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 
 const Login = () => {
@@ -11,12 +11,18 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, googleLogin, guestLogin, user, isAuthenticated } = useAuth();
+  const { login, register, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (searchParams.get('session') === 'ended') {
       setError('Your account was logged in on another device, so this device was signed out.');
+    }
+    if (searchParams.get('error') === 'google_auth_failed') {
+      setError('Google sign-in failed. Please check the Google OAuth redirect URI and try again.');
+    }
+    if (searchParams.get('error') === 'session_failed') {
+      setError('Google sign-in succeeded, but the login session could not be saved. Please try again.');
     }
 
     if (isAuthenticated && user?.onboarded) {
@@ -192,25 +198,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Guest Login */}
-          <button
-            onClick={async () => {
-              setLoading(true); setError('');
-              try {
-                await guestLogin();
-                navigate('/dashboard');
-              } catch (err) {
-                setError(err.response?.data?.message || 'Guest login failed');
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-            className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-brand-50 text-brand-700 border border-brand-200 rounded-xl text-sm font-medium hover:bg-brand-100 transition-all duration-300 hover:-translate-y-0.5"
-          >
-            <User size={18} /> Continue as Guest
-          </button>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">

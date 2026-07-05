@@ -13,6 +13,7 @@ const Onboarding = () => {
     rollNumber: ''
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,12 +50,13 @@ const Onboarding = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
     try {
       await onboard(formData);
       navigate('/dashboard');
     } catch (error) {
-      alert('Failed to save details. Please try again.');
+      setError(error.response?.data?.message || 'Failed to save details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -73,6 +75,12 @@ const Onboarding = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Roll Number</label>
               <input
