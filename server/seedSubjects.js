@@ -1,4 +1,3 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const Subject = require('./src/models/Subject');
 
@@ -265,38 +264,48 @@ const subjects = [
   { name: 'Comprehensive Seminar & General Proficiency', code: 'FT804', degree: 'B.Tech', branch: 'FT', semester: 8 },
 ];
 
+const subjectsWithYear = subjects.map((subject) => ({
+  ...subject,
+  year: Math.ceil(Math.min(Math.max(Number(subject.semester) || 1, 1), 8) / 2)
+}));
+
+const validateSubjects = () => {
+  const invalidSubjects = subjectsWithYear.filter((subject) => (
+    !subject.branch ||
+    !subject.year ||
+    !subject.semester ||
+    subject.semester < 1 ||
+    subject.semester > 8 ||
+    subject.year !== Math.ceil(subject.semester / 2)
+  ));
+
+  if (invalidSubjects.length) {
+    throw new Error(`Invalid subject mappings found: ${invalidSubjects.map((subject) => subject.code).join(', ')}`);
+  }
+};
+
+const seedSubjects = async () => {
+  validateSubjects();
+
+  const result = await Subject.bulkWrite(subjectsWithYear.map((subject) => ({
+    updateOne: {
+      filter: { code: subject.code, degree: subject.degree, branch: subject.branch },
+      update: { $set: subject },
+      upsert: true
+    }
+  })));
+
+  console.log(`Subjects ready. Upserted: ${result.upsertedCount}, updated: ${result.modifiedCount}`);
+  return result;
+};
+
 const seedDB = async () => {
+  require('dotenv').config();
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected for Seeding');
-
-    const subjectsWithYear = subjects.map((subject) => ({
-      ...subject,
-      year: Math.ceil(Math.min(Math.max(Number(subject.semester) || 1, 1), 8) / 2)
-    }));
-
-    const invalidSubjects = subjectsWithYear.filter((subject) => (
-      !subject.branch ||
-      !subject.year ||
-      !subject.semester ||
-      subject.semester < 1 ||
-      subject.semester > 8 ||
-      subject.year !== Math.ceil(subject.semester / 2)
-    ));
-
-    if (invalidSubjects.length) {
-      throw new Error(`Invalid subject mappings found: ${invalidSubjects.map((subject) => subject.code).join(', ')}`);
-    }
-
-    const result = await Subject.bulkWrite(subjectsWithYear.map((subject) => ({
-      updateOne: {
-        filter: { code: subject.code, degree: subject.degree, branch: subject.branch },
-        update: { $set: subject },
-        upsert: true
-      }
-    })));
-    console.log(`Subjects seeded successfully! Upserted: ${result.upsertedCount}, updated: ${result.modifiedCount}`);
-
+    await seedSubjects();
+    await mongoose.disconnect();
     process.exit(0);
   } catch (error) {
     console.error('Seeding error:', error);
@@ -304,4 +313,11 @@ const seedDB = async () => {
   }
 };
 
-seedDB();
+if (require.main === module) {
+  seedDB();
+}
+
+module.exports = {
+  seedSubjects,
+  subjects: subjectsWithYear
+};

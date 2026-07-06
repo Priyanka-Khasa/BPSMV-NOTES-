@@ -8,7 +8,8 @@ const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { upload, uploadDir } = require('../config/storage');
-const { applyAcademicProgression } = require('../utils/academicProgression');
+const { seedSubjects } = require('../../seedSubjects');
+const { applyAcademicProgression, normalizeBranch } = require('../utils/academicProgression');
 
 // Helper to build public file URL from multer file
 const buildFileUrl = (req, filename) => {
@@ -34,6 +35,8 @@ const sanitizeResource = (resource) => {
 const canDelete = (user, resource) => {
   return user.role === 'admin' || resource.uploadedBy.toString() === user.id;
 };
+
+const findSubjects = (filter) => Subject.find(filter).sort({ semester: 1, name: 1 });
 
 // Get all resources with search & filter
 router.get('/all', verifyToken, async (req, res) => {
@@ -127,26 +130,36 @@ router.get('/subjects', verifyToken, async (req, res) => {
 
     if (user.role === 'student') {
       if (user.degree) filter.degree = user.degree;
-      if (user.branch) filter.branch = user.branch;
+      if (user.branch) filter.branch = normalizeBranch(user.branch);
       if (user.semester) filter.semester = user.semester;
       if (user.yearOfStudy) filter.year = user.yearOfStudy;
     } else if (user.role === 'admin') {
       if (showAll !== 'true') {
         if (user.degree) filter.degree = user.degree;
-        if (user.branch) filter.branch = user.branch;
+        if (user.branch) filter.branch = normalizeBranch(user.branch);
       }
     }
 
     if (degree) filter.degree = degree;
-    if (branch) filter.branch = branch;
+    if (branch) filter.branch = normalizeBranch(branch);
     if (semester) filter.semester = parseInt(semester);
     if (year) filter.year = parseInt(year);
 
-    let subjects = await Subject.find(filter).sort({ semester: 1, name: 1 });
+    let subjects = await findSubjects(filter);
     if (!subjects.length && filter.year) {
       const legacyFilter = { ...filter };
       delete legacyFilter.year;
-      subjects = await Subject.find(legacyFilter).sort({ semester: 1, name: 1 });
+      subjects = await findSubjects(legacyFilter);
+    }
+
+    if (!subjects.length && filter.degree && filter.branch && filter.semester) {
+      await seedSubjects();
+      subjects = await findSubjects(filter);
+      if (!subjects.length && filter.year) {
+        const legacyFilter = { ...filter };
+        delete legacyFilter.year;
+        subjects = await findSubjects(legacyFilter);
+      }
     }
     res.json(subjects);
   } catch (error) {
