@@ -86,12 +86,20 @@ const userSchema = new mongoose.Schema({
   yearOfStudy: {
     type: Number,
     min: 1,
-    max: 5
+    max: 4
   },
   semester: {
     type: Number,
     min: 1,
-    max: 10
+    max: 8
+  },
+  lastAcademicProgressionAt: {
+    type: Date
+  },
+  lastAcademicProgressionCycle: {
+    type: String,
+    trim: true,
+    default: ''
   },
   role: {
     type: String,

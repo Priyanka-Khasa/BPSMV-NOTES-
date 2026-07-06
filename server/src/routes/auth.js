@@ -4,6 +4,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
+const { applyAcademicProgression, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 
 const cookieOptions = {
   httpOnly: true,
@@ -75,6 +76,7 @@ if (passport.googleEnabled) {
       }
 
       try {
+        await applyAcademicProgression(user);
         await startSingleDeviceSession(res, user);
         return res.redirect(user.onboarded ? `${clientUrl}/dashboard` : `${clientUrl}/onboarding`);
       } catch (sessionError) {
@@ -146,6 +148,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    await applyAcademicProgression(user);
     await startSingleDeviceSession(res, user);
     res.json({ user: publicUser(user) });
   } catch (error) {
@@ -191,6 +194,7 @@ router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-googleId');
     if (!user) return res.status(404).json({ message: 'User not found' });
+    await applyAcademicProgression(user);
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -208,20 +212,16 @@ router.post('/onboard', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Degree, branch, year and semester are required' });
     }
 
-    const numericYear = Number(yearOfStudy);
-    const numericSemester = Number(semester);
-    if (!Number.isInteger(numericYear) || numericYear < 1 || numericYear > 5) {
-      return res.status(400).json({ message: 'Please select a valid year of study' });
-    }
-    if (!Number.isInteger(numericSemester) || numericSemester < 1 || numericSemester > 10) {
-      return res.status(400).json({ message: 'Please select a valid semester' });
-    }
+    const normalizedAcademic = normalizeYearSemester(yearOfStudy, semester);
+    if (normalizedAcademic.error) return res.status(400).json({ message: normalizedAcademic.error });
 
     const updates = {
       degree,
       branch,
-      yearOfStudy: numericYear,
-      semester: numericSemester,
+      yearOfStudy: normalizedAcademic.yearOfStudy,
+      semester: normalizedAcademic.semester,
+      lastAcademicProgressionAt: new Date(),
+      lastAcademicProgressionCycle: '',
       onboarded: true
     };
 
@@ -277,12 +277,17 @@ router.put('/profile', verifyToken, async (req, res) => {
         .filter((row) => row.cgpa === null || (row.cgpa >= 0 && row.cgpa <= 10))
       : undefined;
 
+    const normalizedAcademic = normalizeYearSemester(yearOfStudy, semester);
+    if (normalizedAcademic.error) return res.status(400).json({ message: normalizedAcademic.error });
+
     let updates = {
       name,
       degree,
       branch,
-      yearOfStudy,
-      semester: Math.min(Math.max(Number(semester) || 1, 1), 10),
+      yearOfStudy: normalizedAcademic.yearOfStudy,
+      semester: normalizedAcademic.semester,
+      lastAcademicProgressionAt: new Date(),
+      lastAcademicProgressionCycle: '',
       bio: bio || '',
       socialLinks: {
         github: socialLinks?.github || '',
@@ -302,6 +307,7 @@ router.put('/profile', verifyToken, async (req, res) => {
       if (completedSemesters.length > 0) {
         const latestCompleted = Math.max(...completedSemesters.map((row) => row.semester));
         updates.semester = Math.min(latestCompleted + 1, 8);
+        updates.yearOfStudy = yearFromSemester(updates.semester);
       }
     }
     if (req.body.rollNumber !== undefined && user.role === 'admin') {

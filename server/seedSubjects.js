@@ -270,11 +270,32 @@ const seedDB = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected for Seeding');
 
-    await Subject.deleteMany();
-    console.log('Cleared existing subjects');
+    const subjectsWithYear = subjects.map((subject) => ({
+      ...subject,
+      year: Math.ceil(Math.min(Math.max(Number(subject.semester) || 1, 1), 8) / 2)
+    }));
 
-    await Subject.insertMany(subjects);
-    console.log('Subjects seeded successfully!');
+    const invalidSubjects = subjectsWithYear.filter((subject) => (
+      !subject.branch ||
+      !subject.year ||
+      !subject.semester ||
+      subject.semester < 1 ||
+      subject.semester > 8 ||
+      subject.year !== Math.ceil(subject.semester / 2)
+    ));
+
+    if (invalidSubjects.length) {
+      throw new Error(`Invalid subject mappings found: ${invalidSubjects.map((subject) => subject.code).join(', ')}`);
+    }
+
+    const result = await Subject.bulkWrite(subjectsWithYear.map((subject) => ({
+      updateOne: {
+        filter: { code: subject.code, degree: subject.degree, branch: subject.branch },
+        update: { $set: subject },
+        upsert: true
+      }
+    })));
+    console.log(`Subjects seeded successfully! Upserted: ${result.upsertedCount}, updated: ${result.modifiedCount}`);
 
     process.exit(0);
   } catch (error) {

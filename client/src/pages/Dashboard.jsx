@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -12,19 +12,27 @@ const Dashboard = () => {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [activeSemester, setActiveSemester] = useState('');
 
   useEffect(() => {
-    if (user?.degree && user?.branch) {
-      fetchSubjects(user.degree, user.branch);
+    if (user?.degree && user?.branch && user?.semester) {
+      fetchSubjects();
     } else {
       setLoading(false);
     }
   }, [user]);
 
-  const fetchSubjects = async (degree, branch) => {
+  const fetchSubjects = async () => {
+    setLoading(true);
+    setSelectedSubject(null);
+    setResources([]);
     try {
-      const res = await axios.get(`/resources/subjects?degree=${degree}&branch=${branch}`);
+      const params = new URLSearchParams({
+        degree: user.degree,
+        branch: user.branch,
+        semester: String(user.semester)
+      });
+      if (user.yearOfStudy) params.set('year', String(user.yearOfStudy));
+      const res = await axios.get(`/resources/subjects?${params.toString()}`);
       setSubjects(res.data);
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -55,26 +63,8 @@ const Dashboard = () => {
 
   const selectedSubjectObj = subjects.find(s => s._id === selectedSubject);
 
-  const groupedSubjects = useMemo(() => subjects.reduce((acc, s) => {
-    const sem = `Semester ${s.semester}`;
-    if (!acc[sem]) acc[sem] = [];
-    acc[sem].push(s);
-    return acc;
-  }, {}), [subjects]);
-
-  const semesterKeys = Object.keys(groupedSubjects).sort((a, b) => {
-    const aNumber = Number(a.replace(/\D/g, ''));
-    const bNumber = Number(b.replace(/\D/g, ''));
-    return aNumber - bNumber;
-  });
-
-  useEffect(() => {
-    if (!activeSemester && semesterKeys.length > 0) {
-      setActiveSemester(semesterKeys[0]);
-    }
-  }, [activeSemester, semesterKeys]);
-
-  const visibleSubjects = activeSemester ? groupedSubjects[activeSemester] || [] : subjects;
+  const currentSemesterLabel = user?.semester ? `Semester ${user.semester}` : 'Semester';
+  const visibleSubjects = subjects;
   const firstName = user?.name?.split(' ')[0] || 'Student';
 
   if (loading) {
@@ -101,7 +91,7 @@ const Dashboard = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-bold text-slate-900">Hi, {firstName}</p>
-                <p className="truncate text-xs font-medium text-slate-500">{user?.degree} / {user?.branch}</p>
+                <p className="truncate text-xs font-medium text-slate-500">{user?.degree} / {user?.branch} / Sem {user?.semester || '-'}</p>
               </div>
               <button
                 onClick={() => navigate('/profile')}
@@ -130,8 +120,8 @@ const Dashboard = () => {
               </div>
               <div className="rounded-xl bg-white/70 p-3 text-center ring-1 ring-white/80">
                 <Clock size={16} className="mx-auto mb-1 text-brand-600" />
-                <p className="text-lg font-bold leading-none text-slate-900">{semesterKeys.length}</p>
-                <p className="mt-1 text-[11px] font-medium text-slate-500">Semesters</p>
+                <p className="text-lg font-bold leading-none text-slate-900">{user?.semester || '-'}</p>
+                <p className="mt-1 text-[11px] font-medium text-slate-500">Semester</p>
               </div>
               <div className="rounded-xl bg-white/70 p-3 text-center ring-1 ring-white/80">
                 <TrendingUp size={16} className="mx-auto mb-1 text-brand-600" />
@@ -147,24 +137,8 @@ const Dashboard = () => {
                 <BookOpen size={17} className="text-brand-600" /> Subjects
               </h2>
               <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-                {activeSemester || 'All'}
+                {currentSemesterLabel}
               </span>
-            </div>
-
-            <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
-              {semesterKeys.map((sem) => (
-                <button
-                  key={sem}
-                  onClick={() => setActiveSemester(sem)}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                    activeSemester === sem
-                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                      : 'bg-white/75 text-slate-600 ring-1 ring-white/80 hover:bg-white'
-                  }`}
-                >
-                  {sem.replace('Semester', 'Sem')}
-                </button>
-              ))}
             </div>
 
             <div className="grid max-h-[260px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 xl:max-h-[360px] xl:grid-cols-1">
@@ -182,7 +156,7 @@ const Dashboard = () => {
                 </button>
               ))}
               {subjects.length === 0 && (
-                <p className="rounded-xl bg-white/60 p-3 text-sm italic text-slate-400">No subjects found for your branch.</p>
+                <p className="rounded-xl bg-white/60 p-3 text-sm italic text-slate-500">No subjects added for your current semester yet.</p>
               )}
             </div>
           </div>
@@ -220,7 +194,7 @@ const Dashboard = () => {
               <div className="p-5 sm:p-7">
                 <p className="mb-2 text-sm font-semibold text-brand-700">Welcome back, {firstName}</p>
                 <h2 className="max-w-xl text-2xl font-display font-bold text-slate-900 sm:text-3xl">Choose one subject and the dashboard becomes a focused study desk.</h2>
-                <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">Start from the semester tabs on the left. You will see uploaded notes, papers, links, and discussion for the selected subject here.</p>
+                <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">Your dashboard now shows only {user?.branch || 'your branch'} Semester {user?.semester || '-'} subjects. Choose one to see notes, papers, links, and discussion.</p>
                 <button onClick={() => navigate('/resources')} className="btn btn-primary mt-5 min-h-11 px-4 py-2.5 text-sm shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30">
                   Explore All Resources <ArrowRight size={16} />
                 </button>

@@ -27,6 +27,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import ActivityCalendar from '../components/ActivityCalendar';
+import { getSemestersForYear, getYearFromSemester, normalizeAcademicSelection } from '../utils/academic';
 
 const socialFields = [
   { key: 'github', label: 'GitHub', icon: Github, placeholder: 'https://github.com/username' },
@@ -122,7 +123,21 @@ const Profile = () => {
     Other: ['General'],
   };
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((current) => {
+      if (name === 'degree') {
+        return { ...current, degree: value, branch: '' };
+      }
+      if (name === 'yearOfStudy') {
+        return { ...current, ...normalizeAcademicSelection(value, current.semester) };
+      }
+      if (name === 'semester') {
+        return { ...current, semester: value };
+      }
+      return { ...current, [name]: value };
+    });
+  };
   const handleSocialChange = (key, value) => {
     setForm((current) => ({
       ...current,
@@ -135,9 +150,11 @@ const Profile = () => {
       const rows = current.semesterCgpa.map((row, rowIndex) => (rowIndex === index ? { ...row, [key]: value } : row));
       const completed = rows.filter((row) => row.cgpa !== '' && row.completedMonth);
       const latestCompleted = completed.length ? Math.max(...completed.map((row) => row.semester)) : Number(current.semester) || 1;
+      const nextSemester = Math.min(latestCompleted + 1, 8);
       return {
         ...current,
-        semester: String(Math.min(latestCompleted + 1, 8)),
+        yearOfStudy: String(getYearFromSemester(nextSemester)),
+        semester: String(nextSemester),
         semesterCgpa: rows,
       };
     });
@@ -223,6 +240,7 @@ const Profile = () => {
     : '--';
 
   const filledSocialLinks = Object.values(form.socialLinks || {}).filter(Boolean).length;
+  const availableSemesters = getSemestersForYear(form.yearOfStudy);
 
   const completeness = useMemo(() => {
     const checks = [
@@ -505,7 +523,7 @@ const Profile = () => {
                   <option value="" disabled>
                     Select
                   </option>
-                  {[1, 2, 3, 4, 5].map((year) => (
+                  {[1, 2, 3, 4].map((year) => (
                     <option key={year} value={year}>
                       Year {year}
                     </option>
@@ -514,11 +532,11 @@ const Profile = () => {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Semester</label>
-                <select name="semester" value={form.semester} onChange={handleChange} className="input-field" required>
+                <select name="semester" value={form.semester} onChange={handleChange} className="input-field" required disabled={!form.yearOfStudy}>
                   <option value="" disabled>
                     Select
                   </option>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((sem) => (
+                  {availableSemesters.map((sem) => (
                     <option key={sem} value={sem}>
                       Sem {sem}
                     </option>
