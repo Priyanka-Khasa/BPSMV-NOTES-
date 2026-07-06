@@ -140,7 +140,7 @@ const Home = () => {
   const journey = [
     { icon: UserPlus, title: 'Enter', text: 'Create your account and land in a calm student workspace.' },
     { icon: Layers, title: 'Filter', text: 'Choose your course, branch, semester, and subject.' },
-    { icon: Eye, title: 'Preview', text: 'Read protected resources inside the hub without download access.' },
+    { icon: Eye, title: 'Preview', text: 'Read resources in the hub, then open or download them whenever needed.' },
     { icon: Orbit, title: 'Return', text: 'Ask doubts, upload notes, and keep the library improving.' },
   ];
 

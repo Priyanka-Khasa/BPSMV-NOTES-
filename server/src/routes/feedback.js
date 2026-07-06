@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
+const fs = require('fs/promises');
 const Feedback = require('../models/Feedback');
 const { feedbackUpload } = require('../config/storage');
 
@@ -29,6 +30,41 @@ const createTransporter = () => {
     secure: port === 465,
     auth: { user, pass }
   });
+};
+
+const sendWithResend = async ({ to, subject, html, attachment }) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return false;
+
+  const payload = {
+    from: process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>',
+    to,
+    subject,
+    html
+  };
+
+  if (attachment) {
+    payload.attachments = [{
+      filename: attachment.filename,
+      content: await fs.readFile(attachment.path, 'base64')
+    }];
+  }
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Resend email failed (${response.status}): ${details}`);
+  }
+
+  return true;
 };
 
 // Helper: build public file URL from multer file
@@ -61,10 +97,7 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
       additionalComments: additionalComments ? additionalComments.trim() : undefined
     });
 
-    // Send emails
-    const transporter = createTransporter();
     const adminEmail = process.env.ADMIN_EMAIL || 'priyankakhasa937@gmail.com';
-
     const safeFullName = escapeHtml(fullName);
     const safeEmail = escapeHtml(email);
     const safePhone = escapeHtml(phone || 'N/A');
@@ -97,39 +130,65 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
       </div>
     `;
 
-    if (transporter) {
+    res.status(201).json({ message: 'Gift submitted successfully', feedback });
+
+    setImmediate(async () => {
       try {
-        await transporter.sendMail({
-          from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
+        const sentAdminWithResend = await sendWithResend({
           to: adminEmail,
           subject: `New Gift Submission: ${issueType} from ${fullName}`,
           html: emailHtml,
-          attachments: [{
+          attachment: {
             filename: req.file.originalname,
             path: req.file.path
-          }]
+          }
         });
 
-        await transporter.sendMail({
-          from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: 'Thank you for your Gift submission',
-          html: confirmationHtml
-        });
-      } catch (emailErr) {
-        console.error('Email sending failed:', emailErr);
+        if (sentAdminWithResend) {
+          await sendWithResend({
+            to: email,
+            subject: 'Thank you for your Gift submission',
+            html: confirmationHtml
+          });
+          return;
+        }
+      } catch (resendErr) {
+        console.error('Resend email failed:', resendErr);
       }
-    } else {
-      console.log('--- GIFT EMAIL (Admin) ---');
-      console.log(`To: ${adminEmail}`);
-      console.log(`Subject: New Gift Submission: ${issueType} from ${fullName}`);
-      console.log(emailHtml);
-      console.log('--- CONFIRMATION EMAIL ---');
-      console.log(`To: ${email}`);
-      console.log(confirmationHtml);
-    }
 
-    res.status(201).json({ message: 'Gift submitted successfully', feedback });
+      const transporter = createTransporter();
+      if (transporter) {
+        try {
+          await transporter.sendMail({
+            from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
+            to: adminEmail,
+            subject: `New Gift Submission: ${issueType} from ${fullName}`,
+            html: emailHtml,
+            attachments: [{
+              filename: req.file.originalname,
+              path: req.file.path
+            }]
+          });
+
+          await transporter.sendMail({
+            from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
+            to: email,
+            subject: 'Thank you for your Gift submission',
+            html: confirmationHtml
+          });
+        } catch (emailErr) {
+          console.error('Email sending failed:', emailErr);
+        }
+      } else {
+        console.log('--- GIFT EMAIL (Admin) ---');
+        console.log(`To: ${adminEmail}`);
+        console.log(`Subject: New Gift Submission: ${issueType} from ${fullName}`);
+        console.log(emailHtml);
+        console.log('--- CONFIRMATION EMAIL ---');
+        console.log(`To: ${email}`);
+        console.log(confirmationHtml);
+      }
+    });
   } catch (error) {
     console.error('Gift submission error:', error);
     if (error.name === 'ValidationError') {

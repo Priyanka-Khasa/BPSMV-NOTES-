@@ -41,14 +41,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
-// Serve non-PDF uploaded files statically. Resource PDFs are served only through
-// protected resource routes so direct sharing of /uploads/*.pdf does not work.
-app.use('/uploads', (req, res, next) => {
-  if (req.path.toLowerCase().endsWith('.pdf')) {
-    return res.status(403).json({ message: 'Direct PDF access is blocked' });
-  }
-  return next();
-}, express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded files normally so students can open and download PDFs.
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.get('/api/health', (req, res) => {

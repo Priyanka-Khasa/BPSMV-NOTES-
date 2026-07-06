@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, FileText, Calendar, User, BookOpen, ExternalLink, ShieldCheck, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, BookOpen, ExternalLink, CheckCircle, Loader2, Download, Eye } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -78,21 +78,19 @@ const PDFViewer = () => {
 
   const isPdf = resource.fileType === 'pdf';
   const isImage = resource.fileType === 'image';
-  const hasProtectedPreview = isPdf || isImage;
-  const secureFileUrl = `${API_BASE}/resources/${id}/file`;
-  const securePdfUrl = `${secureFileUrl}#toolbar=0&navpanes=0&scrollbar=0&download=0&print=0`;
+  const fileUrl = resource.fileUrl || `${API_BASE}/resources/${id}/file`;
 
   return (
-    <div className="space-y-4 animate-fade-in" onContextMenu={(event) => event.preventDefault()}>
+    <div className="space-y-4 animate-fade-in">
       {/* Header */}
       <div className="card p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-xl transition-all duration-300 hover:scale-105 mt-0.5">
+            <button onClick={() => navigate(-1)} className="mt-0.5 rounded-xl p-2 transition-all duration-300 hover:scale-105 hover:bg-slate-100" aria-label="Go back">
               <ArrowLeft size={20} className="text-slate-600" />
             </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-bold text-slate-900">{resource.title}</h1>
+            <div className="min-w-0">
+              <h1 className="break-words text-xl font-display font-bold text-slate-900 sm:text-2xl">{resource.title}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-slate-500">
                 <span className="flex items-center gap-1"><BookOpen size={14} /> {resource.subjectName}</span>
                 <span className="flex items-center gap-1"><User size={14} /> {resource.uploaderName}</span>
@@ -100,15 +98,21 @@ const PDFViewer = () => {
               </div>
             </div>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
-            <ShieldCheck size={16} />
-            Protected preview
-          </div>
+          {(isPdf || isImage) && (
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary px-4 py-2 text-sm">
+                <Eye size={16} /> Open
+              </a>
+              <a href={fileUrl} download className="btn btn-primary px-4 py-2 text-sm">
+                <Download size={16} /> Download
+              </a>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
-        <span>Downloading and sharing resource PDFs is disabled. Access is session-protected and intended only for in-app reading.</span>
+      <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 sm:flex-row sm:items-center sm:justify-between">
+        <span>Open the document here, or use Open/Download for a smoother phone reading experience.</span>
         {isPdf && (
           <button
             type="button"
@@ -167,18 +171,17 @@ const PDFViewer = () => {
               </div>
             );
           })()
-        ) : isPdf && hasProtectedPreview ? (
-          <div className="w-full h-[70vh] sm:h-[80vh]">
+        ) : isPdf ? (
+          <div className="h-[calc(100dvh-260px)] min-h-[520px] w-full sm:h-[80vh]">
             <iframe
-              src={securePdfUrl}
+              src={fileUrl}
               title={resource.title}
               className="w-full h-full border-0"
-              sandbox="allow-same-origin allow-scripts"
             />
           </div>
-        ) : isImage && hasProtectedPreview ? (
-          <div className="p-4 flex justify-center">
-            <img src={secureFileUrl} alt={resource.title} className="max-w-full max-h-[80vh] object-contain rounded-xl" draggable="false" />
+        ) : isImage ? (
+          <div className="flex justify-center p-2 sm:p-4">
+            <img src={fileUrl} alt={resource.title} className="max-h-[80vh] max-w-full rounded-xl object-contain" />
           </div>
         ) : (
           <div className="p-12 text-center">
