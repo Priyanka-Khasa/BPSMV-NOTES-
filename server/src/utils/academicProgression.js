@@ -5,7 +5,25 @@ const semesterYearMap = {
   4: [7, 8]
 };
 
+const branchAliases = {
+  CSE: ['CSE', 'CS', 'COMPUTER SCIENCE', 'COMPUTER SCIENCE ENGINEERING', 'COMPUTER SCIENCE AND ENGINEERING'],
+  ECE: ['ECE', 'EC', 'ELECTRONICS', 'ELECTRONICS AND COMMUNICATION', 'ELECTRONICS AND COMMUNICATION ENGINEERING'],
+  IT: ['IT', 'INFORMATION TECHNOLOGY'],
+  ME: ['ME', 'MECHANICAL', 'MECHANICAL ENGINEERING'],
+  CE: ['CE', 'CIVIL', 'CIVIL ENGINEERING'],
+  EE: ['EE', 'ELECTRICAL', 'ELECTRICAL ENGINEERING'],
+  FT: ['FT', 'FASHION TECHNOLOGY']
+};
+
 const clampSemester = (semester) => Math.min(Math.max(Number(semester) || 1, 1), 8);
+
+const normalizeText = (value) => String(value || '').trim().replace(/\s+/g, ' ').toUpperCase();
+
+const normalizeBranch = (branch) => {
+  const normalized = normalizeText(branch);
+  const match = Object.entries(branchAliases).find(([, aliases]) => aliases.includes(normalized));
+  return match ? match[0] : String(branch || '').trim();
+};
 
 const yearFromSemester = (semester) => Math.ceil(clampSemester(semester) / 2);
 
@@ -106,6 +124,7 @@ module.exports = {
   allowedSemestersForYear,
   applyAcademicProgression,
   getSubjectYear,
+  normalizeBranch,
   normalizeYearSemester,
   yearFromSemester
 };

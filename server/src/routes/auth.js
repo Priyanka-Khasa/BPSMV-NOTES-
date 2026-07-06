@@ -4,7 +4,7 @@ const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
-const { applyAcademicProgression, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
+const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 
 const cookieOptions = {
   httpOnly: true,
@@ -217,7 +217,7 @@ router.post('/onboard', verifyToken, async (req, res) => {
 
     const updates = {
       degree,
-      branch,
+      branch: normalizeBranch(branch),
       yearOfStudy: normalizedAcademic.yearOfStudy,
       semester: normalizedAcademic.semester,
       lastAcademicProgressionAt: new Date(),
@@ -283,7 +283,7 @@ router.put('/profile', verifyToken, async (req, res) => {
     let updates = {
       name,
       degree,
-      branch,
+      branch: normalizeBranch(branch),
       yearOfStudy: normalizedAcademic.yearOfStudy,
       semester: normalizedAcademic.semester,
       lastAcademicProgressionAt: new Date(),

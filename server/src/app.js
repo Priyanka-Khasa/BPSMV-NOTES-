@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
+const { seedSubjects } = require('../seedSubjects');
 
 // Initialize express app
 const app = express();
@@ -61,7 +62,13 @@ app.use('/api/activity', require('./routes/activity'));
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+  try {
+    await seedSubjects();
+  } catch (error) {
+    console.error(`Subject seed check failed: ${error.message}`);
+  }
+
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Uploads served at http://localhost:${PORT}/uploads`);
