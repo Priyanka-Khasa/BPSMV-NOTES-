@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ArrowRight, GraduationCap, BookOpen } from 'lucide-react';
+import { ArrowRight, GraduationCap } from 'lucide-react';
+import { getSemestersForYear, normalizeAcademicSelection } from '../utils/academic';
 
 const Onboarding = () => {
   const { onboard, user, isAuthenticated } = useAuth();
@@ -45,7 +46,16 @@ const Onboarding = () => {
   const getAvailableBranches = () => branchesMap[formData.degree] || branchesMap['Other'];
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((current) => {
+      if (name === 'degree') {
+        return { ...current, degree: value, branch: '' };
+      }
+      if (name === 'yearOfStudy') {
+        return { ...current, ...normalizeAcademicSelection(value, current.semester) };
+      }
+      return { ...current, [name]: value };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -61,6 +71,8 @@ const Onboarding = () => {
       setLoading(false);
     }
   };
+
+  const availableSemesters = getSemestersForYear(formData.yearOfStudy);
 
   return (
     <div className="flex items-center justify-center min-h-[80vh]">
@@ -119,14 +131,14 @@ const Onboarding = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Year of Study</label>
                 <select name="yearOfStudy" value={formData.yearOfStudy} onChange={handleChange} className="input-field" required>
                   <option value="" disabled>Select</option>
-                  {[1,2,3,4,5].map(y => <option key={y} value={y}>Year {y}</option>)}
+                  {[1,2,3,4].map(y => <option key={y} value={y}>Year {y}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Semester</label>
-                <select name="semester" value={formData.semester} onChange={handleChange} className="input-field" required>
+                <select name="semester" value={formData.semester} onChange={handleChange} className="input-field" required disabled={!formData.yearOfStudy}>
                   <option value="" disabled>Select</option>
-                  {[1,2,3,4,5,6,7,8,9,10].map(s => <option key={s} value={s}>Sem {s}</option>)}
+                  {availableSemesters.map(s => <option key={s} value={s}>Sem {s}</option>)}
                 </select>
               </div>
             </div>

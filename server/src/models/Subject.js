@@ -19,11 +19,17 @@ const subjectSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  year: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 4
+  },
   semester: {
     type: Number,
     required: true,
     min: 1,
-    max: 10
+    max: 8
   }
 }, {
   timestamps: true

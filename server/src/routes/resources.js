@@ -8,6 +8,7 @@ const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { upload, uploadDir } = require('../config/storage');
+const { applyAcademicProgression } = require('../utils/academicProgression');
 
 // Helper to build public file URL from multer file
 const buildFileUrl = (req, filename) => {
@@ -118,14 +119,17 @@ router.get('/public/stats', async (req, res) => {
 // Get subjects based on query (protected)
 router.get('/subjects', verifyToken, async (req, res) => {
   try {
-    const { degree, branch, semester, showAll } = req.query;
+    const { degree, branch, semester, year, showAll } = req.query;
     const filter = {};
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
+    await applyAcademicProgression(user);
 
     if (user.role === 'student') {
       if (user.degree) filter.degree = user.degree;
       if (user.branch) filter.branch = user.branch;
+      if (user.semester) filter.semester = user.semester;
+      if (user.yearOfStudy) filter.year = user.yearOfStudy;
     } else if (user.role === 'admin') {
       if (showAll !== 'true') {
         if (user.degree) filter.degree = user.degree;
@@ -136,8 +140,14 @@ router.get('/subjects', verifyToken, async (req, res) => {
     if (degree) filter.degree = degree;
     if (branch) filter.branch = branch;
     if (semester) filter.semester = parseInt(semester);
+    if (year) filter.year = parseInt(year);
 
-    const subjects = await Subject.find(filter).sort({ semester: 1, name: 1 });
+    let subjects = await Subject.find(filter).sort({ semester: 1, name: 1 });
+    if (!subjects.length && filter.year) {
+      const legacyFilter = { ...filter };
+      delete legacyFilter.year;
+      subjects = await Subject.find(legacyFilter).sort({ semester: 1, name: 1 });
+    }
     res.json(subjects);
   } catch (error) {
     console.error('Error fetching subjects:', error);
