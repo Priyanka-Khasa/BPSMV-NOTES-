@@ -14,7 +14,7 @@
   ![License](https://img.shields.io/badge/license-MIT-blue)
 </div>
 
-Students can upload, discover, securely preview, and discuss subject-wise PDFs, notes, links, syllabi, previous year question papers, and career updates in one clean academic workspace.
+Students can upload, discover, view, download, and discuss subject-wise PDFs, notes, links, syllabi, previous year question papers, and career updates in one clean academic workspace.
 
 ## Features
 
@@ -23,7 +23,7 @@ Students can upload, discover, securely preview, and discuss subject-wise PDFs, 
 - Personalized dashboard filtered by degree and branch.
 - Resource explorer with search and filters for degree, branch, semester, year, type, and subject.
 - Upload system for PDFs, notes, question papers, external links, and syllabi.
-- Protected PDF preview flow with direct PDF upload URLs blocked.
+- PDF viewer with normal open and download access.
 - Subject discussion board for student comments.
 - Jobs and internships board for BTech-wide openings, scholarships, hiring challenges, and career news.
 - Common career portal section for AICTE Internships, NCS, Internshala, Unstop, LinkedIn fresher jobs, and TCS NextStep.
@@ -42,7 +42,7 @@ Students can upload, discover, securely preview, and discuss subject-wise PDFs, 
 | Frontend | React 19, Vite, React Router, Tailwind CSS, GSAP, Lenis, Framer Motion, Lucide React |
 | Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs, Nodemailer |
 | Database | MongoDB with Mongoose |
-| File Storage | Local disk in `server/uploads/`, with protected resource PDF streaming |
+| File Storage | Local disk in `server/uploads/`, with public upload URLs and in-app preview streaming |
 
 ## Project Structure
 
@@ -172,7 +172,7 @@ node fixDB.js
 - `GET /api/resources/filter-options` - Get degree and branch filter options.
 - `GET /api/resources/subject/:id` - Get resources for a subject.
 - `GET /api/resources/:id` - Get one resource.
-- `GET /api/resources/:id/file` - Protected in-app resource preview stream. Requires login.
+- `GET /api/resources/:id/file` - In-app resource preview stream. Requires login.
 - `POST /api/resources/add` - Upload a resource.
 - `DELETE /api/resources/:id` - Delete a resource.
 
@@ -203,13 +203,10 @@ node fixDB.js
 - JWT tokens are stored in HTTP-only cookies.
 - Upload, delete, and comment routes are protected where needed.
 - Resource deletion checks ownership or admin role.
-- Direct `/uploads/*.pdf` access is blocked.
-- Resource APIs hide raw PDF file URLs and expose protected preview URLs instead.
-- PDFs are streamed through authenticated preview routes with no-store cache headers.
-- The frontend removes download/open-file actions for PDFs and uses secure in-app preview wording.
+- Uploaded files in `/uploads` can be opened and downloaded normally.
+- Resource APIs expose file URLs for normal viewing/downloading and also provide an authenticated preview URL.
+- The frontend includes Open and Download actions for PDFs and images.
 - Guest accounts are real users with generated credentials.
-
-Important: no web app can make visible PDFs impossible to copy in every condition because screenshots, screen recording, and advanced browser tooling can still capture on-screen content. This app blocks normal direct downloads, public PDF URLs, and exposed file links, and keeps reading inside the protected app flow.
 
 ## Roadmap
 
@@ -217,7 +214,7 @@ Important: no web app can make visible PDFs impossible to copy in every conditio
 - [x] Google OAuth with duplicate account prevention.
 - [x] Guest mode.
 - [x] Resource upload and viewer.
-- [x] Protected PDF preview without public direct PDF URLs.
+- [x] PDF viewer with normal open/download access.
 - [x] Subject discussion board.
 - [x] Jobs and internships board for BTech students.
 - [x] Gift form for genuine bugs/issues, with Rs. 10 reward messaging.

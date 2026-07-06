@@ -25,7 +25,6 @@ const sanitizeResource = (resource) => {
   const obj = resource.toObject ? resource.toObject() : { ...resource };
   if (obj.fileUrl) {
     obj.secureFileUrl = `/resources/${obj._id}/file`;
-    obj.fileUrl = null;
   }
   return obj;
 };
@@ -172,8 +171,8 @@ router.get('/subject/:subjectId', verifyToken, async (req, res) => {
   }
 });
 
-// Protected preview stream. This prevents public /uploads PDF sharing and
-// requires an authenticated session for every resource file request.
+// Authenticated file stream kept for in-app previews. Public /uploads links are
+// also available so students can open and download resources normally.
 router.get('/:id/file', verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -193,12 +192,8 @@ router.get('/:id/file', verifyToken, async (req, res) => {
     }
 
     res.setHeader('Content-Type', resource.fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream');
-    res.setHeader('Content-Disposition', 'inline; filename="protected-resource"');
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Accept-Ranges', 'none');
 
     fs.createReadStream(resolvedFile).pipe(res);
   } catch (error) {
