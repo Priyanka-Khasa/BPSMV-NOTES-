@@ -125,8 +125,6 @@ const Dashboard = () => {
     ? `${resources.length} resources ready`
     : `${totalSubjectResources} resources ready`;
   const subjectList = subjectOverview.length > 0 ? subjectOverview : subjects;
-  const latestResources = resources.slice(0, 3);
-
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -139,47 +137,55 @@ const Dashboard = () => {
     <div className="relative animate-fade-in">
       <style>{`
         :root {
-          --dashboard-surface: rgba(255, 255, 255, 0.86);
-          --dashboard-border: rgba(255, 255, 255, 0.74);
-          --dashboard-shadow: 0 24px 70px rgba(61, 53, 44, 0.12);
+          --dashboard-surface: #fffdf9;
+          --dashboard-muted: #fbf6ee;
+          --dashboard-border: rgba(212, 201, 181, 0.7);
+          --dashboard-shadow: 0 16px 42px rgba(61, 53, 44, 0.09);
         }
         .dashboard-shell {
           background: var(--dashboard-surface);
           border: 1px solid var(--dashboard-border);
           box-shadow: var(--dashboard-shadow);
-          backdrop-filter: blur(18px);
         }
         .dashboard-card {
           background: var(--dashboard-surface);
           border: 1px solid var(--dashboard-border);
           box-shadow: var(--dashboard-shadow);
-          backdrop-filter: blur(18px);
         }
         .subject-button {
-          border: 1px solid rgba(255,255,255,0.75);
-          background: rgba(255,255,255,0.65);
-          transition: all 180ms ease;
+          min-width: 0;
+          border: 1px solid rgba(232, 224, 208, 0.9);
+          background: #fffaf5;
+          transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
         }
         .subject-button:hover, .subject-button:focus-visible {
-          background: rgba(255,255,255,0.9);
+          background: #ffffff;
           border-color: rgba(193, 122, 92, 0.35);
-          transform: translateY(-1px);
           box-shadow: 0 10px 24px rgba(61, 53, 44, 0.08);
           outline: none;
         }
         .subject-button.active {
-          background: linear-gradient(135deg, rgba(255, 251, 247, 0.98), rgba(249, 235, 226, 0.96));
-          border-color: rgba(193, 122, 92, 0.28);
-          box-shadow: 0 12px 28px rgba(193, 122, 92, 0.16);
+          background: #fff4ec;
+          border-color: rgba(193, 122, 92, 0.38);
+          box-shadow: 0 10px 26px rgba(193, 122, 92, 0.13);
         }
         .metric-pill {
-          background: rgba(255,255,255,0.72);
-          border: 1px solid rgba(255,255,255,0.8);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.95);
+          background: #fffaf5;
+          border: 1px solid rgba(232, 224, 208, 0.85);
         }
         .widget-row {
           display: grid;
           gap: 0.7rem;
+        }
+        .dashboard-text-safe {
+          overflow-wrap: anywhere;
+          word-break: normal;
+        }
+        .dashboard-line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
         .widget-bar {
           position: relative;
@@ -195,14 +201,14 @@ const Dashboard = () => {
           background: linear-gradient(90deg, #c17a5c 0%, #a86548 100%);
         }
       `}</style>
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
-        <header className="dashboard-shell rounded-[28px] p-4 sm:p-5 lg:p-6">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-4">
+        <header className="dashboard-shell rounded-2xl p-4 sm:p-5 lg:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-2 text-sm font-semibold uppercase tracking-[0.22em] text-brand-700">B.Tech • ECE study desk</p>
-              <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Keep your semester notes, papers, and focus in one calm place.</h1>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 sm:text-sm">B.Tech / ECE study desk</p>
+              <h1 className="dashboard-text-safe text-2xl font-bold text-slate-900 sm:text-3xl">All your semester notes and papers in one simple place.</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
-                Choose a subject to open the right resources quickly and keep your study flow moving.
+                Choose a subject, see what is available, and open study material without confusion.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -225,9 +231,9 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="grid gap-4 xl:grid-cols-[330px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-            <section className="dashboard-card rounded-[24px] p-4 sm:p-5">
+            <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <img
@@ -255,17 +261,17 @@ const Dashboard = () => {
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="metric-pill rounded-2xl p-3 text-center">
+                <div className="metric-pill rounded-xl p-3 text-center">
                   <Layers size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{subjectList.length}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Subjects</p>
                 </div>
-                <div className="metric-pill rounded-2xl p-3 text-center">
+                <div className="metric-pill rounded-xl p-3 text-center">
                   <FileText size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{totalSubjectResources}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Resources</p>
                 </div>
-                <div className="metric-pill rounded-2xl p-3 text-center">
+                <div className="metric-pill rounded-xl p-3 text-center">
                   <Sparkles size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{focusMetric.split(' ')[0]}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Focus</p>
@@ -273,7 +279,7 @@ const Dashboard = () => {
               </div>
             </section>
 
-            <section className="dashboard-card rounded-[24px] p-4 sm:p-5">
+            <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                   <BookOpen size={17} className="text-brand-600" /> Subjects
@@ -292,18 +298,18 @@ const Dashboard = () => {
                       key={subject._id}
                       type="button"
                       onClick={() => fetchResources(subject._id)}
-                      className={`subject-button flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left ${isActive ? 'active' : ''}`}
+                      className={`subject-button flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isActive ? 'active' : ''}`}
                     >
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${isActive ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-700'}`}>
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isActive ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-700'}`}>
                         <BookOpen size={16} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm font-semibold text-slate-900">{subject.name}</p>
+                          <p className="truncate text-sm font-semibold text-slate-900" title={subject.name}>{subject.name}</p>
                           <ChevronRight size={14} className="shrink-0 text-slate-400" />
                         </div>
                         <p className="mt-1 text-xs text-slate-500">
-                          {subject.notes || 0} notes • {subject.papers || 0} papers
+                          {subject.notes || 0} notes / {subject.papers || 0} papers
                         </p>
                         <p className="mt-1 text-[11px] font-medium text-brand-600">{label}</p>
                       </div>
@@ -317,14 +323,14 @@ const Dashboard = () => {
             </section>
           </aside>
 
-          <main className="space-y-4">
-            <section className="dashboard-card rounded-[24px] p-4 sm:p-5 lg:p-6">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+          <main className="min-w-0 space-y-4">
+            <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
+              <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
                 <div className="min-w-0">
                   <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-brand-700">
-                    {selectedSubjectObj ? `Focus • ${selectedSubjectObj.name}` : 'Dashboard overview'}
+                    {selectedSubjectObj ? 'Subject selected' : 'Dashboard overview'}
                   </p>
-                  <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
+                  <h2 className="dashboard-text-safe text-2xl font-semibold text-slate-900 sm:text-3xl">
                     {selectedSubjectObj ? `${selectedSubjectObj.name} is ready for review.` : 'Choose a subject to start a focused study session.'}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -351,7 +357,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-white/70 bg-gradient-to-br from-[#fff9f2] via-[#fff6eb] to-[#fdf4ea] p-4 shadow-sm">
+                <div className="min-w-0 rounded-2xl border border-[#eadccc] bg-[#fff7ee] p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">Study pulse</p>
@@ -365,10 +371,10 @@ const Dashboard = () => {
                     {subjectList.slice(0, 3).map((subject) => {
                       const width = Math.min(100, Math.max(24, subject.count * 16));
                       return (
-                        <div key={subject._id} className="rounded-2xl bg-white/70 p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="truncate text-sm font-semibold text-slate-900">{subject.name}</p>
-                            <p className="text-xs font-medium text-slate-500">{subject.count} items</p>
+                        <div key={subject._id} className="min-w-0 rounded-xl bg-white p-3 ring-1 ring-[#f0e4d8]">
+                          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                            <p className="dashboard-line-clamp-2 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
+                            <p className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-500">{subject.count} items</p>
                           </div>
                           <div className="widget-bar mt-2">
                             <span style={{ width: `${width}%` }} />
@@ -377,16 +383,16 @@ const Dashboard = () => {
                       );
                     })}
                   </div>
-                  <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/75 p-3 text-sm text-slate-600">
+                  <div className="mt-4 flex min-w-0 items-center gap-2 rounded-xl bg-white p-3 text-sm text-slate-600 ring-1 ring-[#f0e4d8]">
                     <CalendarDays size={15} className="text-brand-700" />
-                    <span>{focusMetric}</span>
+                    <span className="min-w-0 truncate">{focusMetric}</span>
                   </div>
                 </div>
               </div>
             </section>
 
             {!selectedSubject ? (
-              <section className="dashboard-card rounded-[24px] p-4 sm:p-5 lg:p-6">
+              <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">Start here</p>
@@ -400,12 +406,17 @@ const Dashboard = () => {
                     Explore all resources <ArrowRight size={15} />
                   </button>
                 </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {subjectList.slice(0, 3).map((subject) => (
-                    <div key={subject._id} className="rounded-[20px] border border-white/70 bg-white/70 p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-semibold text-slate-900">{subject.name}</p>
-                        <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+                    <button
+                      key={subject._id}
+                      type="button"
+                      onClick={() => fetchResources(subject._id)}
+                      className="min-w-0 rounded-xl border border-[#eadccc] bg-white p-4 text-left transition-colors hover:border-brand-200 hover:bg-[#fffaf5] focus:outline-none focus:ring-2 focus:ring-brand-200"
+                    >
+                      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                        <p className="dashboard-line-clamp-2 font-semibold leading-6 text-slate-900" title={subject.name}>{subject.name}</p>
+                        <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
                           {subject.count || 0} items
                         </span>
                       </div>
@@ -413,12 +424,12 @@ const Dashboard = () => {
                         <CircleCheckBig size={15} className="text-brand-700" />
                         <span>{subject.notes || 0} notes available</span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>
             ) : resources.length === 0 ? (
-              <section className="dashboard-card rounded-[24px] p-10 text-center">
+              <section className="dashboard-card rounded-2xl p-8 text-center sm:p-10">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-brand-50 text-brand-500 shadow-lg shadow-brand-500/10 ring-1 ring-white">
                   <FileText size={32} />
                 </div>
@@ -435,7 +446,7 @@ const Dashboard = () => {
             ) : (
               <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {resources.map((resource) => (
-                  <article key={resource._id} className="dashboard-card flex flex-col rounded-[22px] p-5 group">
+                  <article key={resource._id} className="dashboard-card group flex min-w-0 flex-col rounded-2xl p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-200/60">
                         {resource.resourceType}
@@ -449,9 +460,9 @@ const Dashboard = () => {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    <h4 className="text-base font-semibold text-slate-900 transition-colors group-hover:text-brand-700">{resource.title}</h4>
+                    <h4 className="dashboard-text-safe text-base font-semibold text-slate-900 transition-colors group-hover:text-brand-700">{resource.title}</h4>
                     {resource.year && <p className="mt-1 text-xs text-slate-500">Year: {resource.year}</p>}
-                    <p className="mt-2 text-xs text-slate-400">By {resource.uploaderName || 'student'} • {new Date(resource.createdAt).toLocaleDateString()}</p>
+                    <p className="mt-2 text-xs text-slate-400">By {resource.uploaderName || 'student'} / {new Date(resource.createdAt).toLocaleDateString()}</p>
                     <div className="mt-4 flex items-center gap-2">
                       {resource.resourceType === 'Link' ? (
                         <a
