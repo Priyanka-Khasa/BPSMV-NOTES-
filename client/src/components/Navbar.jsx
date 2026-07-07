@@ -19,27 +19,19 @@ const Navbar = () => {
     { path: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
     { path: '/upload', label: 'Upload', icon: Upload },
     { path: '/chat', label: 'Discussion', icon: MessageSquare },
-    { path: '/gift', label: 'Gift', icon: Gift, colorful: true },
   ];
 
-  const adminNav = { path: '/admin', label: 'Admin', icon: Shield };
-
-  const landingNavLinks = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/login', label: 'Login', icon: ArrowRight },
-  ];
+  const secondaryAction = { path: '/gift', label: 'Gift', icon: Gift };
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 shadow-sm shadow-brand-500/5 ${isLanding ? 'bg-white/58 backdrop-blur-2xl border-b border-white/50' : 'bg-white/78 backdrop-blur-2xl border-b border-white/60'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           <Link to={isAuthenticated ? '/dashboard' : '/'} className="group">
             <BrandLogo size="md" className="transition-transform duration-300 group-hover:scale-[1.02]" />
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden items-center gap-1 md:flex">
             {isAuthenticated ? (
               <>
                 {appNavLinks.map((link) => {
@@ -48,35 +40,27 @@ const Navbar = () => {
                   return (
                     <button
                       key={link.path}
+                      type="button"
                       onClick={() => navigate(link.path)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 ${
                         active
                           ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
+                          : 'text-slate-600 hover:scale-[1.02] hover:bg-white/70 hover:text-slate-900 hover:shadow-sm'
                       }`}
                     >
-                      {link.colorful ? (
-                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center shadow-sm transition-all duration-300 ${
-                          active
-                            ? 'bg-gradient-to-br from-amber-300 via-pink-300 to-emerald-300 text-white shadow-amber-200/70'
-                            : 'bg-gradient-to-br from-amber-100 via-pink-100 to-emerald-100 text-amber-600 group-hover:scale-105'
-                        }`}>
-                          <Icon size={15} fill="currentColor" strokeWidth={2.4} />
-                        </span>
-                      ) : (
-                        <Icon size={16} />
-                      )}
+                      <Icon size={16} />
                       {link.label}
                     </button>
                   );
                 })}
                 {user?.role === 'admin' && (
                   <button
+                    type="button"
                     onClick={() => navigate('/admin')}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                    className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 ${
                       isActive('/admin')
                         ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
+                        : 'text-slate-600 hover:scale-[1.02] hover:bg-white/70 hover:text-slate-900 hover:shadow-sm'
                     }`}
                   >
                     <Shield size={16} />
@@ -87,19 +71,21 @@ const Navbar = () => {
             ) : (
               <>
                 <button
+                  type="button"
                   onClick={() => navigate('/')}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 ${
                     isActive('/')
                       ? 'bg-white/90 text-brand-700 shadow-sm shadow-brand-500/10 ring-1 ring-brand-200/60'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 hover:scale-[1.02] hover:shadow-sm'
+                      : 'text-slate-600 hover:scale-[1.02] hover:bg-white/70 hover:text-slate-900 hover:shadow-sm'
                   }`}
                 >
                   <Home size={16} />
                   Home
                 </button>
                 <button
+                  type="button"
                   onClick={() => navigate('/login')}
-                  className="btn btn-primary text-sm py-2 px-4 shadow-brand-500/20 hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
+                  className="btn btn-primary px-4 py-2 text-sm shadow-brand-500/20 hover:-translate-y-0.5 hover:shadow-brand-500/30"
                 >
                   <ArrowRight size={16} />
                   Get Started
@@ -108,29 +94,38 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right side - Authenticated */}
           {isAuthenticated && (
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden items-center gap-2 md:flex">
               <button
+                type="button"
+                onClick={() => navigate('/gift')}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-amber-600 shadow-sm transition-all hover:bg-white hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                aria-label="Gift"
+                title="Gift"
+              >
+                <Gift size={16} />
+              </button>
+              <button
+                type="button"
                 onClick={() => navigate('/profile')}
-                className="flex items-center gap-2 hover:bg-slate-100/80 px-3 py-1.5 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+                className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all duration-300 hover:scale-[1.02] hover:bg-slate-100/80"
               >
                 <img
                   src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
                   alt=""
-                  className="w-7 h-7 rounded-full object-cover ring-2 ring-white shadow-sm"
+                  className="h-7 w-7 rounded-full object-cover ring-2 ring-white shadow-sm"
                 />
                 <span className="text-sm font-medium text-slate-700">{user?.name}</span>
               </button>
-              <button onClick={logout} className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 hover:scale-105 hover:rotate-6">
+              <button type="button" onClick={logout} className="rounded-xl p-2 text-slate-500 transition-all duration-300 hover:rotate-6 hover:scale-105 hover:bg-red-50 hover:text-red-600">
                 <LogOut size={18} />
               </button>
             </div>
           )}
 
-          {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-300 hover:scale-105"
+            type="button"
+            className="rounded-xl p-2 text-slate-600 transition-all duration-300 hover:scale-105 hover:bg-slate-100 md:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -138,9 +133,8 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <div className={`md:hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md overflow-hidden transition-all duration-500 ease-in-out ${menuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="px-4 py-3 space-y-1">
+      <div className={`overflow-hidden border-t border-slate-200/80 bg-white/95 backdrop-blur-md transition-all duration-500 ease-in-out md:hidden ${menuOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="space-y-1 px-4 py-3">
           {isAuthenticated ? (
             <>
               {appNavLinks.map((link) => {
@@ -149,35 +143,23 @@ const Navbar = () => {
                 return (
                   <button
                     key={link.path}
+                    type="button"
                     onClick={() => { navigate(link.path); setMenuOpen(false); }}
-                    className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                      active
-                        ? 'bg-brand-50 text-brand-700 shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                      active ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    {link.colorful ? (
-                      <span className={`w-7 h-7 rounded-lg flex items-center justify-center shadow-sm ${
-                        active
-                          ? 'bg-gradient-to-br from-amber-300 via-pink-300 to-emerald-300 text-white'
-                          : 'bg-gradient-to-br from-amber-100 via-pink-100 to-emerald-100 text-amber-600'
-                      }`}>
-                        <Icon size={16} fill="currentColor" strokeWidth={2.4} />
-                      </span>
-                    ) : (
-                      <Icon size={18} />
-                    )}
+                    <Icon size={18} />
                     {link.label}
                   </button>
                 );
               })}
               {user?.role === 'admin' && (
                 <button
+                  type="button"
                   onClick={() => { navigate('/admin'); setMenuOpen(false); }}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                    isActive('/admin')
-                      ? 'bg-brand-50 text-brand-700 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                    isActive('/admin') ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
                   <Shield size={18} />
@@ -185,15 +167,25 @@ const Navbar = () => {
                 </button>
               )}
               <button
+                type="button"
+                onClick={() => { navigate('/gift'); setMenuOpen(false); }}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-300 hover:bg-slate-50 hover:text-slate-900"
+              >
+                <Gift size={18} />
+                Gift
+              </button>
+              <button
+                type="button"
                 onClick={() => { navigate('/profile'); setMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all duration-300"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-300 hover:bg-slate-50 hover:text-slate-900"
               >
                 <User size={18} />
                 Profile
               </button>
               <button
+                type="button"
                 onClick={() => { logout(); setMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-300"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-all duration-300 hover:bg-red-50"
               >
                 <LogOut size={18} />
                 Logout
@@ -202,17 +194,19 @@ const Navbar = () => {
           ) : (
             <>
               <button
+                type="button"
                 onClick={() => { navigate('/'); setMenuOpen(false); }}
-                className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  isActive('/') ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ${
+                  isActive('/') ? 'bg-brand-50 text-brand-700 shadow-sm' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                 }`}
               >
                 <Home size={18} />
                 Home
               </button>
               <button
+                type="button"
                 onClick={() => { navigate('/login'); setMenuOpen(false); }}
-                className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium bg-brand-600 text-white hover:bg-brand-700 transition-all duration-300"
+                className="flex w-full items-center gap-3 rounded-xl bg-brand-600 px-3 py-2.5 text-sm font-medium text-white transition-all duration-300 hover:bg-brand-700"
               >
                 <ArrowRight size={18} />
                 Get Started
