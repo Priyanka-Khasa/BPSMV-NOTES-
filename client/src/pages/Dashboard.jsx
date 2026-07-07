@@ -200,18 +200,41 @@ const Dashboard = () => {
           border-radius: inherit;
           background: linear-gradient(90deg, #c17a5c 0%, #a86548 100%);
         }
+        @media (max-width: 640px) {
+          .dashboard-shell,
+          .dashboard-card {
+            box-shadow: 0 10px 26px rgba(61, 53, 44, 0.08);
+          }
+          .dashboard-mobile-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+            width: 100%;
+          }
+          .dashboard-mobile-actions > * {
+            width: 100%;
+          }
+          .dashboard-compact-subjects {
+            max-height: 22rem;
+            overflow-y: auto;
+            padding-right: 0.15rem;
+          }
+          .dashboard-card-list {
+            display: grid;
+            grid-template-columns: 1fr;
+          }
+        }
       `}</style>
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-4">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-3 overflow-x-hidden sm:gap-4">
         <header className="dashboard-shell rounded-2xl p-4 sm:p-5 lg:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700 sm:text-sm">B.Tech / ECE study desk</p>
-              <h1 className="dashboard-text-safe text-2xl font-bold text-slate-900 sm:text-3xl">All your semester notes and papers in one simple place.</h1>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.18em]">B.Tech / ECE study desk</p>
+              <h1 className="dashboard-text-safe text-[1.55rem] font-bold leading-tight text-slate-900 sm:text-3xl">All your semester notes and papers in one simple place.</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
                 Choose a subject, see what is available, and open study material without confusion.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="dashboard-mobile-actions flex flex-wrap items-center gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={() => setUploadOpen(true)}
@@ -231,8 +254,8 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+        <div className="grid min-w-0 gap-3 sm:gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="space-y-3 sm:space-y-4 xl:sticky xl:top-24 xl:self-start">
             <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
@@ -252,7 +275,7 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/profile')}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white/80 text-slate-600 ring-1 ring-white/80 transition-all hover:bg-white hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-[#f0e4d8] transition-all hover:bg-white hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
                   title="Profile"
                   aria-label="Profile"
                 >
@@ -261,17 +284,17 @@ const Dashboard = () => {
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="metric-pill rounded-xl p-3 text-center">
+                <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
                   <Layers size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{subjectList.length}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Subjects</p>
                 </div>
-                <div className="metric-pill rounded-xl p-3 text-center">
+                <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
                   <FileText size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{totalSubjectResources}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Resources</p>
                 </div>
-                <div className="metric-pill rounded-xl p-3 text-center">
+                <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
                   <Sparkles size={16} className="mx-auto mb-1 text-brand-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{focusMetric.split(' ')[0]}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Focus</p>
@@ -289,7 +312,7 @@ const Dashboard = () => {
                 </span>
               </div>
 
-              <div className="space-y-2">
+              <div className="dashboard-compact-subjects space-y-2">
                 {subjectList.map((subject) => {
                   const isActive = selectedSubject === subject._id;
                   const label = subject.count ? `${subject.count} item${subject.count > 1 ? 's' : ''}` : 'No resources yet';
@@ -323,14 +346,14 @@ const Dashboard = () => {
             </section>
           </aside>
 
-          <main className="min-w-0 space-y-4">
+          <main className="min-w-0 space-y-3 sm:space-y-4">
             <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
-              <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
+              <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
                 <div className="min-w-0">
-                  <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-brand-700">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.18em]">
                     {selectedSubjectObj ? 'Subject selected' : 'Dashboard overview'}
                   </p>
-                  <h2 className="dashboard-text-safe text-2xl font-semibold text-slate-900 sm:text-3xl">
+                  <h2 className="dashboard-text-safe text-[1.45rem] font-semibold leading-tight text-slate-900 sm:text-3xl">
                     {selectedSubjectObj ? `${selectedSubjectObj.name} is ready for review.` : 'Choose a subject to start a focused study session.'}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -338,7 +361,7 @@ const Dashboard = () => {
                       ? `Your ${selectedSubjectObj.name} workspace now brings the latest notes and papers into one place.`
                       : 'Pick one subject to see notes, papers, and discussion in a single streamlined view.'}
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="dashboard-mobile-actions mt-4 flex flex-wrap gap-2 sm:w-auto">
                     <button
                       type="button"
                       onClick={() => setUploadOpen(true)}
@@ -357,7 +380,7 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="min-w-0 rounded-2xl border border-[#eadccc] bg-[#fff7ee] p-4 shadow-sm">
+                <div className="min-w-0 rounded-2xl border border-[#eadccc] bg-[#fff7ee] p-3 shadow-sm sm:p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">Study pulse</p>
@@ -395,18 +418,18 @@ const Dashboard = () => {
               <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">Start here</p>
-                    <h3 className="text-xl font-semibold text-slate-900">Pick a subject to open its study set.</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.16em]">Start here</p>
+                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">Pick a subject to open its study set.</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('/resources')}
-                    className="btn btn-secondary min-h-11 px-4 py-2.5 text-sm"
+                    className="btn btn-secondary min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto"
                   >
                     Explore all resources <ArrowRight size={15} />
                   </button>
                 </div>
-                <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                <div className="dashboard-card-list mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {subjectList.slice(0, 3).map((subject) => (
                     <button
                       key={subject._id}
@@ -444,7 +467,7 @@ const Dashboard = () => {
                 </button>
               </section>
             ) : (
-              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <section className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {resources.map((resource) => (
                   <article key={resource._id} className="dashboard-card group flex min-w-0 flex-col rounded-2xl p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
@@ -552,10 +575,10 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[24px] bg-white p-6 shadow-2xl animate-scale-in">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 backdrop-blur-sm animate-fade-in sm:items-center sm:p-4">
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl animate-scale-in sm:max-h-[90vh] sm:p-6">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <h2 className="flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
             <Upload size={18} className="text-brand-600" /> Upload Resource
           </h2>
           <button
