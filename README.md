@@ -1,57 +1,186 @@
 <div align="center">
-  <img src="client/public/vite.svg" alt="BPSMV Resource Hub logo" width="96" />
+  <img src="client/public/assets/image3.png" alt="BPSMV Resource Hub preview" width="760" />
 
   # BPSMV Resource Hub
 
   <p>
-    A cinematic, responsive university resource hub for BPSMV students.
+    A beautiful academic resource hub where BPSMV students can find notes, previous year papers,
+    syllabi, discussions, career updates, profiles, and shared study material in one place.
   </p>
 
-  ![Status](https://img.shields.io/badge/status-in%20development-yellow)
-  ![Frontend](https://img.shields.io/badge/frontend-React%2019%20%2B%20Tailwind-61DAFB)
-  ![Backend](https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933)
-  ![Database](https://img.shields.io/badge/database-MongoDB-47A248)
-  ![License](https://img.shields.io/badge/license-MIT-blue)
+  <p>
+    <img alt="Status" src="https://img.shields.io/badge/status-active%20development-f5a524" />
+    <img alt="Frontend" src="https://img.shields.io/badge/frontend-React%2019%20%2B%20Vite-61dafb" />
+    <img alt="Backend" src="https://img.shields.io/badge/backend-Node.js%20%2B%20Express-339933" />
+    <img alt="Database" src="https://img.shields.io/badge/database-MongoDB-47a248" />
+    <img alt="Made for" src="https://img.shields.io/badge/made%20for-BPSMV%20students-c17a5c" />
+  </p>
 </div>
 
-Students can upload, discover, view, download, and discuss subject-wise PDFs, notes, links, syllabi, previous year question papers, and career updates in one clean academic workspace.
+## Why This Exists
 
-## Features
+Students should not have to search ten WhatsApp groups, old chats, random drives, and half-forgotten links before every exam.
 
-- Dual authentication with Google OAuth or email/password login.
-- Guest mode for quick access without registration.
-- Personalized dashboard filtered by degree and branch.
-- Resource explorer with search and filters for degree, branch, semester, year, type, and subject.
-- Upload system for PDFs, notes, question papers, external links, and syllabi.
-- PDF viewer with normal open and download access.
-- Subject discussion board for student comments.
-- Jobs and internships board for BTech-wide openings, scholarships, hiring challenges, and career news.
-- Common career portal section for AICTE Internships, NCS, Internshala, Unstop, LinkedIn fresher jobs, and TCS NextStep.
-- Student reviews with one review allowed per person.
-- Gift section for reporting real bugs and genuine issues.
-- Accepted genuine issues are eligible for a Rs. 10 gift.
-- Gift submissions are saved and emailed to `priyankakhasa937@gmail.com`.
-- Admin panel for resource moderation.
-- Fully responsive layout for mobile, tablet, laptop, and desktop.
-- Premium logo-led landing page with interactive book motion, smooth scrolling, and responsive storytelling.
+**BPSMV Resource Hub** turns scattered academic material into a calm, searchable, student-powered workspace. It is built for the way students actually study: quick revision, subject-wise browsing, previous year question papers, shared notes, doubts, career links, and a profile that grows with their academic journey.
+
+This project is designed to feel useful from the first click:
+
+- New student? Register, complete onboarding, and see resources for your degree, branch, year, and semester.
+- Preparing for exams? Search notes, PYQs, syllabi, PDFs, and links without losing momentum.
+- Have good material? Upload it once and help the whole batch.
+- Stuck in a subject? Open the discussion room and ask.
+- Looking ahead? Track internships, jobs, scholarships, hiring challenges, and common career portals.
+
+## The Student Promise
+
+> One hub. One login. Every useful academic resource closer than your panic search.
+
+BPSMV Resource Hub is not only a file repository. It is a study companion for the whole campus:
+
+- **Before class:** check subject material and useful links.
+- **Before exams:** filter notes and question papers by semester, year, subject, and type.
+- **After exams:** upload the resources that helped you.
+- **During placement prep:** follow shared internships, jobs, scholarships, and challenges.
+- **Across semesters:** maintain your academic profile, CGPA history, activity graph, and public student profile.
+
+## Highlights
+
+### Academic Resource Library
+
+- Subject-wise resources for B.Tech, M.Tech, BCA, MCA, BBA, MBA, B.Sc, M.Sc, B.A, M.A, and other programs.
+- Degree, branch, year, semester, subject, type, and search filters.
+- Resource types: notes, question papers, external links, and syllabi.
+- PDF and image upload support.
+- In-app PDF viewer with authenticated preview.
+- Normal open and download access for uploaded files.
+- Grid and table-style browsing for different study habits.
+
+### Personalized Dashboard
+
+- Dashboard adapts to the student's degree, branch, year, and semester.
+- Subject readiness view with notes and paper counts.
+- Quick upload and discussion actions.
+- Focused subject workspace for exam preparation.
+- Automatic academic progression logic on profile updates and login checks.
+
+### Student Accounts
+
+- Email and password registration with roll number.
+- Optional Google OAuth login.
+- Secure HTTP-only JWT cookie sessions.
+- Single-device active session protection.
+- Onboarding flow for academic details.
+- Avatar upload, bio, social links, CGPA tracker, and public profile sharing.
+
+### Discussions
+
+- Subject-wise discussion rooms.
+- Text comments.
+- Voice messages with preview before sending.
+- Emoji support.
+- Auto-refreshing message list.
+- Admin and owner deletion controls.
+
+### Career Updates
+
+- Shared jobs, internships, scholarships, hiring challenges, and career news.
+- Students can post openings for everyone.
+- Search and category filters.
+- Deadline badges.
+- Common portals included:
+  - AICTE Internships
+  - National Career Service
+  - Internshala
+  - Unstop
+  - LinkedIn fresher jobs
+  - TCS NextStep
+
+### Reviews And Trust
+
+- Student review wall on the landing page.
+- One review per reviewer.
+- Admin moderation for reviews.
+- Real API-backed stats for resources, students, subjects, notes, branches, and courses.
+
+### Gift Issue Reporting
+
+- Public Gift page for reporting genuine issues, bugs, content issues, and feature requests.
+- Screenshot is required so reports stay useful.
+- Accepted genuine issues are eligible for a **Rs. 10 gift**.
+- Submissions are stored in MongoDB and can be emailed to the configured admin address.
+
+### Admin Panel
+
+- Admin-only route protection.
+- Resource moderation dashboard.
+- Review moderation dashboard.
+- Status filters, search, counts, approve, and delete actions.
+
+## Experience Walkthrough
+
+1. **Land on the cinematic home page**
+   The landing page introduces the hub with animated study-book interactions, live stats, student reviews, and clear entry points.
+
+2. **Create an account**
+   Students register with name, email, password, and roll number, or use Google OAuth if configured.
+
+3. **Complete onboarding**
+   The app asks for degree, branch, year, and semester so the dashboard can show relevant subjects.
+
+4. **Open the dashboard**
+   Students see semester subjects, resource counts, quick upload, discussion access, and subject-specific material.
+
+5. **Browse all resources**
+   Search and filter across the full approved resource library.
+
+6. **Preview or download**
+   PDFs and images can be opened from the hub. Links open externally.
+
+7. **Discuss subject doubts**
+   Students can send text or voice messages in the subject room.
+
+8. **Upload and contribute**
+   Notes, question papers, syllabi, images, PDFs, and external links can be shared with the right subject metadata.
+
+9. **Build a profile**
+   Students can add CGPA entries, bio, avatar, coding profiles, LinkedIn, portfolio, and more.
+
+10. **Track opportunities**
+    The Jobs page keeps shared career updates and useful portals in one place.
 
 ## Tech Stack
 
-| Layer | Stack |
-|---|---|
-| Frontend | React 19, Vite, React Router, Tailwind CSS, GSAP, Lenis, Framer Motion, Lucide React |
-| Backend | Node.js, Express.js, Passport.js, JWT, bcryptjs, Nodemailer |
-| Database | MongoDB with Mongoose |
-| File Storage | Local disk in `server/uploads/`, with public upload URLs and in-app preview streaming |
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 19, Vite, React Router, Tailwind CSS |
+| UI Motion | GSAP, ScrollTrigger, Lenis, Framer Motion |
+| Icons | Lucide React |
+| API Client | Axios |
+| Backend | Node.js, Express 5 |
+| Database | MongoDB, Mongoose |
+| Auth | JWT cookies, Passport Google OAuth, bcryptjs |
+| Uploads | Multer, local upload storage |
+| Email | Nodemailer |
+| Deployment Config | Vercel config, Render blueprint |
 
 ## Project Structure
 
 ```text
 bpsmv-resource-hub/
 |-- client/
+|   |-- public/
+|   |   |-- assets/
 |   |-- src/
 |   |   |-- components/
+|   |   |   |-- ActivityCalendar.jsx
+|   |   |   |-- BrandLogo.jsx
+|   |   |   |-- Layout.jsx
+|   |   |   |-- Navbar.jsx
+|   |   |   |-- ProtectedRoute.jsx
 |   |   |-- context/
+|   |   |   |-- AuthContext.jsx
+|   |   |-- hooks/
+|   |   |   |-- useScrollAnimation.js
 |   |   |-- pages/
 |   |   |   |-- Admin.jsx
 |   |   |   |-- Chat.jsx
@@ -63,167 +192,366 @@ bpsmv-resource-hub/
 |   |   |   |-- Onboarding.jsx
 |   |   |   |-- PDFViewer.jsx
 |   |   |   |-- Profile.jsx
+|   |   |   |-- PublicProfile.jsx
 |   |   |   |-- Resources.jsx
 |   |   |   |-- UploadPage.jsx
+|   |   |-- utils/
+|   |   |   |-- academic.js
 |   |   |-- App.jsx
 |   |   |-- main.jsx
 |   |   |-- index.css
 |   |-- package.json
-|   |-- tailwind.config.js
+|   |-- vite.config.js
 |
 |-- server/
 |   |-- src/
 |   |   |-- config/
+|   |   |   |-- db.js
+|   |   |   |-- passport.js
+|   |   |   |-- storage.js
 |   |   |-- models/
+|   |   |   |-- Activity.js
+|   |   |   |-- Comment.js
+|   |   |   |-- Feedback.js
 |   |   |   |-- JobUpdate.js
+|   |   |   |-- Resource.js
+|   |   |   |-- Review.js
+|   |   |   |-- Subject.js
+|   |   |   |-- User.js
 |   |   |-- routes/
+|   |   |   |-- activity.js
+|   |   |   |-- auth.js
+|   |   |   |-- comments.js
+|   |   |   |-- feedback.js
 |   |   |   |-- jobUpdates.js
+|   |   |   |-- resources.js
+|   |   |   |-- reviews.js
+|   |   |-- utils/
+|   |   |   |-- academicProgression.js
 |   |   |-- app.js
 |   |-- uploads/
-|   |-- package.json
-|   |-- seedSubjects.js
+|   |-- .env.example
 |   |-- fixDB.js
+|   |-- seedSubjects.js
+|   |-- package.json
+|
+|-- render.yaml
+|-- vercel.json
+|-- package.json
+|-- README.md
 ```
 
-## Environment Setup
+## Getting Started
 
-Create a `.env` file inside `server/`:
+### Prerequisites
+
+Install these before running the project:
+
+- Node.js 22.x for the backend
+- npm
+- MongoDB local server or MongoDB Atlas connection string
+
+### 1. Clone And Enter The Project
+
+```bash
+git clone <your-repository-url>
+cd bpsmv-resource-hub
+```
+
+### 2. Install Dependencies
+
+Install frontend and backend packages:
+
+```bash
+npm run install:client
+npm run install:server
+```
+
+Or install manually:
+
+```bash
+cd client
+npm install
+
+cd ../server
+npm install
+```
+
+### 3. Configure Backend Environment
+
+Create `server/.env` using `server/.env.example` as a guide:
 
 ```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/bpsmv-resource-hub
-JWT_SECRET=your_jwt_secret_here
+MONGO_URI=mongodb://localhost:27017/bpsmv
+JWT_SECRET=replace_with_a_strong_secret
 CLIENT_URL=http://localhost:5173
+CLIENT_URLS=http://localhost:5173
+API_URL=http://localhost:5000
+COOKIE_SAME_SITE=lax
 
-# Gift submission email destination
 ADMIN_EMAIL=priyankakhasa937@gmail.com
 
-# Required for real email delivery
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_sender_email@gmail.com
 SMTP_PASS=your_app_password
 
-# Optional Google OAuth
+PORT=5000
+
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-SESSION_SECRET=your_session_secret_here
+
+ENABLE_GUEST_LOGIN=false
+NODE_ENV=development
 ```
 
-If SMTP credentials are not configured, Gift submissions are still saved in MongoDB and the email content is printed in the server console.
+Notes:
 
-## Run Locally
+- Email/password login works without Google OAuth.
+- Gift submissions are saved even if SMTP is not configured.
+- In production, always use a strong `JWT_SECRET`.
+- If frontend and backend are hosted on separate domains, configure `CLIENT_URLS` and cookie settings carefully.
 
-### Backend
+### 4. Start The Backend
 
 ```bash
-cd bpsmv-resource-hub/server
-npm install
+cd server
 npm start
 ```
 
-The backend runs on `http://localhost:5000`.
+Backend URL:
 
-### Frontend
+```text
+http://localhost:5000
+```
+
+Health check:
+
+```text
+http://localhost:5000/api/health
+```
+
+### 5. Start The Frontend
+
+Open a second terminal:
 
 ```bash
-cd bpsmv-resource-hub/client
-npm install
+cd client
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173`.
+Frontend URL:
 
-### Seed Subjects
+```text
+http://localhost:5173
+```
 
-Run this once after the database is connected:
+### 6. Seed Subjects
+
+The server checks subject seeding on startup, but you can run it manually:
 
 ```bash
-cd bpsmv-resource-hub/server
+cd server
 node seedSubjects.js
 ```
 
-### Fix MongoDB Indexes
+### 7. Fix Old MongoDB Indexes If Needed
 
-If registration fails because of an old index, run:
+If registration fails because of an old unique index, run:
 
 ```bash
-cd bpsmv-resource-hub/server
+cd server
 node fixDB.js
 ```
 
-## API Endpoints
+## Frontend Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Cinematic landing page, stats, reviews, and entry actions |
+| `/login` | Login, register, and Google sign-in entry |
+| `/onboarding` | Protected academic onboarding |
+| `/dashboard` | Personalized student study dashboard |
+| `/resources` | Full searchable resource explorer |
+| `/viewer/:id` | Protected PDF/image resource viewer |
+| `/chat` | Subject-wise discussion rooms |
+| `/jobs` | Jobs, internships, scholarships, and career updates |
+| `/upload` | Dedicated upload page |
+| `/profile` | Student profile, CGPA, social links, activity |
+| `/u/:id` | Public shareable profile |
+| `/gift` | Public issue reporting and gift page |
+| `/admin` | Admin moderation panel |
+
+## API Overview
+
+All protected routes use the HTTP-only `token` cookie set during login.
 
 ### Auth
 
-- `GET /api/auth/google` - Start Google login.
-- `GET /api/auth/google/callback` - Google login callback.
-- `POST /api/auth/register` - Register with email and password.
-- `POST /api/auth/login` - Log in with email and password.
-- `POST /api/auth/logout` - Log out.
-- `GET /api/auth/me` - Get the current user.
-- `POST /api/auth/onboard` - Complete onboarding.
-- `PUT /api/auth/profile` - Update profile.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/auth/google` | Start Google OAuth login |
+| `GET` | `/api/auth/google/callback` | Google OAuth callback |
+| `POST` | `/api/auth/register` | Register with name, email, password, roll number |
+| `POST` | `/api/auth/login` | Login with email and password |
+| `POST` | `/api/auth/logout` | Logout and clear active session |
+| `GET` | `/api/auth/me` | Get current user |
+| `POST` | `/api/auth/onboard` | Save academic onboarding |
+| `PUT` | `/api/auth/profile` | Update profile, social links, and CGPA |
+| `POST` | `/api/auth/avatar` | Upload avatar |
+| `POST` | `/api/auth/guest` | Guest login when enabled |
 
 ### Resources
 
-- `GET /api/resources/all` - List resources with search and filters.
-- `GET /api/resources/subjects` - List subjects.
-- `GET /api/resources/filter-options` - Get degree and branch filter options.
-- `GET /api/resources/subject/:id` - Get resources for a subject.
-- `GET /api/resources/:id` - Get one resource.
-- `GET /api/resources/:id/file` - In-app resource preview stream. Requires login.
-- `POST /api/resources/add` - Upload a resource.
-- `DELETE /api/resources/:id` - Delete a resource.
-
-### Job Updates
-
-- `GET /api/job-updates` - List shared jobs, internships, scholarships, hiring challenges, and career news.
-- `POST /api/job-updates` - Add a shared career update. Requires login.
-- `DELETE /api/job-updates/:id` - Delete a career update. Requires owner or admin access.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/resources/public/stats` | Public landing-page stats |
+| `GET` | `/api/resources/all` | Search and filter approved resources |
+| `GET` | `/api/resources/subjects` | Get subjects for the user or filters |
+| `GET` | `/api/resources/filter-options` | Get degree and branch filter options |
+| `GET` | `/api/resources/subject/:subjectId` | Get resources for one subject |
+| `GET` | `/api/resources/:id/file` | Authenticated file preview stream |
+| `GET` | `/api/resources/:id` | Get one resource |
+| `POST` | `/api/resources/add` | Upload file or link resource |
+| `DELETE` | `/api/resources/:id` | Delete resource if owner or admin |
 
 ### Comments
 
-- `GET /api/comments/:subjectId` - Get comments for a subject.
-- `POST /api/comments/:subjectId` - Add a comment.
-- `DELETE /api/comments/:id` - Delete a comment.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/comments/:subjectId` | Get subject discussion messages |
+| `POST` | `/api/comments/:subjectId` | Add text message |
+| `POST` | `/api/comments/:subjectId/voice` | Add voice message |
+| `DELETE` | `/api/comments/:id` | Delete message if owner or admin |
 
 ### Reviews
 
-- `GET /api/reviews/approved` - Show approved student reviews.
-- `POST /api/reviews` - Submit one review per person. After submission, the form is hidden and the student can see their own review with other reviews.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/reviews/approved` | Public approved reviews |
+| `POST` | `/api/reviews` | Submit student review |
+| `GET` | `/api/reviews/all` | Admin review list |
+| `PUT` | `/api/reviews/:id/approve` | Admin approve review |
+| `DELETE` | `/api/reviews/:id` | Admin delete review |
 
-### Gift
+### Jobs And Career Updates
 
-- `POST /api/feedback` - Submit Gift issue report data with a required screenshot. Accepted genuine bugs or issues are eligible for a Rs. 10 gift. The submission is stored in MongoDB and emailed to `ADMIN_EMAIL`, which defaults to `priyankakhasa937@gmail.com`.
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/job-updates` | List career updates |
+| `POST` | `/api/job-updates` | Add career update |
+| `DELETE` | `/api/job-updates/:id` | Delete update if owner or admin |
 
-## Auth & Security
+### Activity
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/activity/me` | Get personal activity stats |
+| `POST` | `/api/activity/job-apply/:id` | Record job application activity |
+
+### Gift And Feedback
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/feedback` | Submit issue report with screenshot |
+
+## Data Models
+
+| Model | Purpose |
+| --- | --- |
+| `User` | Student/admin identity, auth, academic info, CGPA, socials, avatar |
+| `Subject` | Degree, branch, year, semester, and subject catalog |
+| `Resource` | Notes, papers, syllabi, links, upload metadata |
+| `Comment` | Text and voice subject discussions |
+| `JobUpdate` | Shared career posts |
+| `Review` | Student review wall |
+| `Feedback` | Gift issue reports |
+| `Activity` | PDF opens, completions, job applications, recent actions |
+
+## Security And Quality Notes
 
 - Passwords are hashed with bcryptjs.
-- JWT tokens are stored in HTTP-only cookies.
-- Upload, delete, and comment routes are protected where needed.
-- Resource deletion checks ownership or admin role.
-- Uploaded files in `/uploads` can be opened and downloaded normally.
-- Resource APIs expose file URLs for normal viewing/downloading and also provide an authenticated preview URL.
-- The frontend includes Open and Download actions for PDFs and images.
-- Guest accounts are real users with generated credentials.
+- JWTs are stored in HTTP-only cookies.
+- Protected routes validate the current session against the database.
+- Only the newest login session remains active for an account.
+- Resource deletion requires owner or admin access.
+- Admin routes are guarded by role checks.
+- File preview paths are resolved safely inside the upload directory.
+- CORS uses configured frontend origins.
+- Production startup rejects weak or missing critical configuration.
 
-## Roadmap
+## Deployment Notes
 
-- [x] Authentication system.
-- [x] Google OAuth with duplicate account prevention.
-- [x] Guest mode.
-- [x] Resource upload and viewer.
-- [x] PDF viewer with normal open/download access.
-- [x] Subject discussion board.
-- [x] Jobs and internships board for BTech students.
-- [x] Gift form for genuine bugs/issues, with Rs. 10 reward messaging.
-- [ ] Admin view for managing subjects without direct database access.
-- [ ] Pagination for subjects and resources at scale.
-- [ ] Real-time chat.
+This repository includes deployment configuration files:
+
+- `vercel.json` for Vercel-oriented routing/build setup.
+- `render.yaml` for Render deployment blueprint setup.
+
+Before deploying:
+
+- Set all backend environment variables in the hosting dashboard.
+- Use MongoDB Atlas or another reachable MongoDB service.
+- Configure `CLIENT_URL`, `CLIENT_URLS`, and `API_URL` to match deployed domains.
+- Use a strong production `JWT_SECRET`.
+- Decide whether uploads should remain local or move to persistent/cloud storage.
+
+## Build Commands
+
+Frontend production build:
+
+```bash
+cd client
+npm run build
+```
+
+Root build shortcut:
+
+```bash
+npm run build
+```
+
+Backend start:
+
+```bash
+cd server
+npm start
+```
+
+## How Students Can Contribute
+
+You can make this hub stronger even without writing code:
+
+- Upload clean notes with clear titles.
+- Add previous year question papers with the correct year.
+- Share official syllabi and helpful links.
+- Answer doubts in subject discussions.
+- Post genuine internship or job openings.
+- Report bugs through the Gift page with a screenshot.
+- Leave a review so new students know the hub is alive.
+
+For code contributions:
+
+1. Create a new branch.
+2. Keep changes focused.
+3. Test the frontend and backend locally.
+4. Avoid committing `.env`, uploaded private files, logs, or generated build folders.
+5. Open a pull request with a clear description and screenshots for UI changes.
+
+## Future Ideas
+
+- Admin subject management without direct database scripts.
+- Better resource approval workflow.
+- Pagination and infinite scroll for very large resource collections.
+- Real-time discussion updates with WebSockets.
+- Cloud storage for production uploads.
+- Notifications for new subject resources.
+- Saved resources and personal study lists.
+- AI-powered resource summaries and study planning.
 
 ## License
 
-MIT - free to use and adapt with attribution.
+This project is currently marked as private in package metadata. Add a repository license file before public distribution.
 
-Developed for BPSMV University students.
+## Credits
+
+Built with care for BPSMV students: a place to study faster, share better, and make useful academic material easier to find for everyone.
