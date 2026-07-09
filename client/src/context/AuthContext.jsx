@@ -55,16 +55,16 @@ export const AuthProvider = ({ children }) => {
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  const login = async (email, password, turnstileToken) => {
+  const login = async (email, password) => {
     setUser(null);
-    const res = await axios.post('/auth/login', { email, password, turnstileToken });
+    const res = await axios.post('/auth/login', { email, password });
     setUser(res.data.user);
     return res.data.user;
   };
 
-  const register = async (name, email, password, rollNumber, turnstileToken) => {
+  const register = async (name, email, password, rollNumber) => {
     setUser(null);
-    const res = await axios.post('/auth/register', { name, email, password, rollNumber, turnstileToken });
+    const res = await axios.post('/auth/register', { name, email, password, rollNumber });
     setUser(res.data.user);
     return res.data.user;
   };

@@ -6,7 +6,6 @@ const Payment = require('../models/Payment');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { subscriptionSummary } = require('../utils/subscription');
-const { verifyTurnstile } = require('../utils/turnstile');
 
 const router = express.Router();
 const PLANS = Object.freeze({
@@ -65,7 +64,6 @@ const extendAccess = async (payment) => {
 router.get('/config', verifyToken, (req, res) => {
   res.json({
     keyId: process.env.RAZORPAY_KEY_ID || '',
-    turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || '',
     plans: Object.entries(PLANS).map(([id, plan]) => ({
       id,
       amount: plan.amount,
@@ -84,9 +82,6 @@ router.post('/order', verifyToken, paymentLimiter, async (req, res) => {
   try {
     const plan = PLANS[req.body.plan];
     if (!plan) return res.status(400).json({ message: 'Choose a valid access plan' });
-
-    const captcha = await verifyTurnstile(req.body.turnstileToken, req.ip, 'payment');
-    if (!captcha.success) return res.status(400).json({ message: captcha.reason });
 
     const user = await User.findById(req.user.id);
     if (!user?.onboarded) {

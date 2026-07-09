@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Check, CreditCard, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import TurnstileWidget from '../components/TurnstileWidget';
 
 const loadRazorpay = () => new Promise((resolve) => {
   if (window.Razorpay) return resolve(true);
@@ -22,14 +21,13 @@ const fallbackPlans = [
 const Subscribe = () => {
   const { user, fetchUser, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [plans, setPlans] = useState(fallbackPlans);
   const [selected, setSelected] = useState('yearly');
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const [resetKey, setResetKey] = useState(0);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState('');
-
-  const handleCaptcha = useCallback((token) => setTurnstileToken(token), []);
+  const fromPath = location.state?.from?.pathname;
+  const redirectAfterPayment = fromPath && fromPath !== '/subscribe' ? fromPath : '/dashboard';
 
   useEffect(() => {
     axios.get('/payments/config')
@@ -41,26 +39,18 @@ const Subscribe = () => {
 
   useEffect(() => {
     if (user?.subscription?.active || user?.role === 'admin') {
-      navigate('/dashboard', { replace: true });
+      navigate(redirectAfterPayment, { replace: true });
     }
-  }, [navigate, user]);
+  }, [navigate, redirectAfterPayment, user]);
 
   const startPayment = async () => {
-    if (!turnstileToken) {
-      setError('Please complete the security check.');
-      return;
-    }
-
     setPaying(true);
     setError('');
     try {
       const loaded = await loadRazorpay();
       if (!loaded) throw new Error('Razorpay checkout could not load. Check your connection.');
 
-      const { data: order } = await axios.post('/payments/order', {
-        plan: selected,
-        turnstileToken
-      });
+      const { data: order } = await axios.post('/payments/order', { plan: selected });
 
       const checkout = new window.Razorpay({
         key: order.keyId,
@@ -81,7 +71,7 @@ const Subscribe = () => {
           try {
             await axios.post('/payments/verify', response);
             await fetchUser();
-            navigate('/dashboard', { replace: true });
+            navigate(redirectAfterPayment, { replace: true });
           } catch (verifyError) {
             setError(verifyError.response?.data?.message || 'Payment verification failed.');
             setPaying(false);
@@ -96,8 +86,6 @@ const Subscribe = () => {
     } catch (paymentError) {
       setError(paymentError.response?.data?.message || paymentError.message || 'Could not start payment.');
       setPaying(false);
-      setTurnstileToken('');
-      setResetKey((value) => value + 1);
     }
   };
 
@@ -150,16 +138,11 @@ const Subscribe = () => {
 
       <div className="mx-auto mt-6 max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
         {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <TurnstileWidget
-          action="payment"
-          onVerify={handleCaptcha}
-          resetKey={resetKey}
-        />
         <button
           type="button"
           onClick={startPayment}
-          disabled={paying || !turnstileToken}
-          className="btn btn-primary mt-3 w-full py-3 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={paying}
+          className="btn btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {paying ? <Loader2 size={17} className="animate-spin" /> : <CreditCard size={17} />}
           {paying ? 'Opening secure checkout...' : `Pay ₹${plans.find((plan) => plan.id === selected)?.amount / 100 || 0}`}

@@ -24,8 +24,7 @@ if (process.env.NODE_ENV === 'production') {
   const optionalIntegrations = [
     'RAZORPAY_KEY_ID',
     'RAZORPAY_KEY_SECRET',
-    'RAZORPAY_WEBHOOK_SECRET',
-    'TURNSTILE_SECRET_KEY'
+    'RAZORPAY_WEBHOOK_SECRET'
   ];
   const missingIntegrations = optionalIntegrations.filter((key) => !process.env[key]);
   if (missingIntegrations.length) {

@@ -6,7 +6,6 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
-const { verifyTurnstile } = require('../utils/turnstile');
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
@@ -109,9 +108,7 @@ if (passport.googleEnabled) {
 // Email/Password Register
 router.post('/register', authLimiter, async (req, res) => {
   try {
-    const { name, email, password, rollNumber, turnstileToken } = req.body;
-    const captcha = await verifyTurnstile(turnstileToken, req.ip, 'register');
-    if (!captcha.success) return res.status(400).json({ message: captcha.reason });
+    const { name, email, password, rollNumber } = req.body;
     if (!name || !email || !password || !rollNumber) {
       return res.status(400).json({ message: 'Name, email, password and roll number are required' });
     }
@@ -147,9 +144,7 @@ router.post('/register', authLimiter, async (req, res) => {
 // Email/Password Login
 router.post('/login', authLimiter, async (req, res) => {
   try {
-    const { email, password, turnstileToken } = req.body;
-    const captcha = await verifyTurnstile(turnstileToken, req.ip, 'login');
-    if (!captcha.success) return res.status(400).json({ message: captcha.reason });
+    const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
