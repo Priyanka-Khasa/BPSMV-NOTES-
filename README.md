@@ -301,8 +301,23 @@ PORT=5000
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
+RAZORPAY_KEY_ID=rzp_test_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_separate_webhook_secret
+
+TURNSTILE_SITE_KEY=your_public_turnstile_site_key
+TURNSTILE_SECRET_KEY=your_private_turnstile_secret_key
+TURNSTILE_HOSTNAME=localhost
+
 ENABLE_GUEST_LOGIN=false
 NODE_ENV=development
+```
+
+Create `client/.env`:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_TURNSTILE_SITE_KEY=your_public_turnstile_site_key
 ```
 
 Notes:
@@ -310,6 +325,9 @@ Notes:
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
 - In production, always use a strong `JWT_SECRET`.
+- Use Razorpay test keys while developing. Never put `RAZORPAY_KEY_SECRET` or `TURNSTILE_SECRET_KEY` in the client.
+- In Razorpay, configure a webhook for `payment.captured` at `https://YOUR_API_DOMAIN/api/payments/webhook` and use the same `RAZORPAY_WEBHOOK_SECRET`.
+- Create separate Cloudflare Turnstile widgets for local/staging and production hostnames.
 - If frontend and backend are hosted on separate domains, configure `CLIENT_URLS` and cookie settings carefully.
 
 ### 4. Start The Backend
@@ -371,6 +389,7 @@ node fixDB.js
 | `/` | Cinematic landing page, stats, reviews, and entry actions |
 | `/login` | Login, register, and Google sign-in entry |
 | `/onboarding` | Protected academic onboarding |
+| `/subscribe` | ₹5 monthly or ₹50 yearly secure access checkout |
 | `/dashboard` | Personalized student study dashboard |
 | `/resources` | Full searchable resource explorer |
 | `/viewer/:id` | Protected PDF/image resource viewer |
@@ -400,6 +419,16 @@ All protected routes use the HTTP-only `token` cookie set during login.
 | `PUT` | `/api/auth/profile` | Update profile, social links, and CGPA |
 | `POST` | `/api/auth/avatar` | Upload avatar |
 | `POST` | `/api/auth/guest` | Guest login when enabled |
+
+### Payments
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/payments/config` | Get public checkout configuration and server-owned plan prices |
+| `GET` | `/api/payments/status` | Get the signed-in student's access status |
+| `POST` | `/api/payments/order` | Validate Turnstile and create a Razorpay order |
+| `POST` | `/api/payments/verify` | Verify Razorpay's HMAC signature and activate access |
+| `POST` | `/api/payments/webhook` | Process signed Razorpay payment events |
 
 ### Resources
 
@@ -459,7 +488,8 @@ All protected routes use the HTTP-only `token` cookie set during login.
 
 | Model | Purpose |
 | --- | --- |
-| `User` | Student/admin identity, auth, academic info, CGPA, socials, avatar |
+| `User` | Student/admin identity, auth, academic info, subscription status, CGPA, socials, avatar |
+| `Payment` | Razorpay order/payment IDs, plan, amount, status, and access dates |
 | `Subject` | Degree, branch, year, semester, and subject catalog |
 | `Resource` | Notes, papers, syllabi, links, upload metadata |
 | `Comment` | Text and voice subject discussions |
@@ -474,6 +504,12 @@ All protected routes use the HTTP-only `token` cookie set during login.
 - JWTs are stored in HTTP-only cookies.
 - Protected routes validate the current session against the database.
 - Only the newest login session remains active for an account.
+- Login, registration, and checkout use server-validated Cloudflare Turnstile tokens.
+- Monthly and yearly prices are fixed on the server in paise; the browser cannot choose an amount.
+- Razorpay checkout responses and webhooks are verified with HMAC-SHA256 signatures.
+- Payment records are unique and retained per student for an auditable access history.
+- Expired or unpaid students receive `402 SUBSCRIPTION_REQUIRED` before protected APIs run.
+- Uploaded files are streamed through authenticated, paid-access routes instead of public static hosting.
 - Resource deletion requires owner or admin access.
 - Admin routes are guarded by role checks.
 - File preview paths are resolved safely inside the upload directory.
@@ -493,6 +529,9 @@ Before deploying:
 - Use MongoDB Atlas or another reachable MongoDB service.
 - Configure `CLIENT_URL`, `CLIENT_URLS`, and `API_URL` to match deployed domains.
 - Use a strong production `JWT_SECRET`.
+- Add the live Razorpay keys and webhook secret, then test a real ₹5 transaction before launch.
+- Add production Turnstile keys and restrict the widget to your deployed frontend hostname.
+- Keep Razorpay Test Mode and Live Mode credentials separate.
 - Decide whether uploads should remain local or move to persistent/cloud storage.
 
 ## Build Commands

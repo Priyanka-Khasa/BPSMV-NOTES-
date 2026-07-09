@@ -15,6 +15,7 @@ import Admin from './pages/Admin';
 import Gift from './pages/Gift';
 import Jobs from './pages/Jobs';
 import ProtectedRoute from './components/ProtectedRoute';
+import Subscribe from './pages/Subscribe';
 
 function App() {
   return (
@@ -23,8 +24,13 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={
-          <ProtectedRoute>
+          <ProtectedRoute subscriptionRequired={false}>
             <Onboarding />
+          </ProtectedRoute>
+        } />
+        <Route path="/subscribe" element={
+          <ProtectedRoute subscriptionRequired={false}>
+            <Subscribe />
           </ProtectedRoute>
         } />
         <Route path="/dashboard" element={

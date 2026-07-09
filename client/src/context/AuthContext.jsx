@@ -45,6 +45,9 @@ export const AuthProvider = ({ children }) => {
             window.location.href = '/login?session=ended';
           }
         }
+        if (err.response?.status === 402 && window.location.pathname !== '/subscribe') {
+          window.location.href = '/subscribe';
+        }
         return Promise.reject(err);
       }
     );
@@ -52,16 +55,16 @@ export const AuthProvider = ({ children }) => {
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, turnstileToken) => {
     setUser(null);
-    const res = await axios.post('/auth/login', { email, password });
+    const res = await axios.post('/auth/login', { email, password, turnstileToken });
     setUser(res.data.user);
     return res.data.user;
   };
 
-  const register = async (name, email, password, rollNumber) => {
+  const register = async (name, email, password, rollNumber, turnstileToken) => {
     setUser(null);
-    const res = await axios.post('/auth/register', { name, email, password, rollNumber });
+    const res = await axios.post('/auth/register', { name, email, password, rollNumber, turnstileToken });
     setUser(res.data.user);
     return res.data.user;
   };

@@ -78,7 +78,7 @@ const PDFViewer = () => {
 
   const isPdf = resource.fileType === 'pdf';
   const isImage = resource.fileType === 'image';
-  const fileUrl = resource.fileUrl || `${API_BASE}/resources/${id}/file`;
+  const fileUrl = `${API_BASE}${resource.secureFileUrl || `/resources/${id}/file`}`;
 
   return (
     <div className="space-y-4 animate-fade-in">

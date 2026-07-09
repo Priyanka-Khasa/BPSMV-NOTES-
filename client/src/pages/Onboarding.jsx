@@ -21,7 +21,7 @@ const Onboarding = () => {
     if (!isAuthenticated) {
       navigate('/login', { replace: true });
     } else if (user?.onboarded) {
-      navigate('/dashboard', { replace: true });
+      navigate(user?.subscription?.active || user?.role === 'admin' ? '/dashboard' : '/subscribe', { replace: true });
     } else if (user?.rollNumber) {
       setFormData(prev => ({ ...prev, rollNumber: user.rollNumber }));
     }
@@ -64,7 +64,7 @@ const Onboarding = () => {
     setLoading(true);
     try {
       await onboard(formData);
-      navigate('/dashboard');
+      navigate('/subscribe');
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to save details. Please try again.');
     } finally {

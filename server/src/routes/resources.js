@@ -27,6 +27,7 @@ const sanitizeResource = (resource) => {
   const obj = resource.toObject ? resource.toObject() : { ...resource };
   if (obj.fileUrl) {
     obj.secureFileUrl = `/resources/${obj._id}/file`;
+    delete obj.fileUrl;
   }
   return obj;
 };
@@ -194,8 +195,7 @@ router.get('/subject/:subjectId', verifyToken, async (req, res) => {
   }
 });
 
-// Authenticated file stream kept for in-app previews. Public /uploads links are
-// also available so students can open and download resources normally.
+// Resource files are streamed only after authentication and subscription checks.
 router.get('/:id/file', verifyToken, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

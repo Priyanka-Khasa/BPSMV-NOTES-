@@ -5,6 +5,9 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const { seedSubjects } = require('../seedSubjects');
+const { router: paymentRouter, webhook: paymentWebhook } = require('./routes/payments');
+const { verifyToken } = require('./routes/auth');
+const { requireActiveSubscription } = require('./utils/subscription');
 
 // Initialize express app
 const app = express();
@@ -18,6 +21,10 @@ if (process.env.NODE_ENV === 'production') {
   if (!process.env.CLIENT_URL && !process.env.CLIENT_URLS) {
     throw new Error('CLIENT_URL or CLIENT_URLS must be set in production');
   }
+  ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET', 'RAZORPAY_WEBHOOK_SECRET',
+    'TURNSTILE_SECRET_KEY', 'TURNSTILE_SITE_KEY'].forEach((key) => {
+    if (!process.env[key]) throw new Error(`${key} must be set in production`);
+  });
 }
 
 // Middleware
@@ -37,13 +44,11 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+app.post('/api/payments/webhook', express.raw({ type: 'application/json', limit: '256kb' }), paymentWebhook);
+app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
-
-// Serve uploaded files normally so students can open and download PDFs.
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -53,6 +58,36 @@ app.get('/api/health', (req, res) => {
 // Import and use other routes here
 const { router: authRouter } = require('./routes/auth');
 app.use('/api/auth', authRouter);
+app.use('/api/payments', paymentRouter);
+
+// Existing upload URLs remain usable, but are no longer public.
+app.get('/uploads/:filename', verifyToken, requireActiveSubscription, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  if (filename !== req.params.filename) {
+    return res.status(400).json({ message: 'Invalid filename' });
+  }
+  return res.sendFile(filename, {
+    root: path.join(__dirname, '../uploads'),
+    dotfiles: 'deny',
+    headers: {
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff'
+    }
+  }, (error) => {
+    if (error && !res.headersSent) {
+      res.status(error.statusCode || 404).json({ message: 'File not found' });
+    }
+  });
+});
+
+app.use('/api', (req, res, next) => {
+  const publicRequest =
+    (req.method === 'GET' && req.path === '/resources/public/stats') ||
+    (req.method === 'GET' && req.path === '/reviews/approved') ||
+    (req.method === 'POST' && req.path === '/feedback');
+  if (publicRequest) return next();
+  return verifyToken(req, res, () => requireActiveSubscription(req, res, next));
+});
 app.use('/api/resources', require('./routes/resources'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/reviews', require('./routes/reviews'));
@@ -71,6 +106,5 @@ connectDB().then(async () => {
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Uploads served at http://localhost:${PORT}/uploads`);
   });
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
+const ProtectedRoute = ({ children, adminOnly = false, subscriptionRequired = true }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
@@ -20,6 +20,10 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (adminOnly && user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (subscriptionRequired && user?.role !== 'admin' && !user?.subscription?.active) {
+    return <Navigate to="/subscribe" state={{ from: location }} replace />;
   }
 
   return children;

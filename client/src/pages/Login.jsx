@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
+import TurnstileWidget from '../components/TurnstileWidget';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -11,6 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
   const { login, register, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ const Login = () => {
     }
 
     if (isAuthenticated && user?.onboarded) {
-      navigate('/dashboard', { replace: true });
+      navigate(user?.subscription?.active || user?.role === 'admin' ? '/dashboard' : '/subscribe', { replace: true });
     } else if (isAuthenticated && !user?.onboarded) {
       navigate('/onboarding', { replace: true });
     }
@@ -41,6 +43,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
+      if (!turnstileToken) throw new Error('Please complete the security check');
       if (mode === 'signup') {
         if (!form.name || !form.email || !form.password || !form.rollNumber) {
           throw new Error('All fields are required');
@@ -51,14 +54,14 @@ const Login = () => {
         if (!form.rollNumber.trim()) {
           throw new Error('Roll number is required');
         }
-        await register(form.name, form.email, form.password, form.rollNumber.trim());
+        await register(form.name, form.email, form.password, form.rollNumber.trim(), turnstileToken);
         navigate('/onboarding');
       } else {
-        const userData = await login(form.email, form.password);
+        const userData = await login(form.email, form.password, turnstileToken);
         if (!userData.onboarded) {
           navigate('/onboarding');
         } else {
-          navigate('/dashboard');
+          navigate(userData.subscription?.active || userData.role === 'admin' ? '/dashboard' : '/subscribe');
         }
       }
     } catch (err) {
@@ -93,13 +96,13 @@ const Login = () => {
           {/* Toggle */}
           <div className="flex bg-white/65 rounded-xl p-1 mb-6 ring-1 ring-white/80 shadow-inner">
             <button
-              onClick={() => { setMode('login'); setError(''); }}
+              onClick={() => { setMode('login'); setError(''); setTurnstileToken(''); }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'login' ? 'bg-white text-slate-900 shadow-sm shadow-brand-500/10' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Log in
             </button>
             <button
-              onClick={() => { setMode('signup'); setError(''); }}
+              onClick={() => { setMode('signup'); setError(''); setTurnstileToken(''); }}
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${mode === 'signup' ? 'bg-white text-slate-900 shadow-sm shadow-brand-500/10' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Sign up
@@ -180,9 +183,14 @@ const Login = () => {
               </div>
               <p className="text-xs text-slate-400 mt-1.5">Must be at least 6 characters</p>
             </div>
+            <TurnstileWidget
+              key={mode}
+              action={mode === 'signup' ? 'register' : 'login'}
+              onVerify={setTurnstileToken}
+            />
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !turnstileToken}
               className="btn btn-primary w-full py-3.5 shadow-lg shadow-brand-500/20 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-0.5 transition-all duration-300"
             >
               {loading ? (

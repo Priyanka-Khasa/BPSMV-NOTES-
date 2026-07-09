@@ -5,6 +5,17 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
+const { subscriptionSummary } = require('../utils/subscription');
+const { verifyTurnstile } = require('../utils/turnstile');
+const rateLimit = require('express-rate-limit');
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many attempts. Please wait and try again.' }
+});
 
 const cookieOptions = {
   httpOnly: true,
@@ -35,7 +46,8 @@ const publicUser = (user) => ({
   avatar: user.avatar,
   bio: user.bio,
   socialLinks: user.socialLinks,
-  semesterCgpa: user.semesterCgpa
+  semesterCgpa: user.semesterCgpa,
+  subscription: subscriptionSummary(user)
 });
 
 // Helper to sign JWT and set cookie. The session id is checked against the
@@ -78,7 +90,7 @@ if (passport.googleEnabled) {
       try {
         await applyAcademicProgression(user);
         await startSingleDeviceSession(res, user);
-        return res.redirect(user.onboarded ? `${clientUrl}/dashboard` : `${clientUrl}/onboarding`);
+        return res.redirect(user.onboarded ? `${clientUrl}/subscribe` : `${clientUrl}/onboarding`);
       } catch (sessionError) {
         console.error('Google session error:', sessionError);
         return res.redirect(`${clientUrl}/login?error=session_failed`);
@@ -95,9 +107,11 @@ if (passport.googleEnabled) {
 }
 
 // Email/Password Register
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
-    const { name, email, password, rollNumber } = req.body;
+    const { name, email, password, rollNumber, turnstileToken } = req.body;
+    const captcha = await verifyTurnstile(turnstileToken, req.ip, 'register');
+    if (!captcha.success) return res.status(400).json({ message: captcha.reason });
     if (!name || !email || !password || !rollNumber) {
       return res.status(400).json({ message: 'Name, email, password and roll number are required' });
     }
@@ -131,9 +145,11 @@ router.post('/register', async (req, res) => {
 });
 
 // Email/Password Login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
+    const captcha = await verifyTurnstile(turnstileToken, req.ip, 'login');
+    if (!captcha.success) return res.status(400).json({ message: captcha.reason });
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
@@ -195,7 +211,9 @@ router.get('/me', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.id).select('-googleId');
     if (!user) return res.status(404).json({ message: 'User not found' });
     await applyAcademicProgression(user);
-    res.json(user);
+    const responseUser = user.toObject();
+    responseUser.subscription = subscriptionSummary(user);
+    res.json(responseUser);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
