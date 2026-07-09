@@ -305,10 +305,6 @@ RAZORPAY_KEY_ID=rzp_test_your_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 RAZORPAY_WEBHOOK_SECRET=your_separate_webhook_secret
 
-TURNSTILE_SITE_KEY=your_public_turnstile_site_key
-TURNSTILE_SECRET_KEY=your_private_turnstile_secret_key
-TURNSTILE_HOSTNAME=localhost
-
 ENABLE_GUEST_LOGIN=false
 NODE_ENV=development
 ```
@@ -317,7 +313,6 @@ Create `client/.env`:
 
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_TURNSTILE_SITE_KEY=your_public_turnstile_site_key
 ```
 
 Notes:
@@ -325,9 +320,8 @@ Notes:
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
 - In production, always use a strong `JWT_SECRET`.
-- Use Razorpay test keys while developing. Never put `RAZORPAY_KEY_SECRET` or `TURNSTILE_SECRET_KEY` in the client.
+- Use Razorpay test keys while developing. Never put `RAZORPAY_KEY_SECRET` in the client.
 - In Razorpay, configure a webhook for `payment.captured` at `https://YOUR_API_DOMAIN/api/payments/webhook` and use the same `RAZORPAY_WEBHOOK_SECRET`.
-- Create separate Cloudflare Turnstile widgets for local/staging and production hostnames.
 - If frontend and backend are hosted on separate domains, configure `CLIENT_URLS` and cookie settings carefully.
 
 ### 4. Start The Backend
@@ -426,7 +420,7 @@ All protected routes use the HTTP-only `token` cookie set during login.
 | --- | --- | --- |
 | `GET` | `/api/payments/config` | Get public checkout configuration and server-owned plan prices |
 | `GET` | `/api/payments/status` | Get the signed-in student's access status |
-| `POST` | `/api/payments/order` | Validate Turnstile and create a Razorpay order |
+| `POST` | `/api/payments/order` | Create a Razorpay order for the selected access plan |
 | `POST` | `/api/payments/verify` | Verify Razorpay's HMAC signature and activate access |
 | `POST` | `/api/payments/webhook` | Process signed Razorpay payment events |
 
@@ -504,7 +498,6 @@ All protected routes use the HTTP-only `token` cookie set during login.
 - JWTs are stored in HTTP-only cookies.
 - Protected routes validate the current session against the database.
 - Only the newest login session remains active for an account.
-- Login, registration, and checkout use server-validated Cloudflare Turnstile tokens.
 - Monthly and yearly prices are fixed on the server in paise; the browser cannot choose an amount.
 - Razorpay checkout responses and webhooks are verified with HMAC-SHA256 signatures.
 - Payment records are unique and retained per student for an auditable access history.
@@ -530,7 +523,6 @@ Before deploying:
 - Configure `CLIENT_URL`, `CLIENT_URLS`, and `API_URL` to match deployed domains.
 - Use a strong production `JWT_SECRET`.
 - Add the live Razorpay keys and webhook secret, then test a real ₹5 transaction before launch.
-- Add production Turnstile keys and restrict the widget to your deployed frontend hostname.
 - Keep Razorpay Test Mode and Live Mode credentials separate.
 - Decide whether uploads should remain local or move to persistent/cloud storage.
 
