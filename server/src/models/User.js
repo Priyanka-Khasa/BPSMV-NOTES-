@@ -116,6 +116,24 @@ const userSchema = new mongoose.Schema({
   },
   lastLoginAt: {
     type: Date
+  },
+  subscription: {
+    status: {
+      type: String,
+      enum: ['inactive', 'active', 'cancelled'],
+      default: 'inactive'
+    },
+    plan: {
+      type: String,
+      enum: ['monthly', 'yearly', null],
+      default: null
+    },
+    startsAt: Date,
+    expiresAt: Date,
+    lastPayment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment'
+    }
   }
 }, {
   timestamps: true
