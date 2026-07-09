@@ -21,10 +21,18 @@ if (process.env.NODE_ENV === 'production') {
   if (!process.env.CLIENT_URL && !process.env.CLIENT_URLS) {
     throw new Error('CLIENT_URL or CLIENT_URLS must be set in production');
   }
-  ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET', 'RAZORPAY_WEBHOOK_SECRET',
-    'TURNSTILE_SECRET_KEY', 'TURNSTILE_SITE_KEY'].forEach((key) => {
-    if (!process.env[key]) throw new Error(`${key} must be set in production`);
-  });
+  const optionalIntegrations = [
+    'RAZORPAY_KEY_ID',
+    'RAZORPAY_KEY_SECRET',
+    'RAZORPAY_WEBHOOK_SECRET',
+    'TURNSTILE_SECRET_KEY'
+  ];
+  const missingIntegrations = optionalIntegrations.filter((key) => !process.env[key]);
+  if (missingIntegrations.length) {
+    console.warn(
+      `Payment access is locked until these environment variables are configured: ${missingIntegrations.join(', ')}`
+    );
+  }
 }
 
 // Middleware
