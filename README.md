@@ -383,7 +383,7 @@ node fixDB.js
 | `/` | Cinematic landing page, stats, reviews, and entry actions |
 | `/login` | Login, register, and Google sign-in entry |
 | `/onboarding` | Protected academic onboarding |
-| `/subscribe` | ₹5 monthly or ₹50 yearly secure access checkout |
+| `/subscribe` | Rs. 10 monthly or Rs. 50 yearly secure access checkout |
 | `/dashboard` | Personalized student study dashboard |
 | `/resources` | Full searchable resource explorer |
 | `/viewer/:id` | Protected PDF/image resource viewer |
@@ -522,7 +522,7 @@ Before deploying:
 - Use MongoDB Atlas or another reachable MongoDB service.
 - Configure `CLIENT_URL`, `CLIENT_URLS`, and `API_URL` to match deployed domains.
 - Use a strong production `JWT_SECRET`.
-- Add the live Razorpay keys and webhook secret, then test a real ₹5 transaction before launch.
+- Add the live Razorpay keys and webhook secret, then test a real Rs. 10 transaction before launch.
 - Keep Razorpay Test Mode and Live Mode credentials separate.
 - Decide whether uploads should remain local or move to persistent/cloud storage.
 
