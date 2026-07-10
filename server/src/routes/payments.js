@@ -9,7 +9,7 @@ const { subscriptionSummary } = require('../utils/subscription');
 
 const router = express.Router();
 const PLANS = Object.freeze({
-  monthly: { amount: 500, label: 'Monthly Access', months: 1 },
+  monthly: { amount: 1000, label: 'Monthly Access', months: 1 },
   yearly: { amount: 5000, label: 'Yearly Access', months: 12 }
 });
 

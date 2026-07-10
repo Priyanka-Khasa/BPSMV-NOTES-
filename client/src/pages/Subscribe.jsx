@@ -1,7 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Check, CreditCard, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
+import {
+  BookOpen,
+  BriefcaseBusiness,
+  Check,
+  CreditCard,
+  Gift,
+  GraduationCap,
+  Loader2,
+  LockKeyhole,
+  MessageSquareText,
+  Newspaper,
+  ShieldCheck,
+  Trophy,
+  UploadCloud
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const loadRazorpay = () => new Promise((resolve) => {
@@ -14,8 +28,51 @@ const loadRazorpay = () => new Promise((resolve) => {
 });
 
 const fallbackPlans = [
-  { id: 'monthly', label: 'Monthly Access', amount: 500, currency: 'INR' },
+  { id: 'monthly', label: 'Monthly Access', amount: 1000, currency: 'INR' },
   { id: 'yearly', label: 'Yearly Access', amount: 5000, currency: 'INR' }
+];
+
+const featureGroups = [
+  {
+    icon: BookOpen,
+    title: 'Notes and Papers',
+    text: 'Access notes, previous year papers, syllabi, PDFs, and subject material.'
+  },
+  {
+    icon: BriefcaseBusiness,
+    title: 'Jobs and Internships',
+    text: 'Browse student-shared jobs, internships, scholarships, and career links.'
+  },
+  {
+    icon: Trophy,
+    title: 'Hackathons',
+    text: 'Stay updated with competitions, hiring challenges, and growth opportunities.'
+  },
+  {
+    icon: Newspaper,
+    title: 'Campus Updates',
+    text: 'Follow useful academic, placement, and resource updates in one place.'
+  },
+  {
+    icon: Gift,
+    title: 'Gift Feature',
+    text: 'Report genuine issues with screenshots and keep the platform improving.'
+  },
+  {
+    icon: UploadCloud,
+    title: 'Upload Resources',
+    text: 'Share notes, links, question papers, images, and PDFs with your batch.'
+  },
+  {
+    icon: MessageSquareText,
+    title: 'Subject Chat',
+    text: 'Discuss doubts, send messages, and collaborate inside subject rooms.'
+  },
+  {
+    icon: GraduationCap,
+    title: 'Student Dashboard',
+    text: 'Get a personalized dashboard for your degree, branch, year, and semester.'
+  }
 ];
 
 const Subscribe = () => {
@@ -42,6 +99,8 @@ const Subscribe = () => {
       navigate(redirectAfterPayment, { replace: true });
     }
   }, [navigate, redirectAfterPayment, user]);
+
+  const selectedPlan = plans.find((plan) => plan.id === selected) || fallbackPlans[0];
 
   const startPayment = async () => {
     setPaying(true);
@@ -90,72 +149,115 @@ const Subscribe = () => {
   };
 
   return (
-    <div className="mx-auto max-w-4xl py-8 sm:py-12">
-      <div className="text-center">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-emerald-50 text-emerald-700">
-          <ShieldCheck size={25} />
-        </div>
-        <h1 className="mt-4 text-3xl font-bold text-slate-900">Unlock the Resource Hub</h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-600">
-          One small student contribution keeps notes, papers, discussions, and career resources available in one secure place.
-        </p>
-      </div>
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+          <section className="bg-slate-950 p-6 text-white sm:p-8 lg:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+              <ShieldCheck size={14} /> Secure student access
+            </div>
+            <h1 className="mt-5 max-w-2xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+              Unlock BPSMV Resource Hub for serious study.
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+              One low student contribution opens notes, papers, jobs, internships, hackathons, uploads, chat, updates, and issue rewards in one protected account.
+            </p>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        {plans.map((plan) => {
-          const active = selected === plan.id;
-          const yearly = plan.id === 'yearly';
-          return (
-            <button
-              key={plan.id}
-              type="button"
-              onClick={() => setSelected(plan.id)}
-              className={`relative p-6 text-left border bg-white transition-all ${
-                active
-                  ? 'border-brand-500 ring-2 ring-brand-100 shadow-lg'
-                  : 'border-slate-200 hover:border-slate-300'
-              } rounded-lg`}
-            >
-              {yearly && (
-                <span className="absolute right-4 top-4 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                  Save ₹10
-                </span>
-              )}
-              <p className="text-sm font-semibold text-slate-600">{plan.label}</p>
-              <p className="mt-3 text-4xl font-bold text-slate-900">
-                ₹{plan.amount / 100}
-                <span className="text-sm font-medium text-slate-500"> / {yearly ? 'year' : 'month'}</span>
-              </p>
-              <div className="mt-5 space-y-2 text-sm text-slate-600">
-                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> All notes and papers</p>
-                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Discussions and career updates</p>
-                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Access on your verified account</p>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {featureGroups.map(({ icon: Icon, title, text }) => (
+                <div key={title} className="rounded-xl border border-white/10 bg-white/[0.06] p-4">
+                  <div className="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-emerald-400/15 text-emerald-200">
+                    <Icon size={18} />
+                  </div>
+                  <h2 className="text-sm font-semibold text-white">{title}</h2>
+                  <p className="mt-1 text-xs leading-5 text-slate-300">{text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="p-5 sm:p-7 lg:p-8">
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">Choose access</p>
+            <h2 className="mt-2 text-2xl font-bold text-slate-950">Simple pricing for students</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Payment activates access only for your logged-in account. Dashboard opens after successful verification.
+            </p>
+
+            <div className="mt-6 grid gap-3">
+              {plans.map((plan) => {
+                const active = selected === plan.id;
+                const yearly = plan.id === 'yearly';
+                const monthlyEquivalent = yearly ? Math.round((plan.amount / 100) / 12) : null;
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    onClick={() => setSelected(plan.id)}
+                    className={`relative w-full rounded-xl border p-5 text-left transition-all ${
+                      active
+                        ? 'border-brand-500 bg-brand-50/60 ring-2 ring-brand-100 shadow-lg shadow-brand-100/70'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">{plan.label}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-950">
+                          Rs. {plan.amount / 100}
+                          <span className="text-sm font-medium text-slate-500"> / {yearly ? 'year' : 'month'}</span>
+                        </p>
+                        {yearly && (
+                          <p className="mt-1 text-xs font-medium text-emerald-700">
+                            Around Rs. {monthlyEquivalent}/month with yearly access
+                          </p>
+                        )}
+                      </div>
+                      <span className={`mt-1 h-5 w-5 rounded-full border ${active ? 'border-brand-600 bg-brand-600 shadow-inner' : 'border-slate-300'}`}>
+                        {active && <span className="mx-auto mt-1 block h-2.5 w-2.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    {yearly && (
+                      <span className="mt-4 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                        Best value
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Notes and papers</p>
+                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Upload resources</p>
+                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Jobs and internships</p>
+                <p className="flex items-center gap-2"><Check size={16} className="text-emerald-600" /> Chat and updates</p>
               </div>
-            </button>
-          );
-        })}
-      </div>
+            </div>
 
-      <div className="mx-auto mt-6 max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-        {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-        <button
-          type="button"
-          onClick={startPayment}
-          disabled={paying}
-          className="btn btn-primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {paying ? <Loader2 size={17} className="animate-spin" /> : <CreditCard size={17} />}
-          {paying ? 'Opening secure checkout...' : `Pay ₹${plans.find((plan) => plan.id === selected)?.amount / 100 || 0}`}
-        </button>
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
-          <LockKeyhole size={13} /> Payment is processed securely by Razorpay.
-        </p>
-      </div>
+            <div className="mt-5">
+              {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+              <button
+                type="button"
+                onClick={startPayment}
+                disabled={paying}
+                className="btn btn-primary w-full py-3.5 text-base disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {paying ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
+                {paying ? 'Opening secure checkout...' : `Pay Rs. ${selectedPlan.amount / 100}`}
+              </button>
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
+                <LockKeyhole size={13} /> Payment is processed securely by Razorpay.
+              </p>
+            </div>
 
-      <div className="mt-6 text-center">
-        <button type="button" onClick={logout} className="text-sm font-medium text-slate-500 hover:text-slate-800">
-          Sign out
-        </button>
+            <div className="mt-5 text-center">
+              <button type="button" onClick={logout} className="text-sm font-medium text-slate-500 hover:text-slate-800">
+                Sign out
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
