@@ -3,114 +3,168 @@ const Subject = require('./src/models/Subject');
 
 const subjects = [
   // ─── SEMESTER I (1st Year) ───────────────────────────────────────────────
-  { name: 'Physics (Semiconductor Physics)', code: 'CS101', degree: 'B.Tech', branch: 'CSE', semester: 1 },
-  { name: 'Mathematics-I (Calculus & Linear Algebra)', code: 'CS102', degree: 'B.Tech', branch: 'CSE', semester: 1 },
-  { name: 'Basic Electrical Engineering', code: 'CS103', degree: 'B.Tech', branch: 'CSE', semester: 1 },
-  { name: 'Engineering Graphics & Design', code: 'CS104', degree: 'B.Tech', branch: 'CSE', semester: 1 },
-  { name: 'Induction Program', code: 'CS105', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Semiconductor Physics', code: 'CS101', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Mathematics-I (Calculus & Linear Algebra)', code: 'CS102', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Basic Electrical Engineering', code: 'CS103', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Engineering Graphics & Design', code: 'CS104', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Physics Lab', code: 'CS105', degree: 'B.Tech', branch: 'CSE', semester: 1 },
+{ name: 'Basic Electrical Engineering Lab', code: 'CS106', degree: 'B.Tech', branch: 'CSE', semester: 1 },
 
-  // ─── SEMESTER II (1st Year) ──────────────────────────────────────────────
-  { name: 'Chemistry-I', code: 'CS201', degree: 'B.Tech', branch: 'CSE', semester: 2 },
-  { name: 'Mathematics-II (Probability & Statistics)', code: 'CS202', degree: 'B.Tech', branch: 'CSE', semester: 2 },
-  { name: 'Programming for Problem Solving (C)', code: 'CS203', degree: 'B.Tech', branch: 'CSE', semester: 2 },
-  { name: 'English / Effective Technical Communication', code: 'CS204', degree: 'B.Tech', branch: 'CSE', semester: 2 },
-  { name: 'Workshop / Manufacturing Practices', code: 'CS205', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+// ─── SEMESTER II (1st Year) ──────────────────────────────────────────────
+{ name: 'Chemistry-I', code: 'CS201', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'Mathematics-II (Probability & Statistics)', code: 'CS202', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'Programming for Problem Solving (C)', code: 'CS203', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'English', code: 'CS204', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'Workshop / Manufacturing Practices', code: 'CS205', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'English Language Lab', code: 'CS206', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'Programming for Problem Solving Lab', code: 'CS207', degree: 'B.Tech', branch: 'CSE', semester: 2 },
+{ name: 'Chemistry Lab', code: 'CS208', degree: 'B.Tech', branch: 'CSE', semester: 2 },
 
-  // ─── SEMESTER III (2nd Year) ─────────────────────────────────────────────
-  { name: 'Data Structures & Algorithms', code: 'CS301', degree: 'B.Tech', branch: 'CSE', semester: 3 },
-  { name: 'Computer Organization & Architecture', code: 'CS302', degree: 'B.Tech', branch: 'CSE', semester: 3 },
-  { name: 'Object-Oriented Programming with C++', code: 'CS303', degree: 'B.Tech', branch: 'CSE', semester: 3 },
-  { name: 'Mathematics-III (Calculus & ODEs)', code: 'CS304', degree: 'B.Tech', branch: 'CSE', semester: 3 },
-  { name: 'Digital Electronics', code: 'CS305', degree: 'B.Tech', branch: 'CSE', semester: 3 },
-  { name: 'Humanities-I (Organizational Behaviour)', code: 'CS306', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+// ─── SEMESTER III (2nd Year) ─────────────────────────────────────────────
+{ name: 'Data Structures & Algorithms', code: 'CS301', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Computer Organization & Architecture', code: 'CS302', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Object-Oriented Programming with C++', code: 'CS303', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Mathematics-III (Calculus & ODEs)', code: 'CS304', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Digital Electronics', code: 'CS305', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Humanities-I (Effective Technical Communication)', code: 'CS306', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Environmental Science', code: 'CS307', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Digital Electronics Lab', code: 'CS308', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Data Structures & Algorithms Lab', code: 'CS309', degree: 'B.Tech', branch: 'CSE', semester: 3 },
+{ name: 'Object-Oriented Programming with C++ Lab', code: 'CS310', degree: 'B.Tech', branch: 'CSE', semester: 3 },
 
-  // ─── SEMESTER IV (2nd Year) ──────────────────────────────────────────────
-  { name: 'Discrete Mathematics', code: 'CS401', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Operating Systems', code: 'CS402', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Design and Analysis of Algorithms', code: 'CS403', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Software Engineering', code: 'CS404', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Python Programming', code: 'CS405', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Hardware Lab / Scilab / MATLAB', code: 'CS406', degree: 'B.Tech', branch: 'CSE', semester: 4 },
-  { name: 'Environmental Sciences', code: 'CS407', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+// ─── SEMESTER IV (2nd Year) ──────────────────────────────────────────────
+{ name: 'Discrete Mathematics', code: 'CS401', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Operating System', code: 'CS402', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Design and Analysis of Algorithms', code: 'CS403', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Software Engineering', code: 'CS404', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Python', code: 'CS405', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Management-I (Organizational Behaviour)', code: 'CS406', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Universal Human Values', code: 'CS407', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Hardware Lab / MATLAB', code: 'CS408', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Python Lab', code: 'CS409', degree: 'B.Tech', branch: 'CSE', semester: 4 },
+{ name: 'Operating System Lab', code: 'CS410', degree: 'B.Tech', branch: 'CSE', semester: 4 },
 
-  // ─── SEMESTER V (3rd Year) ───────────────────────────────────────────────
-  { name: 'Database Management Systems (DBMS)', code: 'CS501', degree: 'B.Tech', branch: 'CSE', semester: 5 },
-  { name: 'Formal Language and Automata Theory (FLAT)', code: 'CS502', degree: 'B.Tech', branch: 'CSE', semester: 5 },
-  { name: 'Java Programming', code: 'CS503', degree: 'B.Tech', branch: 'CSE', semester: 5 },
-  { name: 'Machine Learning', code: 'CS504', degree: 'B.Tech', branch: 'CSE', semester: 5 },
-  { name: 'Humanities-II (Economics for Engineers)', code: 'CS505', degree: 'B.Tech', branch: 'CSE', semester: 5 },
-  { name: 'Constitution of India / Indian Traditional Knowledge', code: 'CS506', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+// ─── SEMESTER V (3rd Year) ───────────────────────────────────────────────
+{ name: 'Database Management Systems (DBMS)', code: 'CS501', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Formal Language and Automata Theory (FLAT)', code: 'CS502', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Java Programming', code: 'CS503', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Machine Learning', code: 'CS504', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Humanities-II (Economics for Engineers)', code: 'CS505', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Constitution of India / Indian Traditional Knowledge', code: 'CS506', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Database Management Systems Lab', code: 'CS507', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Java Programming Lab', code: 'CS508', degree: 'B.Tech', branch: 'CSE', semester: 5 },
+{ name: 'Industrial Practical Training-I', code: 'CS509', degree: 'B.Tech', branch: 'CSE', semester: 5 },
 
-  // ─── SEMESTER VI (3rd Year) ──────────────────────────────────────────────
-  { name: 'Compiler Design', code: 'CS601', degree: 'B.Tech', branch: 'CSE', semester: 6 },
-  { name: 'Computer Networks', code: 'CS602', degree: 'B.Tech', branch: 'CSE', semester: 6 },
-  { name: 'Professional Elective-I (e.g. Software Project Management)', code: 'CS603', degree: 'B.Tech', branch: 'CSE', semester: 6 },
-  { name: 'Professional Elective-II (e.g. Data Mining)', code: 'CS604', degree: 'B.Tech', branch: 'CSE', semester: 6 },
-  { name: 'Open Elective-I', code: 'CS605', degree: 'B.Tech', branch: 'CSE', semester: 6 },
-  { name: 'Mini Project / Institutional Training', code: 'CS606', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+// ─── SEMESTER VI (3rd Year) ──────────────────────────────────────────────
+{ name: 'Compiler Design', code: 'CS601', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Computer Networks', code: 'CS602', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Elective-I (e.g. Cloud Computing)', code: 'CS603', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Elective-II (e.g. Data Mining)', code: 'CS604', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Open Elective-I', code: 'CS605', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Project-I', code: 'CS606', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Computer Networks Lab', code: 'CS607', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Compiler Design Lab', code: 'CS608', degree: 'B.Tech', branch: 'CSE', semester: 6 },
+{ name: 'Elective-I Course Lab (e.g. Cloud Computing Lab)', code: 'CS609', degree: 'B.Tech', branch: 'CSE', semester: 6 },
 
-  // ─── SEMESTER VII (4th Year) ─────────────────────────────────────────────
-  { name: 'Professional Elective-III (e.g. Cryptography & Network Security)', code: 'CS701', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Professional Elective-IV (e.g. Artificial Intelligence)', code: 'CS702', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Professional Elective-V (e.g. Soft Computing)', code: 'CS703', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Open Elective-II (e.g. Human Resource Management)', code: 'CS704', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Bioinformatics', code: 'CS705', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Project-I / Major Project Phase-I', code: 'CS706', degree: 'B.Tech', branch: 'CSE', semester: 7 },
-  { name: 'Practical Training / Industrial Internship Evaluation', code: 'CS707', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+// ─── SEMESTER VII (4th Year) ─────────────────────────────────────────────
+{ name: 'Elective-III (e.g. Information Security)', code: 'CS701', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Elective-IV (e.g. Internet of Things)', code: 'CS702', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Open Elective-II (e.g. Human Resource Management)', code: 'CS703', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Open Elective-III (e.g. Financial Management)', code: 'CS704', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Bioinformatics', code: 'CS705', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Project-II', code: 'CS706', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Industrial Practical Training-II', code: 'CS707', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Seminar', code: 'CS708', degree: 'B.Tech', branch: 'CSE', semester: 7 },
+{ name: 'Elective-III (e.g. Information Security Lab)', code: 'CS709', degree: 'B.Tech', branch: 'CSE', semester: 7 },
 
-  // ─── SEMESTER VIII (4th Year) ────────────────────────────────────────────
-  { name: 'Professional Elective-VI (e.g. Big Data)', code: 'CS801', degree: 'B.Tech', branch: 'CSE', semester: 8 },
-  { name: 'Open Elective-III/IV (e.g. Cyber Laws)', code: 'CS802', degree: 'B.Tech', branch: 'CSE', semester: 8 },
-  { name: 'Project-II / Final Major Project', code: 'CS803', degree: 'B.Tech', branch: 'CSE', semester: 8 },
-  { name: 'Seminar', code: 'CS804', degree: 'B.Tech', branch: 'CSE', semester: 8 },
-
+// ─── SEMESTER VIII (4th Year) ────────────────────────────────────────────
+{ name: 'Elective-V (e.g. Deep Learning)', code: 'CS801', degree: 'B.Tech', branch: 'CSE', semester: 8 },
+{ name: 'Open Elective-IV (e.g. Embedded System)', code: 'CS802', degree: 'B.Tech', branch: 'CSE', semester: 8 },
+{ name: 'Project-III', code: 'CS803', degree: 'B.Tech', branch: 'CSE', semester: 8 },
+{ name: 'Seminar', code: 'CS804', degree: 'B.Tech', branch: 'CSE', semester: 8 },
+{ name: 'General Proficiency', code: 'CS805', degree: 'B.Tech', branch: 'CSE', semester: 8 },
   // ════════════════════════════════════════════════════════════════════════
   // ECE - ELECTRONICS & COMMUNICATION ENGINEERING
   // ════════════════════════════════════════════════════════════════════════
 
   // ─── SEMESTER I (1st Year) ───────────────────────────────────────────────
-  { name: 'Electromagnetic Theory / Oscillations, Waves & Optics', code: 'EC101', degree: 'B.Tech', branch: 'ECE', semester: 1 },
+  { name: 'Chemistry-I', code: 'EC101', degree: 'B.Tech', branch: 'ECE', semester: 1 },
   { name: 'Mathematics-I (Calculus & Linear Algebra)', code: 'EC102', degree: 'B.Tech', branch: 'ECE', semester: 1 },
   { name: 'Programming for Problem Solving (C)', code: 'EC103', degree: 'B.Tech', branch: 'ECE', semester: 1 },
   { name: 'English / Effective Technical Communication', code: 'EC104', degree: 'B.Tech', branch: 'ECE', semester: 1 },
   { name: 'Workshop / Manufacturing Practices', code: 'EC105', degree: 'B.Tech', branch: 'ECE', semester: 1 },
   { name: 'Induction Program', code: 'EC106', degree: 'B.Tech', branch: 'ECE', semester: 1 },
+  { name: 'Chemistry Lab', code: 'EC107', degree: 'B.Tech', branch: 'ECE', semester: 1 },
+  { name: 'Programming for problem solving lab', code: 'EC108', degree: 'B.Tech', branch: 'ECE', semester: 1 },
 
   // ─── SEMESTER II (1st Year) ──────────────────────────────────────────────
-  { name: 'Semiconductor Physics', code: 'EC201', degree: 'B.Tech', branch: 'ECE', semester: 2 },
+  { name: 'Introduction to Electromagnetic Theory', code: 'EC201', degree: 'B.Tech', branch: 'ECE', semester: 2 },
   { name: 'Mathematics-II (Probability & Statistics)', code: 'EC202', degree: 'B.Tech', branch: 'ECE', semester: 2 },
   { name: 'Basic Electrical Engineering', code: 'EC203', degree: 'B.Tech', branch: 'ECE', semester: 2 },
   { name: 'Engineering Graphics & Design (CAD)', code: 'EC204', degree: 'B.Tech', branch: 'ECE', semester: 2 },
+  { name: 'Basic Electrical Engineering Lab', code: 'EC205', degree: 'B.Tech', branch: 'ECE', semester: 2 },
+  { name: 'Physics Lab', code: 'EC206', degree: 'B.Tech', branch: 'ECE', semester: 2 },
 
   // ─── SEMESTER III (2nd Year) ─────────────────────────────────────────────
   { name: 'Electronic Devices', code: 'EC301', degree: 'B.Tech', branch: 'ECE', semester: 3 },
-  { name: 'Digital System and Design', code: 'EC302', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Digital Electronics', code: 'EC302', degree: 'B.Tech', branch: 'ECE', semester: 3 },
   { name: 'Network Theory', code: 'EC303', degree: 'B.Tech', branch: 'ECE', semester: 3 },
-  { name: 'Mathematics-III (Calculus & ODEs)', code: 'EC304', degree: 'B.Tech', branch: 'ECE', semester: 3 },
-  { name: 'Electronic Equipment and Maintenance', code: 'EC305', degree: 'B.Tech', branch: 'ECE', semester: 3 },
-  { name: 'Engineering Economics and Management', code: 'EC306', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Modeling and Simulation',code:'EC304',degree:'B.Tech',branch:'ECE',semester:3},
+  { name: 'Quantitative Aptitude',code:'EC305',degree:'B.Tech',branch:'ECE',semester:3},
+  { name: 'Signals and Systems', code: 'EC306', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Constitution of India', code: 'EC307', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Environmental Studies', code: 'EC308', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Engineering Economics and Management', code: 'EC309', degree: 'B.Tech', branch: 'ECE', semester: 3 },
+  { name: 'Electronics Poject Workshop-I',code:'EC310',degree:'B.Tech',branch:'ECE',semester:3},
+  { name: 'Electronics Devices Lab',code:'EC311',degree:'B.Tech',branch:'ECE',semester:3},
+  { name: 'Digital Electronics Lab',code:'EC312',degree:'B.Tech',branch:'ECE',semester:3},
 
   // ─── SEMESTER IV (2nd Year) ──────────────────────────────────────────────
-  { name: 'Analog Circuits', code: 'EC401', degree: 'B.Tech', branch: 'ECE', semester: 4 },
-  { name: 'Signals and Systems', code: 'EC402', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Analog and Digital Communication', code: 'EC401', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Analog Circuits', code: 'EC402', degree: 'B.Tech', branch: 'ECE', semester: 4 },
   { name: 'Microprocessors and Microcontrollers', code: 'EC403', degree: 'B.Tech', branch: 'ECE', semester: 4 },
-  { name: 'Data Structures', code: 'EC404', degree: 'B.Tech', branch: 'ECE', semester: 4 },
-  { name: 'Environmental Sciences', code: 'EC405', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Design and Simulation tool', code: 'EC404', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'ICT for development', code: 'EC405', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Universal Human Values', code: 'EC406', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Analog and Digital Communication Lab', code: 'EC407', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Analog Circuits Lab', code: 'EC408', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Microprocessor and Microcontroller Lab', code: 'EC409', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Python Programming', code: 'EC410', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Python Programming Lab', code: 'EC411', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Logical Reasoning', code: 'EC412', degree: 'B.Tech', branch: 'ECE', semester: 4 },
+  { name: 'Electronics Project Workshop-II', code: 'EC413', degree: 'B.Tech', branch: 'ECE', semester: 4 },
 
   // ─── SEMESTER V (3rd Year) ───────────────────────────────────────────────
-  { name: 'Analog and Digital Communication', code: 'EC501', degree: 'B.Tech', branch: 'ECE', semester: 5 },
-  { name: 'Digital Signal Processing (DSP)', code: 'EC502', degree: 'B.Tech', branch: 'ECE', semester: 5 },
-  { name: 'Program Elective-I (e.g. Wireless & Mobile Communication)', code: 'EC503', degree: 'B.Tech', branch: 'ECE', semester: 5 },
-  { name: 'Open Elective-I (e.g. Optimization Techniques)', code: 'EC504', degree: 'B.Tech', branch: 'ECE', semester: 5 },
-  { name: 'Foreign Language (Non-credit)', code: 'EC505', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+  { name: 'Linear Integrated Circuits', code: 'EC501', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Digital Signal Processing', code: 'EC502', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Microwave Theory and Techniques', code: 'EC503', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Electromagnetic Waves & Propagation', code: 'EC504', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Foreign Language I (German)', code: 'EC505', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Wireless and Mobile Communication', code: 'EC506', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Marketing Management & HRM', code: 'EC507', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Current Issues and Societal Development', code: 'EC508', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Non-Verbal Reasoning', code: 'EC509', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Community Service Oriented Project', code: 'EC510', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Linear Integrated Circuit Lab', code: 'EC511', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Digital Signal Processing Lab', code: 'EC512', degree: 'B.Tech', branch: 'ECE', semester: 5 },
+{ name: 'Professional Training Assessment - I', code: 'EC513', degree: 'B.Tech', branch: 'ECE', semester: 5 },
 
   // ─── SEMESTER VI (3rd Year) ──────────────────────────────────────────────
-  { name: 'Mobile Communication and Network', code: 'EC601', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Mobile Communication', code: 'EC601', degree: 'B.Tech', branch: 'ECE', semester: 6 },
   { name: 'Control Systems', code: 'EC602', degree: 'B.Tech', branch: 'ECE', semester: 6 },
   { name: 'Digital System Design', code: 'EC603', degree: 'B.Tech', branch: 'ECE', semester: 6 },
   { name: 'Single Board Computers for Electronic System Design (Arduino/RPi)', code: 'EC604', degree: 'B.Tech', branch: 'ECE', semester: 6 },
   { name: 'Program Elective-II (Advanced Industry Specialization)', code: 'EC605', degree: 'B.Tech', branch: 'ECE', semester: 6 },
   { name: 'Open Elective-II', code: 'EC606', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Computer Networks', code: 'EC607', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Essence of Indian Traditional Knowledge', code: 'EC608', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Scriptive Language-I', code: 'EC609', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Machine Learning', code: 'EC610', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Computer Network Lab', code: 'EC611', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Electronic Measurnment Lab', code: 'EC612', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Scripting Language Lab', code: 'EC613', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Single Board Comupter for Electronics System Design Lab', code: 'EC614', degree: 'B.Tech', branch: 'ECE', semester: 6 },
+  { name: 'Scriptive Language-I Lab', code: 'EC615', degree: 'B.Tech', branch: 'ECE', semester: 6 },
 
   // ─── SEMESTER VII (4th Year) ─────────────────────────────────────────────
   { name: 'Fiber Optic Communications', code: 'EC701', degree: 'B.Tech', branch: 'ECE', semester: 7 },
@@ -123,11 +177,16 @@ const subjects = [
   { name: 'Professional Training / Industrial Internship Assessment', code: 'EC708', degree: 'B.Tech', branch: 'ECE', semester: 7 },
 
   // ─── SEMESTER VIII (4th Year) ────────────────────────────────────────────
-  { name: 'Program Elective-VI (e.g. Advanced VLSI / Radar Systems)', code: 'EC801', degree: 'B.Tech', branch: 'ECE', semester: 8 },
-  { name: 'Open Elective-IV (e.g. Cloud Computing & Big Data)', code: 'EC802', degree: 'B.Tech', branch: 'ECE', semester: 8 },
-  { name: 'Major Project / Final Year Dissertation', code: 'EC803', degree: 'B.Tech', branch: 'ECE', semester: 8 },
-  { name: 'Seminar & General Proficiency', code: 'EC804', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'Audio Video Processing(PE-6)', code: 'EC801', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'Industrial Electronics(PE-7)', code: 'EC802', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'Intelligent instrumentation for Engineering(OE-4)', code: 'EC803', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'Waste to Energy(OE-5)', code: 'EC804', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'Project Stage-II', code: 'EC805', degree: 'B.Tech', branch: 'ECE', semester: 8 },
+  { name: 'In House Training', code: 'EC806', degree: 'B.Tech', branch: 'ECE', semester: 8 },
 
+  // ════════════════════════════════════════════════════════════════════════
+
+  
   // ════════════════════════════════════════════════════════════════════════
   // IT - INFORMATION TECHNOLOGY
   // ════════════════════════════════════════════════════════════════════════

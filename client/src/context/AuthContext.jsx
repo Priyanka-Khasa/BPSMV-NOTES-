@@ -1,7 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const normalizeApiBase = (value) => {
+  const trimmed = (value || '/api').trim();
+  if (!trimmed || trimmed === '/api') return '/api';
+
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+  return withoutTrailingSlash.endsWith('/api')
+    ? withoutTrailingSlash
+    : `${withoutTrailingSlash}/api`;
+};
+
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL);
 
 // Configure axios defaults globally
 axios.defaults.baseURL = API_BASE;
@@ -46,14 +56,14 @@ export const AuthProvider = ({ children }) => {
           }
         }
         if (err.response?.status === 402 && window.location.pathname !== '/subscribe') {
-          window.location.href = '/subscribe';
+          window.location.href = user?.onboarded === false ? '/onboarding' : '/subscribe';
         }
         return Promise.reject(err);
       }
     );
 
     return () => axios.interceptors.response.eject(interceptor);
-  }, []);
+  }, [user?.onboarded]);
 
   const login = async (email, password) => {
     setUser(null);
