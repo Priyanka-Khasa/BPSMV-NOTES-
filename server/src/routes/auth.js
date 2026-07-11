@@ -111,10 +111,16 @@ if (passport.googleEnabled) {
   });
 } else {
   router.get('/google', (req, res) => {
-    res.status(503).json({ message: 'Google OAuth is not configured. Please use email/password login.' });
+    res.status(503).json({
+      message: 'Google OAuth is not configured. Please use email/password login.',
+      reason: passport.googleConfigProblem || 'Google credentials are missing or invalid'
+    });
   });
   router.get('/google/callback', (req, res) => {
-    res.status(503).json({ message: 'Google OAuth is not configured.' });
+    res.status(503).json({
+      message: 'Google OAuth is not configured.',
+      reason: passport.googleConfigProblem || 'Google credentials are missing or invalid'
+    });
   });
 }
 

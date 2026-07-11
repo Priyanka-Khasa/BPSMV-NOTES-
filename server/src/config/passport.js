@@ -12,21 +12,27 @@ const hasCompleteAcademicProfile = (user) => Boolean(
 );
 
 // Validate that Google credentials look real (not a placeholder or copy-paste error)
-const hasValidGoogleCreds = (() => {
-  const id = process.env.GOOGLE_CLIENT_ID;
-  const secret = process.env.GOOGLE_CLIENT_SECRET;
-  if (!id || !secret) return false;
-  if (secret === id) return false;                         // copy-paste error
-  if (secret.includes('.googleusercontent.com')) return false; // accidentally copied Client ID into Secret
-  if (secret.length < 20) return false;                    // too short to be a real secret
-  return true;
-})();
+const googleClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+const googleClientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+
+const getGoogleConfigProblem = () => {
+  if (!googleClientId) return 'GOOGLE_CLIENT_ID is missing';
+  if (!googleClientSecret) return 'GOOGLE_CLIENT_SECRET is missing';
+  if (!googleClientId.endsWith('.apps.googleusercontent.com')) return 'GOOGLE_CLIENT_ID does not look like a Google web client ID';
+  if (googleClientSecret === googleClientId) return 'GOOGLE_CLIENT_SECRET is the same as GOOGLE_CLIENT_ID';
+  if (googleClientSecret.includes('.googleusercontent.com')) return 'GOOGLE_CLIENT_SECRET looks like a client ID';
+  if (googleClientSecret.length < 20) return 'GOOGLE_CLIENT_SECRET is too short';
+  return '';
+};
+
+const googleConfigProblem = getGoogleConfigProblem();
+const hasValidGoogleCreds = !googleConfigProblem;
 
 if (hasValidGoogleCreds) {
   const apiUrl = (process.env.API_URL || 'http://localhost:5000').replace(/\/$/, '');
   passport.use(new GoogleStrategy({
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: googleClientId,
+      clientSecret: googleClientSecret,
       callbackURL: `${apiUrl}/api/auth/google/callback`
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -71,10 +77,11 @@ if (hasValidGoogleCreds) {
     }
   ));
 } else {
-  console.log('[Auth] Google OAuth credentials missing or appear invalid. Email/password login will still work.');
+  console.log(`[Auth] Google OAuth disabled: ${googleConfigProblem}. Email/password login will still work.`);
 }
 
 // Expose flag so routes can decide whether to register Google endpoints
 passport.googleEnabled = hasValidGoogleCreds;
+passport.googleConfigProblem = googleConfigProblem;
 
 module.exports = passport;
