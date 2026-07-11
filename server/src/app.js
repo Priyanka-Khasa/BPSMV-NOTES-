@@ -68,6 +68,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
 
+console.log('[Auth] Passport initialized');
+console.log(`[Auth] Google OAuth enabled: ${passport.googleEnabled}`);
+if (!passport.googleEnabled) {
+  console.warn(`[Auth] Google OAuth disabled reason: ${passport.googleConfigProblem || 'unknown'}`);
+}
+
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'BPSMV Resource Hub API is running' });

@@ -39,7 +39,8 @@ const getGoogleConfigProblem = () => {
 
 const normalizeApiUrl = (url) => {
   const normalized = cleanEnvValue(url || 'http://localhost:5000')
-    .replace(/\/+$|\/api$/i, '');
+    .replace(/\/api\/?$/i, '')
+    .replace(/\/+$/, '');
   return normalized;
 };
 
@@ -50,11 +51,16 @@ const normalizeCallbackUrl = (url) => {
 
 const googleConfigProblem = getGoogleConfigProblem();
 const hasValidGoogleCreds = !googleConfigProblem;
+const googleClientIdStatus = process.env.GOOGLE_CLIENT_ID ? 'set' : 'missing';
+const googleClientSecretStatus = process.env.GOOGLE_CLIENT_SECRET ? 'set' : 'missing';
 
 if (hasValidGoogleCreds) {
   const apiUrl = normalizeApiUrl(process.env.API_URL);
   const callbackUrl = normalizeCallbackUrl(googleCallbackUrl) || `${apiUrl}/api/auth/google/callback`;
+  console.log(`[Auth] Google OAuth enabled`);
   console.log(`[Auth] Google OAuth callback URL: ${callbackUrl}`);
+  console.log(`[Auth] GOOGLE_CLIENT_ID status: ${googleClientIdStatus}`);
+  console.log(`[Auth] GOOGLE_CLIENT_SECRET status: ${googleClientSecretStatus}`);
   passport.use(new GoogleStrategy({
       clientID: googleClientId,
       clientSecret: googleClientSecret,
