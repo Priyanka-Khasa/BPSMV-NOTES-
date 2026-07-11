@@ -14,6 +14,17 @@ const app = express();
 
 const passport = require('./config/passport');
 
+const cleanEnvValue = (value) => {
+  const trimmed = (value || '').trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+};
+
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'bpsmv_fallback_secret_2026') {
     throw new Error('JWT_SECRET must be set to a strong unique value in production');
@@ -39,7 +50,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => cleanEnvValue(origin))
   .filter(Boolean);
 
 app.use(cors({

@@ -11,9 +11,20 @@ const hasCompleteAcademicProfile = (user) => Boolean(
   user?.semester
 );
 
+const cleanEnvValue = (value) => {
+  const trimmed = (value || '').trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+};
+
 // Validate that Google credentials look real (not a placeholder or copy-paste error)
-const googleClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
-const googleClientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+const googleClientId = cleanEnvValue(process.env.GOOGLE_CLIENT_ID);
+const googleClientSecret = cleanEnvValue(process.env.GOOGLE_CLIENT_SECRET);
 
 const getGoogleConfigProblem = () => {
   if (!googleClientId) return 'GOOGLE_CLIENT_ID is missing';
@@ -29,7 +40,7 @@ const googleConfigProblem = getGoogleConfigProblem();
 const hasValidGoogleCreds = !googleConfigProblem;
 
 if (hasValidGoogleCreds) {
-  const apiUrl = (process.env.API_URL || 'http://localhost:5000').replace(/\/$/, '');
+  const apiUrl = cleanEnvValue(process.env.API_URL || 'http://localhost:5000').replace(/\/$/, '');
   passport.use(new GoogleStrategy({
       clientID: googleClientId,
       clientSecret: googleClientSecret,

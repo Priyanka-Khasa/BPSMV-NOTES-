@@ -81,7 +81,18 @@ const startSingleDeviceSession = async (res, user) => {
   return sessionId;
 };
 
-const getClientUrl = () => (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+const cleanEnvValue = (value) => {
+  const trimmed = (value || '').trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+};
+
+const getClientUrl = () => cleanEnvValue(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 // Google OAuth routes (only if credentials are valid)
 if (passport.googleEnabled) {
