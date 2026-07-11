@@ -25,6 +25,7 @@ const cleanEnvValue = (value) => {
 // Validate that Google credentials look real (not a placeholder or copy-paste error)
 const googleClientId = cleanEnvValue(process.env.GOOGLE_CLIENT_ID);
 const googleClientSecret = cleanEnvValue(process.env.GOOGLE_CLIENT_SECRET);
+const googleCallbackUrl = cleanEnvValue(process.env.GOOGLE_CALLBACK_URL);
 
 const getGoogleConfigProblem = () => {
   if (!googleClientId) return 'GOOGLE_CLIENT_ID is missing';
@@ -36,15 +37,28 @@ const getGoogleConfigProblem = () => {
   return '';
 };
 
+const normalizeApiUrl = (url) => {
+  const normalized = cleanEnvValue(url || 'http://localhost:5000')
+    .replace(/\/+$|\/api$/i, '');
+  return normalized;
+};
+
+const normalizeCallbackUrl = (url) => {
+  if (!url) return '';
+  return cleanEnvValue(url).replace(/\/+$/, '');
+};
+
 const googleConfigProblem = getGoogleConfigProblem();
 const hasValidGoogleCreds = !googleConfigProblem;
 
 if (hasValidGoogleCreds) {
-  const apiUrl = cleanEnvValue(process.env.API_URL || 'http://localhost:5000').replace(/\/$/, '');
+  const apiUrl = normalizeApiUrl(process.env.API_URL);
+  const callbackUrl = normalizeCallbackUrl(googleCallbackUrl) || `${apiUrl}/api/auth/google/callback`;
+  console.log(`[Auth] Google OAuth callback URL: ${callbackUrl}`);
   passport.use(new GoogleStrategy({
       clientID: googleClientId,
       clientSecret: googleClientSecret,
-      callbackURL: `${apiUrl}/api/auth/google/callback`
+      callbackURL: callbackUrl
     },
     async (accessToken, refreshToken, profile, done) => {
       try {

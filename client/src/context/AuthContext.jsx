@@ -11,7 +11,14 @@ const normalizeApiBase = (value) => {
     : `${withoutTrailingSlash}/api`;
 };
 
-const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL);
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE = normalizeApiBase(rawApiUrl || '/api');
+
+if (!rawApiUrl && import.meta.env.MODE === 'production') {
+  console.warn(
+    'VITE_API_URL is not configured in production. API calls will default to /api and may fail if the backend is hosted on a different domain.'
+  );
+}
 
 // Configure axios defaults globally
 axios.defaults.baseURL = API_BASE;
