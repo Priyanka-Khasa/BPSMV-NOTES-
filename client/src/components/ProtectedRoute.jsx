@@ -18,6 +18,10 @@ const ProtectedRoute = ({ children, adminOnly = false, subscriptionRequired = tr
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (!user?.onboarded && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (adminOnly && user?.role !== 'admin') {
     return <Navigate to="/dashboard" replace />;
   }

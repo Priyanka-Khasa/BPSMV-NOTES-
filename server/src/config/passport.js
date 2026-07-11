@@ -2,6 +2,15 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
 
+const hasCompleteAcademicProfile = (user) => Boolean(
+  user?.onboarded &&
+  user?.rollNumber &&
+  user?.degree &&
+  user?.branch &&
+  user?.yearOfStudy &&
+  user?.semester
+);
+
 // Validate that Google credentials look real (not a placeholder or copy-paste error)
 const hasValidGoogleCreds = (() => {
   const id = process.env.GOOGLE_CLIENT_ID;
@@ -29,6 +38,10 @@ if (hasValidGoogleCreds) {
 
         let user = await User.findOne({ googleId: profile.id });
         if (user) {
+          if (!hasCompleteAcademicProfile(user) && user.onboarded) {
+            user.onboarded = false;
+            await user.save({ validateBeforeSave: false });
+          }
           return done(null, user);
         }
 
@@ -36,6 +49,9 @@ if (hasValidGoogleCreds) {
         if (user) {
           user.googleId = profile.id;
           user.avatar = user.avatar || profile.photos?.[0]?.value;
+          if (!hasCompleteAcademicProfile(user)) {
+            user.onboarded = false;
+          }
           await user.save({ validateBeforeSave: false });
           return done(null, user);
         }

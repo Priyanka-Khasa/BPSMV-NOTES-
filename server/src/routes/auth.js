@@ -36,7 +36,7 @@ const publicUser = (user) => ({
   name: user.name,
   email: user.email,
   rollNumber: user.rollNumber,
-  onboarded: user.onboarded,
+  onboarded: isAcademicProfileComplete(user),
   role: user.role,
   degree: user.degree,
   branch: user.branch,
@@ -48,6 +48,15 @@ const publicUser = (user) => ({
   semesterCgpa: user.semesterCgpa,
   subscription: subscriptionSummary(user)
 });
+
+const isAcademicProfileComplete = (user) => Boolean(
+  user?.onboarded &&
+  user?.rollNumber &&
+  user?.degree &&
+  user?.branch &&
+  user?.yearOfStudy &&
+  user?.semester
+);
 
 // Helper to sign JWT and set cookie. The session id is checked against the
 // database on every protected request so only the newest login remains valid.
@@ -88,8 +97,12 @@ if (passport.googleEnabled) {
 
       try {
         await applyAcademicProgression(user);
+        if (!isAcademicProfileComplete(user) && user.onboarded) {
+          user.onboarded = false;
+          await user.save({ validateBeforeSave: false });
+        }
         await startSingleDeviceSession(res, user);
-        return res.redirect(user.onboarded ? `${clientUrl}/subscribe` : `${clientUrl}/onboarding`);
+        return res.redirect(isAcademicProfileComplete(user) ? `${clientUrl}/subscribe` : `${clientUrl}/onboarding`);
       } catch (sessionError) {
         console.error('Google session error:', sessionError);
         return res.redirect(`${clientUrl}/login?error=session_failed`);
@@ -207,6 +220,7 @@ router.get('/me', verifyToken, async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     await applyAcademicProgression(user);
     const responseUser = user.toObject();
+    responseUser.onboarded = isAcademicProfileComplete(user);
     responseUser.subscription = subscriptionSummary(user);
     res.json(responseUser);
   } catch (error) {
