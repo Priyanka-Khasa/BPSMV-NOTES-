@@ -132,7 +132,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-slate-200 border-t-slate-700" />
       </div>
     );
   }
@@ -146,8 +146,8 @@ const Dashboard = () => {
           --dashboard-muted: #f5f7fb;
           --dashboard-border: rgba(203, 213, 225, 0.82);
           --dashboard-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
-          --dashboard-accent: #2563eb;
-          --dashboard-accent-soft: #eff6ff;
+          --dashboard-accent: #334155;
+          --dashboard-accent-soft: #f1f5f9;
           --dashboard-good: #059669;
           --dashboard-empty: #64748b;
         }
@@ -173,14 +173,14 @@ const Dashboard = () => {
         }
         .subject-button:hover, .subject-button:focus-visible {
           background: #f8fafc;
-          border-color: rgba(37, 99, 235, 0.26);
+          border-color: rgba(51, 65, 85, 0.22);
           box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
           outline: none;
         }
         .subject-button.active {
           background: var(--dashboard-accent-soft);
-          border-color: rgba(37, 99, 235, 0.34);
-          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
+          border-color: rgba(51, 65, 85, 0.28);
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
         }
         .metric-pill {
           background: #f8fafc;
@@ -191,11 +191,13 @@ const Dashboard = () => {
           gap: 0.7rem;
         }
         .subject-icon {
-          background: #eef2ff;
-          color: #4f46e5;
+          width: 2rem;
+          height: 2rem;
+          background: #f1f5f9;
+          color: #475569;
         }
         .subject-button.active .subject-icon {
-          background: #2563eb;
+          background: #334155;
           color: #ffffff;
         }
         .status-chip {
@@ -227,6 +229,24 @@ const Dashboard = () => {
           -webkit-box-orient: vertical;
           overflow: hidden;
         }
+        .dashboard-line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .dashboard-compact-subjects {
+          max-height: 27rem;
+          overflow-y: auto;
+          padding-right: 0.2rem;
+        }
+        .dashboard-compact-subjects::-webkit-scrollbar {
+          width: 0.35rem;
+        }
+        .dashboard-compact-subjects::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 999px;
+        }
         .widget-bar {
           position: relative;
           overflow: hidden;
@@ -238,20 +258,20 @@ const Dashboard = () => {
           display: block;
           height: 100%;
           border-radius: inherit;
-          background: linear-gradient(90deg, #2563eb 0%, #14b8a6 100%);
+          background: linear-gradient(90deg, #334155 0%, #0f766e 100%);
         }
         .empty-illustration {
           background:
-            radial-gradient(circle at 22% 22%, rgba(37, 99, 235, 0.13), transparent 28%),
+            radial-gradient(circle at 22% 22%, rgba(51, 65, 85, 0.12), transparent 28%),
             linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
         }
         .dashboard-action-primary {
-          background: #2563eb;
+          background: #334155;
           color: #ffffff;
-          box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
         }
         .dashboard-action-primary:hover {
-          background: #1d4ed8;
+          background: #1f2937;
           color: #ffffff;
         }
         .dashboard-action-secondary {
@@ -261,7 +281,7 @@ const Dashboard = () => {
         }
         .dashboard-action-secondary:hover {
           background: #f8fafc;
-          color: #1e40af;
+          color: #0f172a;
         }
         @media (max-width: 640px) {
           .dashboard-shell,
@@ -291,7 +311,7 @@ const Dashboard = () => {
         <header className="dashboard-shell rounded-2xl p-4 sm:p-5 lg:p-6">
           <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.18em]">B.Tech / ECE study desk</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 sm:text-sm sm:tracking-[0.18em]">B.Tech / ECE study desk</p>
               <h1 className="dashboard-text-safe text-[1.55rem] font-bold leading-tight text-slate-900 sm:text-3xl">All your semester notes and papers in one simple place.</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
                 Choose a subject, see what is available, and open study material without confusion.
@@ -323,7 +343,7 @@ const Dashboard = () => {
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <img
-                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=2563eb&color=fff`}
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=334155&color=fff`}
                     alt=""
                     className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md shadow-slate-200"
                   />
@@ -338,7 +358,7 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/profile')}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                   title="Profile"
                   aria-label="Profile"
                 >
@@ -348,17 +368,17 @@ const Dashboard = () => {
 
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <Layers size={16} className="mx-auto mb-1 text-blue-600" />
+                  <Layers size={16} className="mx-auto mb-1 text-slate-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{subjectList.length}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Subjects</p>
                 </div>
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <FileText size={16} className="mx-auto mb-1 text-blue-600" />
+                  <FileText size={16} className="mx-auto mb-1 text-slate-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{totalSubjectResources}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Resources</p>
                 </div>
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <Sparkles size={16} className="mx-auto mb-1 text-blue-600" />
+                  <Sparkles size={16} className="mx-auto mb-1 text-slate-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{focusMetric.split(' ')[0]}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Focus</p>
                 </div>
@@ -368,9 +388,9 @@ const Dashboard = () => {
             <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <BookOpen size={17} className="text-blue-600" /> Subjects
+                  <BookOpen size={17} className="text-slate-600" /> Subjects
                 </h2>
-                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
                   {user?.semester ? `Sem ${user.semester}` : 'Semester'}
                 </span>
               </div>
@@ -385,17 +405,17 @@ const Dashboard = () => {
                       key={subject._id}
                       type="button"
                       onClick={() => fetchResources(subject._id)}
-                      className={`subject-button flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left ${isActive ? 'active' : ''}`}
+                      className={`subject-button flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left ${isActive ? 'active' : ''}`}
                     >
-                      <div className="subject-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                        <BookOpen size={16} />
+                      <div className="subject-icon flex shrink-0 items-center justify-center rounded-lg">
+                        <BookOpen size={14} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                          <p className="dashboard-line-clamp-2 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
+                          <p className="dashboard-line-clamp-1 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
                           <ChevronRight size={14} className="shrink-0 text-slate-400" />
                         </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           <span className="text-xs text-slate-500">{subject.notes || 0} notes</span>
                           <span className="h-1 w-1 rounded-full bg-slate-300" />
                           <span className="text-xs text-slate-500">{subject.papers || 0} papers</span>
@@ -416,7 +436,7 @@ const Dashboard = () => {
             <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
               <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
                 <div className="min-w-0">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.18em]">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 sm:text-sm sm:tracking-[0.18em]">
                     {selectedSubjectObj ? 'Subject selected' : 'Dashboard overview'}
                   </p>
                   <h2 className="dashboard-text-safe text-[1.45rem] font-semibold leading-tight text-slate-900 sm:text-3xl">
@@ -452,7 +472,7 @@ const Dashboard = () => {
                       <p className="text-sm font-semibold text-slate-900">Study pulse</p>
                       <p className="text-xs text-slate-500">{readySubjects.length ? 'Subjects with material ready' : 'No uploaded material yet'}</p>
                     </div>
-                    <div className="rounded-full bg-blue-50 p-2 text-blue-700">
+                    <div className="rounded-full bg-slate-100 p-2 text-slate-700">
                       <Target size={16} />
                     </div>
                   </div>
@@ -489,7 +509,7 @@ const Dashboard = () => {
                     </div>
                   )}
                   <div className="mt-4 flex min-w-0 items-center gap-2 rounded-xl bg-white p-3 text-sm text-slate-600 ring-1 ring-slate-200">
-                    <CalendarDays size={15} className="text-blue-700" />
+                    <CalendarDays size={15} className="text-slate-700" />
                     <span className="min-w-0 truncate">{focusMetric}</span>
                   </div>
                 </div>
@@ -500,7 +520,7 @@ const Dashboard = () => {
               <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.16em]">Start here</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 sm:text-sm sm:tracking-[0.16em]">Start here</p>
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">Pick a subject to open its study set.</h3>
                     {emptySubjectCount > 0 && (
                       <p className="mt-1 text-sm text-slate-500">{emptySubjectCount} subject{emptySubjectCount > 1 ? 's' : ''} waiting for first upload.</p>
@@ -522,7 +542,7 @@ const Dashboard = () => {
                         key={subject._id}
                         type="button"
                         onClick={() => fetchResources(subject._id)}
-                        className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-blue-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
                       >
                         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                           <p className="dashboard-line-clamp-2 font-semibold leading-6 text-slate-900" title={subject.name}>{subject.name}</p>
@@ -544,7 +564,7 @@ const Dashboard = () => {
             ) : resources.length === 0 ? (
               <section className="dashboard-card rounded-2xl p-5 sm:p-8">
                 <div className="grid gap-5 rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
-                  <div className="empty-illustration flex h-16 w-16 items-center justify-center rounded-2xl text-blue-600 ring-1 ring-white">
+                  <div className="empty-illustration flex h-16 w-16 items-center justify-center rounded-2xl text-slate-700 ring-1 ring-white">
                     <FileText size={30} />
                   </div>
                   <div className="min-w-0">
@@ -570,7 +590,7 @@ const Dashboard = () => {
                 {resources.map((resource) => (
                   <article key={resource._id} className="dashboard-card group flex min-w-0 flex-col rounded-2xl p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-200/60">
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
                         {resource.resourceType}
                       </span>
                       <button
@@ -582,7 +602,7 @@ const Dashboard = () => {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    <h4 className="dashboard-text-safe text-base font-semibold text-slate-900 transition-colors group-hover:text-blue-700">{resource.title}</h4>
+                    <h4 className="dashboard-text-safe text-base font-semibold text-slate-900 transition-colors group-hover:text-slate-700">{resource.title}</h4>
                     {resource.year && <p className="mt-1 text-xs text-slate-500">Year: {resource.year}</p>}
                     <p className="mt-2 text-xs text-slate-400">By {resource.uploaderName || 'student'} / {new Date(resource.createdAt).toLocaleDateString()}</p>
                     <div className="mt-4 flex items-center gap-2">
@@ -678,7 +698,7 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
       <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl animate-scale-in sm:max-h-[90vh] sm:p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
-            <Upload size={18} className="text-blue-600" /> Upload Resource
+            <Upload size={18} className="text-slate-700" /> Upload Resource
           </h2>
           <button
             type="button"
@@ -728,7 +748,7 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
           ) : (
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">File (PDF/Image)</label>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files[0])} className="block w-full cursor-pointer text-sm text-slate-500 transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100" required />
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files[0])} className="block w-full cursor-pointer text-sm text-slate-500 transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-slate-700 hover:file:bg-slate-200" required />
             </div>
           )}
           <button type="submit" disabled={isUploading} className="btn dashboard-action-primary w-full text-sm">
