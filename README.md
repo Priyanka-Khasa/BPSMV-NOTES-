@@ -284,6 +284,7 @@ Create `server/.env` using `server/.env.example` as a guide:
 ```env
 MONGO_URI=mongodb://localhost:27017/bpsmv
 JWT_SECRET=replace_with_a_strong_secret
+AUTH_SESSION_DAYS=30
 CLIENT_URL=http://localhost:5173
 CLIENT_URLS=http://localhost:5173
 API_URL=http://localhost:5000
@@ -320,6 +321,7 @@ Notes:
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
 - In production, always use a strong `JWT_SECRET`.
+- `AUTH_SESSION_DAYS` controls how many days users stay logged in. The default is 30.
 - Use Razorpay test keys while developing. Never put `RAZORPAY_KEY_SECRET` in the client.
 - In Razorpay, configure a webhook for `payment.captured` at `https://YOUR_API_DOMAIN/api/payments/webhook` and use the same `RAZORPAY_WEBHOOK_SECRET`.
 - If frontend and backend are hosted on separate domains, configure `CLIENT_URLS` and cookie settings carefully.

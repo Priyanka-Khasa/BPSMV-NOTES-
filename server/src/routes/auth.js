@@ -17,11 +17,15 @@ const authLimiter = rateLimit({
   message: { message: 'Too many attempts. Please wait and try again.' }
 });
 
+const SESSION_DAYS = Math.max(1, Number(process.env.AUTH_SESSION_DAYS || 30));
+const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60 * 1000;
+const SESSION_EXPIRES_IN = `${SESSION_DAYS}d`;
+
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: process.env.COOKIE_SAME_SITE || 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000
+  maxAge: SESSION_MAX_AGE
 };
 
 const clearAuthCookie = (res) => {
@@ -66,7 +70,7 @@ const setAuthCookie = (res, user, sessionId) => {
   const token = jwt.sign(
     { id: user._id, onboarded: user.onboarded, role: user.role, sessionId },
     secret,
-    { expiresIn: '7d' }
+    { expiresIn: SESSION_EXPIRES_IN }
   );
   res.cookie('token', token, cookieOptions);
   return token;
