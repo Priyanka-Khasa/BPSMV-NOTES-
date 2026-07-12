@@ -125,10 +125,14 @@ const Dashboard = () => {
     ? `${resources.length} resources ready`
     : `${totalSubjectResources} resources ready`;
   const subjectList = subjectOverview.length > 0 ? subjectOverview : subjects;
+  const readySubjects = subjectList.filter((subject) => (subject.count || 0) > 0);
+  const pulseSubjects = readySubjects.slice(0, 3);
+  const emptySubjectCount = Math.max(subjectList.length - readySubjects.length, 0);
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-600" />
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-blue-100 border-t-blue-600" />
       </div>
     );
   }
@@ -137,10 +141,15 @@ const Dashboard = () => {
     <div className="relative animate-fade-in">
       <style>{`
         :root {
-          --dashboard-surface: #fffdf9;
-          --dashboard-muted: #fbf6ee;
-          --dashboard-border: rgba(212, 201, 181, 0.7);
-          --dashboard-shadow: 0 16px 42px rgba(61, 53, 44, 0.09);
+          --dashboard-surface: #ffffff;
+          --dashboard-soft: #f8fafc;
+          --dashboard-muted: #f5f7fb;
+          --dashboard-border: rgba(203, 213, 225, 0.82);
+          --dashboard-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
+          --dashboard-accent: #2563eb;
+          --dashboard-accent-soft: #eff6ff;
+          --dashboard-good: #059669;
+          --dashboard-empty: #64748b;
         }
         .dashboard-shell {
           background: var(--dashboard-surface);
@@ -152,30 +161,61 @@ const Dashboard = () => {
           border: 1px solid var(--dashboard-border);
           box-shadow: var(--dashboard-shadow);
         }
+        .dashboard-panel {
+          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          border: 1px solid var(--dashboard-border);
+        }
         .subject-button {
           min-width: 0;
-          border: 1px solid rgba(232, 224, 208, 0.9);
-          background: #fffaf5;
-          transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+          border: 1px solid transparent;
+          background: #ffffff;
+          transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
         }
         .subject-button:hover, .subject-button:focus-visible {
-          background: #ffffff;
-          border-color: rgba(193, 122, 92, 0.35);
-          box-shadow: 0 10px 24px rgba(61, 53, 44, 0.08);
+          background: #f8fafc;
+          border-color: rgba(37, 99, 235, 0.26);
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
           outline: none;
         }
         .subject-button.active {
-          background: #fff4ec;
-          border-color: rgba(193, 122, 92, 0.38);
-          box-shadow: 0 10px 26px rgba(193, 122, 92, 0.13);
+          background: var(--dashboard-accent-soft);
+          border-color: rgba(37, 99, 235, 0.34);
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.12);
         }
         .metric-pill {
-          background: #fffaf5;
-          border: 1px solid rgba(232, 224, 208, 0.85);
+          background: #f8fafc;
+          border: 1px solid rgba(226, 232, 240, 0.95);
         }
         .widget-row {
           display: grid;
           gap: 0.7rem;
+        }
+        .subject-icon {
+          background: #eef2ff;
+          color: #4f46e5;
+        }
+        .subject-button.active .subject-icon {
+          background: #2563eb;
+          color: #ffffff;
+        }
+        .status-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          border-radius: 999px;
+          padding: 0.25rem 0.55rem;
+          font-size: 0.68rem;
+          font-weight: 700;
+          line-height: 1;
+          white-space: nowrap;
+        }
+        .status-chip.ready {
+          background: #ecfdf5;
+          color: #047857;
+        }
+        .status-chip.empty {
+          background: #f1f5f9;
+          color: #64748b;
         }
         .dashboard-text-safe {
           overflow-wrap: anywhere;
@@ -192,18 +232,41 @@ const Dashboard = () => {
           overflow: hidden;
           height: 0.5rem;
           border-radius: 999px;
-          background: rgba(193, 122, 92, 0.14);
+          background: #e2e8f0;
         }
         .widget-bar > span {
           display: block;
           height: 100%;
           border-radius: inherit;
-          background: linear-gradient(90deg, #c17a5c 0%, #a86548 100%);
+          background: linear-gradient(90deg, #2563eb 0%, #14b8a6 100%);
+        }
+        .empty-illustration {
+          background:
+            radial-gradient(circle at 22% 22%, rgba(37, 99, 235, 0.13), transparent 28%),
+            linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+        }
+        .dashboard-action-primary {
+          background: #2563eb;
+          color: #ffffff;
+          box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+        }
+        .dashboard-action-primary:hover {
+          background: #1d4ed8;
+          color: #ffffff;
+        }
+        .dashboard-action-secondary {
+          background: #ffffff;
+          border: 1px solid #dbe3ef;
+          color: #334155;
+        }
+        .dashboard-action-secondary:hover {
+          background: #f8fafc;
+          color: #1e40af;
         }
         @media (max-width: 640px) {
           .dashboard-shell,
           .dashboard-card {
-            box-shadow: 0 10px 26px rgba(61, 53, 44, 0.08);
+            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
           }
           .dashboard-mobile-actions {
             display: grid;
@@ -228,7 +291,7 @@ const Dashboard = () => {
         <header className="dashboard-shell rounded-2xl p-4 sm:p-5 lg:p-6">
           <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.18em]">B.Tech / ECE study desk</p>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.18em]">B.Tech / ECE study desk</p>
               <h1 className="dashboard-text-safe text-[1.55rem] font-bold leading-tight text-slate-900 sm:text-3xl">All your semester notes and papers in one simple place.</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-base">
                 Choose a subject, see what is available, and open study material without confusion.
@@ -238,14 +301,14 @@ const Dashboard = () => {
               <button
                 type="button"
                 onClick={() => setUploadOpen(true)}
-                className="btn btn-primary min-h-11 px-4 py-2.5 text-sm shadow-brand-500/20 hover:shadow-brand-500/30"
+                className="btn dashboard-action-primary min-h-11 px-4 py-2.5 text-sm"
               >
                 <Upload size={15} /> Upload
               </button>
               <button
                 type="button"
                 onClick={() => (selectedSubject ? navigate(`/chat?subject=${selectedSubject}`) : navigate('/resources'))}
-                className="btn btn-secondary min-h-11 px-4 py-2.5 text-sm"
+                className="btn dashboard-action-secondary min-h-11 px-4 py-2.5 text-sm"
               >
                 {selectedSubject ? <MessageSquare size={15} /> : <Search size={15} />}
                 {selectedSubject ? 'Discussion' : 'Browse'}
@@ -254,15 +317,15 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <div className="grid min-w-0 gap-3 sm:gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-3 sm:gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
           <aside className="space-y-3 sm:space-y-4 xl:sticky xl:top-24 xl:self-start">
             <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <img
-                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=c17a5c&color=fff`}
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=2563eb&color=fff`}
                     alt=""
-                    className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md shadow-brand-500/10"
+                    className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md shadow-slate-200"
                   />
                   <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
                 </div>
@@ -275,7 +338,7 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/profile')}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-[#f0e4d8] transition-all hover:bg-white hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   title="Profile"
                   aria-label="Profile"
                 >
@@ -285,17 +348,17 @@ const Dashboard = () => {
 
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <Layers size={16} className="mx-auto mb-1 text-brand-600" />
+                  <Layers size={16} className="mx-auto mb-1 text-blue-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{subjectList.length}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Subjects</p>
                 </div>
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <FileText size={16} className="mx-auto mb-1 text-brand-600" />
+                  <FileText size={16} className="mx-auto mb-1 text-blue-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{totalSubjectResources}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Resources</p>
                 </div>
                 <div className="metric-pill rounded-xl px-2 py-3 text-center sm:p-3">
-                  <Sparkles size={16} className="mx-auto mb-1 text-brand-600" />
+                  <Sparkles size={16} className="mx-auto mb-1 text-blue-600" />
                   <p className="text-base font-semibold leading-none text-slate-900">{focusMetric.split(' ')[0]}</p>
                   <p className="mt-1 text-[11px] font-medium text-slate-500">Focus</p>
                 </div>
@@ -305,9 +368,9 @@ const Dashboard = () => {
             <section className="dashboard-card rounded-2xl p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <BookOpen size={17} className="text-brand-600" /> Subjects
+                  <BookOpen size={17} className="text-blue-600" /> Subjects
                 </h2>
-                <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
+                <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
                   {user?.semester ? `Sem ${user.semester}` : 'Semester'}
                 </span>
               </div>
@@ -315,26 +378,29 @@ const Dashboard = () => {
               <div className="dashboard-compact-subjects space-y-2">
                 {subjectList.map((subject) => {
                   const isActive = selectedSubject === subject._id;
-                  const label = subject.count ? `${subject.count} item${subject.count > 1 ? 's' : ''}` : 'No resources yet';
+                  const hasResources = (subject.count || 0) > 0;
+                  const label = hasResources ? `${subject.count} item${subject.count > 1 ? 's' : ''}` : 'Not started';
                   return (
                     <button
                       key={subject._id}
                       type="button"
                       onClick={() => fetchResources(subject._id)}
-                      className={`subject-button flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${isActive ? 'active' : ''}`}
+                      className={`subject-button flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left ${isActive ? 'active' : ''}`}
                     >
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isActive ? 'bg-brand-600 text-white' : 'bg-brand-50 text-brand-700'}`}>
+                      <div className="subject-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
                         <BookOpen size={16} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-sm font-semibold text-slate-900" title={subject.name}>{subject.name}</p>
+                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                          <p className="dashboard-line-clamp-2 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
                           <ChevronRight size={14} className="shrink-0 text-slate-400" />
                         </div>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {subject.notes || 0} notes / {subject.papers || 0} papers
-                        </p>
-                        <p className="mt-1 text-[11px] font-medium text-brand-600">{label}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-slate-500">{subject.notes || 0} notes</span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="text-xs text-slate-500">{subject.papers || 0} papers</span>
+                          <span className={`status-chip ${hasResources ? 'ready' : 'empty'}`}>{label}</span>
+                        </div>
                       </div>
                     </button>
                   );
@@ -350,7 +416,7 @@ const Dashboard = () => {
             <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
               <div className="grid min-w-0 gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start">
                 <div className="min-w-0">
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.18em]">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.18em]">
                     {selectedSubjectObj ? 'Subject selected' : 'Dashboard overview'}
                   </p>
                   <h2 className="dashboard-text-safe text-[1.45rem] font-semibold leading-tight text-slate-900 sm:text-3xl">
@@ -365,14 +431,14 @@ const Dashboard = () => {
                     <button
                       type="button"
                       onClick={() => setUploadOpen(true)}
-                      className="btn btn-primary min-h-11 px-4 py-2.5 text-sm"
+                      className="btn dashboard-action-primary min-h-11 px-4 py-2.5 text-sm"
                     >
                       <Upload size={15} /> Upload resource
                     </button>
                     <button
                       type="button"
                       onClick={() => (selectedSubject ? navigate(`/chat?subject=${selectedSubject}`) : navigate('/resources'))}
-                      className="btn btn-secondary min-h-11 px-4 py-2.5 text-sm"
+                      className="btn dashboard-action-secondary min-h-11 px-4 py-2.5 text-sm"
                     >
                       {selectedSubject ? <MessageSquare size={15} /> : <ArrowRight size={15} />}
                       {selectedSubject ? 'Open discussion' : 'Explore resources'}
@@ -380,34 +446,50 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                <div className="min-w-0 rounded-2xl border border-[#eadccc] bg-[#fff7ee] p-3 shadow-sm sm:p-4">
+                <div className="dashboard-panel min-w-0 rounded-2xl p-3 sm:p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">Study pulse</p>
-                      <p className="text-xs text-slate-500">Live subject readiness</p>
+                      <p className="text-xs text-slate-500">{readySubjects.length ? 'Subjects with material ready' : 'No uploaded material yet'}</p>
                     </div>
-                    <div className="rounded-full bg-brand-50 p-2 text-brand-700">
+                    <div className="rounded-full bg-blue-50 p-2 text-blue-700">
                       <Target size={16} />
                     </div>
                   </div>
-                  <div className="widget-row mt-4">
-                    {subjectList.slice(0, 3).map((subject) => {
-                      const width = Math.min(100, Math.max(24, subject.count * 16));
-                      return (
-                        <div key={subject._id} className="min-w-0 rounded-xl bg-white p-3 ring-1 ring-[#f0e4d8]">
-                          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
-                            <p className="dashboard-line-clamp-2 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
-                            <p className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-500">{subject.count} items</p>
+                  {pulseSubjects.length > 0 ? (
+                    <div className="widget-row mt-4">
+                      {pulseSubjects.map((subject) => {
+                        const width = Math.min(100, Math.max(24, subject.count * 16));
+                        return (
+                          <div key={subject._id} className="min-w-0 rounded-xl bg-white p-3 ring-1 ring-slate-200">
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+                              <p className="dashboard-line-clamp-2 text-sm font-semibold leading-5 text-slate-900" title={subject.name}>{subject.name}</p>
+                              <p className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-500">{subject.count} items</p>
+                            </div>
+                            <div className="widget-bar mt-2">
+                              <span style={{ width: `${width}%` }} />
+                            </div>
                           </div>
-                          <div className="widget-bar mt-2">
-                            <span style={{ width: `${width}%` }} />
-                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-xl bg-white p-4 ring-1 ring-slate-200">
+                      <div className="flex items-start gap-3">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500">
+                          <FileText size={17} />
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4 flex min-w-0 items-center gap-2 rounded-xl bg-white p-3 text-sm text-slate-600 ring-1 ring-[#f0e4d8]">
-                    <CalendarDays size={15} className="text-brand-700" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900">Nothing to track yet</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                            Upload the first note or question paper and this area will show the most active subjects.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-4 flex min-w-0 items-center gap-2 rounded-xl bg-white p-3 text-sm text-slate-600 ring-1 ring-slate-200">
+                    <CalendarDays size={15} className="text-blue-700" />
                     <span className="min-w-0 truncate">{focusMetric}</span>
                   </div>
                 </div>
@@ -418,60 +500,77 @@ const Dashboard = () => {
               <section className="dashboard-card rounded-2xl p-4 sm:p-5 lg:p-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-700 sm:text-sm sm:tracking-[0.16em]">Start here</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700 sm:text-sm sm:tracking-[0.16em]">Start here</p>
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">Pick a subject to open its study set.</h3>
+                    {emptySubjectCount > 0 && (
+                      <p className="mt-1 text-sm text-slate-500">{emptySubjectCount} subject{emptySubjectCount > 1 ? 's' : ''} waiting for first upload.</p>
+                    )}
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate('/resources')}
-                    className="btn btn-secondary min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto"
+                    className="btn dashboard-action-secondary min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto"
                   >
                     Explore all resources <ArrowRight size={15} />
                   </button>
                 </div>
                 <div className="dashboard-card-list mt-4 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {subjectList.slice(0, 3).map((subject) => (
-                    <button
-                      key={subject._id}
-                      type="button"
-                      onClick={() => fetchResources(subject._id)}
-                      className="min-w-0 rounded-xl border border-[#eadccc] bg-white p-4 text-left transition-colors hover:border-brand-200 hover:bg-[#fffaf5] focus:outline-none focus:ring-2 focus:ring-brand-200"
-                    >
-                      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                        <p className="dashboard-line-clamp-2 font-semibold leading-6 text-slate-900" title={subject.name}>{subject.name}</p>
-                        <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700">
-                          {subject.count || 0} items
-                        </span>
-                      </div>
-                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
-                        <CircleCheckBig size={15} className="text-brand-700" />
-                        <span>{subject.notes || 0} notes available</span>
-                      </div>
-                    </button>
-                  ))}
+                  {subjectList.slice(0, 3).map((subject) => {
+                    const hasResources = (subject.count || 0) > 0;
+                    return (
+                      <button
+                        key={subject._id}
+                        type="button"
+                        onClick={() => fetchResources(subject._id)}
+                        className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-blue-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      >
+                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                          <p className="dashboard-line-clamp-2 font-semibold leading-6 text-slate-900" title={subject.name}>{subject.name}</p>
+                          <span className={`status-chip ${hasResources ? 'ready' : 'empty'}`}>
+                            {hasResources ? `${subject.count} items` : 'Not started'}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                          <CircleCheckBig size={15} className={hasResources ? 'text-emerald-600' : 'text-slate-400'} />
+                          <span>{subject.notes || 0} notes</span>
+                          <span className="h-1 w-1 rounded-full bg-slate-300" />
+                          <span>{subject.papers || 0} papers</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </section>
             ) : resources.length === 0 ? (
-              <section className="dashboard-card rounded-2xl p-8 text-center sm:p-10">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-brand-50 text-brand-500 shadow-lg shadow-brand-500/10 ring-1 ring-white">
-                  <FileText size={32} />
+              <section className="dashboard-card rounded-2xl p-5 sm:p-8">
+                <div className="grid gap-5 rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center sm:p-6">
+                  <div className="empty-illustration flex h-16 w-16 items-center justify-center rounded-2xl text-blue-600 ring-1 ring-white">
+                    <FileText size={30} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">No material uploaded</p>
+                    <h3 className="mt-1 dashboard-text-safe text-xl font-semibold text-slate-900">
+                      {selectedSubjectObj?.name || 'This subject'} is ready for its first resource.
+                    </h3>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                      Add notes, previous papers, syllabus files, or helpful links. Once something is uploaded, it will appear here instead of an empty panel.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setUploadOpen(true)}
+                    className="btn dashboard-action-primary min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto"
+                  >
+                    <Upload size={15} /> Upload resource
+                  </button>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">No resources yet</h3>
-                <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">Be the first to add notes or question papers for this subject.</p>
-                <button
-                  type="button"
-                  onClick={() => setUploadOpen(true)}
-                  className="btn btn-primary mt-5 min-h-11 px-4 py-2.5 text-sm"
-                >
-                  <Upload size={15} /> Upload resource
-                </button>
               </section>
             ) : (
               <section className="grid min-w-0 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {resources.map((resource) => (
                   <article key={resource._id} className="dashboard-card group flex min-w-0 flex-col rounded-2xl p-5">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 ring-1 ring-brand-200/60">
+                      <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-200/60">
                         {resource.resourceType}
                       </span>
                       <button
@@ -483,7 +582,7 @@ const Dashboard = () => {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    <h4 className="dashboard-text-safe text-base font-semibold text-slate-900 transition-colors group-hover:text-brand-700">{resource.title}</h4>
+                    <h4 className="dashboard-text-safe text-base font-semibold text-slate-900 transition-colors group-hover:text-blue-700">{resource.title}</h4>
                     {resource.year && <p className="mt-1 text-xs text-slate-500">Year: {resource.year}</p>}
                     <p className="mt-2 text-xs text-slate-400">By {resource.uploaderName || 'student'} / {new Date(resource.createdAt).toLocaleDateString()}</p>
                     <div className="mt-4 flex items-center gap-2">
@@ -492,7 +591,7 @@ const Dashboard = () => {
                           href={resource.linkUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="btn btn-secondary flex-1 justify-center text-sm"
+                          className="btn dashboard-action-secondary flex-1 justify-center text-sm"
                         >
                           <ExternalLink size={14} /> Open link
                         </a>
@@ -500,7 +599,7 @@ const Dashboard = () => {
                         <button
                           type="button"
                           onClick={() => navigate(`/viewer/${resource._id}`)}
-                          className="btn btn-primary flex-1 justify-center text-sm"
+                          className="btn dashboard-action-primary flex-1 justify-center text-sm"
                         >
                           <FileText size={14} /> View
                         </button>
@@ -579,7 +678,7 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
       <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl animate-scale-in sm:max-h-[90vh] sm:p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="flex min-w-0 items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
-            <Upload size={18} className="text-brand-600" /> Upload Resource
+            <Upload size={18} className="text-blue-600" /> Upload Resource
           </h2>
           <button
             type="button"
@@ -629,10 +728,10 @@ const UploadModal = ({ isOpen, onClose, subjects, currentSubjectId, onUploadSucc
           ) : (
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">File (PDF/Image)</label>
-              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files[0])} className="block w-full cursor-pointer text-sm text-slate-500 transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-brand-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-brand-700 hover:file:bg-brand-100" required />
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files[0])} className="block w-full cursor-pointer text-sm text-slate-500 transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100" required />
             </div>
           )}
-          <button type="submit" disabled={isUploading} className="btn btn-primary w-full text-sm">
+          <button type="submit" disabled={isUploading} className="btn dashboard-action-primary w-full text-sm">
             {isUploading ? (
               <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
