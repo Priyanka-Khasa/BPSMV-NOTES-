@@ -70,6 +70,9 @@ router.post('/', verifyToken, async (req, res) => {
     if (!title || !company || !applyUrl || !summary) {
       return res.status(400).json({ message: 'Title, company, apply link, and summary are required' });
     }
+    if (!/^https?:\/\//i.test(applyUrl)) {
+      return res.status(400).json({ message: 'Apply link must start with http:// or https://' });
+    }
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(401).json({ message: 'User not found' });

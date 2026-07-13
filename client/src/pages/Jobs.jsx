@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarDays,
+  CheckCircle2,
   Code2,
   ExternalLink,
   GraduationCap,
@@ -16,7 +17,10 @@ import {
   Search,
   ShieldCheck,
   Trash2,
+  UserRound,
+  X,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const categories = ['Internship', 'Job', 'Hiring Challenge', 'Scholarship', 'Career News'];
 
@@ -33,10 +37,14 @@ const emptyForm = {
   title: '',
   company: '',
   category: 'Internship',
+  mode: 'Remote',
   location: '',
   deadline: '',
   applyUrl: '',
+  stipend: '',
+  eligibility: '',
   summary: '',
+  tags: '',
 };
 
 const formatDate = (value) => {
@@ -44,79 +52,126 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const deadlineBadge = (deadline) => {
-  if (!deadline) return { text: 'Rolling', className: 'bg-slate-100 text-slate-700' };
+const formatDeadline = (deadline) => {
+  if (!deadline) return { label: 'ROLLING', date: 'No fixed date', tone: 'neutral' };
   const days = Math.ceil((new Date(deadline) - new Date()) / 86400000);
-  if (days < 0) return { text: 'Expired', className: 'bg-red-50 text-red-700' };
-  if (days <= 3) return { text: `${days} day${days === 1 ? '' : 's'} left`, className: 'bg-red-50 text-red-700' };
-  if (days <= 10) return { text: `${days} days left`, className: 'bg-amber-50 text-amber-700' };
-  return { text: `${days} days left`, className: 'bg-emerald-50 text-emerald-700' };
+  if (days < 0) return { label: 'EXPIRED', date: formatDate(deadline), tone: 'danger' };
+  if (days <= 3) return { label: `${days}D LEFT`, date: formatDate(deadline), tone: 'danger' };
+  if (days <= 10) return { label: `${days}D LEFT`, date: formatDate(deadline), tone: 'warning' };
+  return { label: `${days}D LEFT`, date: formatDate(deadline), tone: 'safe' };
 };
 
+const deadlineTone = {
+  danger: 'border-red-200 bg-red-50 text-red-700',
+  warning: 'border-amber-200 bg-amber-50 text-amber-700',
+  safe: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  neutral: 'border-slate-200 bg-parchment-light text-slate-600',
+};
+
+const categoryTone = {
+  Internship: 'bg-brand-50 text-brand-700 border-brand-100',
+  Job: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  'Hiring Challenge': 'bg-indigo-50 text-indigo-700 border-indigo-100',
+  Scholarship: 'bg-amber-50 text-amber-700 border-amber-100',
+  'Career News': 'bg-slate-100 text-slate-700 border-slate-200',
+};
+
+const safeUrl = (url) => /^https?:\/\//i.test(String(url || '').trim());
+
 const Jobs = () => {
+  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [message, setMessage] = useState(null);
 
-  const loadPosts = async () => {
-    setLoading(true);
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => setMessage(null), 3500);
+  };
+
+  const loadPosts = async ({ nextPage = 1, append = false } = {}) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
+
     try {
-      const res = await axios.get('/job-updates', { params: { limit: 50 } });
-      setPosts(res.data.updates || []);
-      setMessage('');
+      const res = await axios.get('/job-updates', {
+        params: {
+          page: nextPage,
+          limit: 12,
+          search: search.trim() || undefined,
+          category: activeCategory === 'All' ? undefined : activeCategory,
+        },
+      });
+      const updates = res.data.updates || [];
+      setPosts((current) => (append ? [...current, ...updates] : updates));
+      setPage(res.data.page || nextPage);
+      setPages(res.data.pages || 1);
+      setTotal(res.data.total || updates.length);
     } catch (error) {
       setPosts([]);
-      setMessage(error.response?.status === 401
+      setPage(1);
+      setPages(1);
+      setTotal(0);
+      showMessage('error', error.response?.status === 401
         ? 'Please log in again to view shared openings.'
-        : 'Backend is not connected. Start/restart the server so posts can be shared with all students.');
+        : 'Backend is not connected. Start or restart the server to load shared openings.');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    loadPosts();
-  }, []);
+    loadPosts({ nextPage: 1 });
+  }, [activeCategory]);
 
-  const visiblePosts = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return posts
-      .filter((post) => category === 'All' || post.category === category)
-      .filter((post) => {
-        if (!term) return true;
-        return [post.title, post.company, post.location, post.summary, post.category]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-          .includes(term);
-      })
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [posts, search, category]);
+  const urgentCount = useMemo(() => posts.filter((post) => ['danger', 'warning'].includes(formatDeadline(post.deadline).tone)).length, [posts]);
+  const canLoadMore = page < pages;
 
   const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
 
+  const handleSearch = (event) => {
+    event.preventDefault();
+    loadPosts({ nextPage: 1 });
+  };
+
+  const canDelete = (post) => {
+    const postedById = typeof post.postedBy === 'object' ? post.postedBy?._id : post.postedBy;
+    return user?.role === 'admin' || (postedById && postedById === (user?._id || user?.id));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setSaving(true);
-    setMessage('');
+    if (!safeUrl(form.applyUrl)) {
+      showMessage('error', 'Apply link must start with http:// or https://');
+      return;
+    }
 
+    setSaving(true);
     try {
       const res = await axios.post('/job-updates', {
         ...form,
-        mode: 'Online',
-        stipend: 'Not disclosed',
-        eligibility: 'BTech students',
+        location: form.location || 'Remote',
+        stipend: form.stipend || 'Not disclosed',
+        eligibility: form.eligibility || 'BTech students',
         sourceName: 'Campus post',
       });
       setPosts((current) => [res.data, ...current]);
+      setTotal((count) => count + 1);
       setForm(emptyForm);
-      setMessage('Posted successfully. This opening is saved in the database and visible to all students.');
+      setComposerOpen(false);
+      showMessage('success', 'Opening posted successfully.');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Could not post. Please make sure the backend server is running.');
+      showMessage('error', error.response?.data?.message || 'Could not post this opening.');
     } finally {
       setSaving(false);
     }
@@ -127,9 +182,10 @@ const Jobs = () => {
     try {
       await axios.delete(`/job-updates/${post._id}`);
       setPosts((current) => current.filter((item) => item._id !== post._id));
-      setMessage('Deleted successfully.');
+      setTotal((count) => Math.max(count - 1, 0));
+      showMessage('success', 'Opening deleted.');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Could not delete this opening.');
+      showMessage('error', error.response?.data?.message || 'Could not delete this opening.');
     }
   };
 
@@ -141,171 +197,255 @@ const Jobs = () => {
     }
   };
 
+  const emptyTitle = posts.length === 0 && (search.trim() || activeCategory !== 'All')
+    ? 'No matches for this search'
+    : 'No shared openings yet';
+  const emptyText = posts.length === 0 && (search.trim() || activeCategory !== 'All')
+    ? 'Try another keyword or switch categories.'
+    : 'Post the first verified-looking update for everyone.';
+
   return (
-    <div className="relative -mx-4 -my-6 min-h-[calc(100vh-4rem)] bg-[#f7f3ec] sm:-mx-6 lg:-mx-8">
-      <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-sm font-semibold text-brand-700">Jobs & Internships</p>
-          <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-3xl font-display font-bold text-slate-950 sm:text-4xl">Career updates for BTech students</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Post once, and every student can see it. Common portals are kept separate below.
-              </p>
+    <div className="space-y-6 pb-12 animate-fade-in">
+      <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-sm">
+        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold text-brand-700">Career Board</p>
+            <h1 className="mt-1 font-display text-3xl font-bold text-charcoal sm:text-4xl">Jobs, internships, scholarships</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+              Scan urgency first, check who posted it, then apply. Shared openings stay separate from common career portals.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-100 bg-parchment-light p-2">
+            <div className="rounded-lg bg-white px-3 py-3 text-center">
+              <p className="font-mono text-xl font-bold text-charcoal">{total}</p>
+              <p className="text-[11px] font-semibold uppercase text-slate-400">Live</p>
             </div>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-              {visiblePosts.length} shared update{visiblePosts.length === 1 ? '' : 's'}
+            <div className="rounded-lg bg-white px-3 py-3 text-center">
+              <p className="font-mono text-xl font-bold text-red-700">{urgentCount}</p>
+              <p className="text-[11px] font-semibold uppercase text-slate-400">Urgent</p>
             </div>
+            <button type="button" onClick={() => setComposerOpen(true)} className="rounded-lg bg-brand-700 px-3 py-3 text-center text-white transition-colors hover:bg-brand-800">
+              <Plus size={18} className="mx-auto" />
+              <span className="mt-1 block text-[11px] font-bold uppercase">Post</span>
+            </button>
           </div>
         </div>
       </section>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {message && (
-          <div className="mb-4 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            <AlertCircle size={17} />
-            {message}
+      {message && (
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
+            message.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border-red-200 bg-red-50 text-red-700'
+          }`}
+        >
+          {message.type === 'success' ? <CheckCircle2 size={17} /> : <AlertCircle size={17} />}
+          {message.text}
+        </div>
+      )}
+
+      <section className="card p-3">
+        <form onSubmit={handleSearch} className="flex flex-col gap-3 lg:flex-row">
+          <div className="relative flex-1">
+            <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="input-field pl-10"
+              placeholder="Search role, company, skill, location..."
+            />
           </div>
-        )}
-
-        <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm lg:sticky lg:top-20 lg:self-start">
-            <div className="mb-4 flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-slate-950 text-white">
-                <Plus size={18} />
-              </span>
-              <div>
-                <h2 className="font-display text-lg font-bold text-slate-950">Add opening</h2>
-                <p className="text-xs text-slate-500">Saved to the shared database.</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <input className="input-field" value={form.title} onChange={(e) => updateForm('title', e.target.value)} placeholder="Role title" required />
-              <input className="input-field" value={form.company} onChange={(e) => updateForm('company', e.target.value)} placeholder="Company / source" required />
-              <select className="input-field" value={form.category} onChange={(e) => updateForm('category', e.target.value)}>
-                {categories.map((item) => <option key={item}>{item}</option>)}
-              </select>
-              <input className="input-field" value={form.location} onChange={(e) => updateForm('location', e.target.value)} placeholder="Location or Remote" />
-              <input className="input-field" type="date" value={form.deadline} onChange={(e) => updateForm('deadline', e.target.value)} />
-              <input className="input-field" type="url" value={form.applyUrl} onChange={(e) => updateForm('applyUrl', e.target.value)} placeholder="Apply link" required />
-              <textarea className="input-field min-h-24" value={form.summary} onChange={(e) => updateForm('summary', e.target.value)} placeholder="Short note for students" required />
-            </div>
-
-            <button disabled={saving} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-brand-700 disabled:opacity-60">
-              {saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}
-              {saving ? 'Posting...' : 'Post update'}
+          <button type="submit" className="btn btn-primary px-5 py-3 text-sm">
+            <Search size={16} /> Search
+          </button>
+        </form>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {['All', ...categories].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setActiveCategory(item)}
+              className={`shrink-0 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                activeCategory === item
+                  ? 'border-brand-300 bg-brand-50 text-brand-800'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:text-brand-700'
+              }`}
+            >
+              {item}
             </button>
-          </form>
+          ))}
+        </div>
+      </section>
 
-          <section className="space-y-4">
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm">
-              <div className="flex flex-col gap-3 md:flex-row">
-                <div className="relative flex-1">
-                  <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-brand-300 focus:ring-4 focus:ring-brand-100"
-                    placeholder="Search opening..."
-                  />
+      {loading ? (
+        <div className="card flex min-h-64 items-center justify-center p-10 text-slate-500">
+          <Loader2 className="mr-2 animate-spin" /> Loading shared openings
+        </div>
+      ) : posts.length ? (
+        <section className="grid gap-4 xl:grid-cols-2">
+          {posts.map((post) => {
+            const deadline = formatDeadline(post.deadline);
+            const posterRole = post.postedBy?.role || '';
+            return (
+              <article key={post._id} className="card p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className={`rounded-xl border px-3 py-2 font-mono ${deadlineTone[deadline.tone]}`}>
+                    <p className="text-lg font-bold leading-none">{deadline.label}</p>
+                    <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide">{deadline.date}</p>
+                  </div>
+                  {canDelete(post) && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(post)}
+                      title="Delete opening"
+                      className="grid h-9 w-9 place-items-center rounded-xl border border-red-100 bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
-                <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field md:w-52">
-                  <option>All</option>
-                  {categories.map((item) => <option key={item}>{item}</option>)}
-                </select>
-              </div>
-            </div>
 
-            {loading ? (
-              <div className="rounded-2xl bg-white p-10 text-center text-slate-500">
-                <Loader2 className="mx-auto mb-3 animate-spin" />
-                Loading shared openings
-              </div>
-            ) : visiblePosts.length ? (
-              <div className="space-y-3">
-                {visiblePosts.map((post) => {
-                  const badge = deadlineBadge(post.deadline);
-                  return (
-                    <article key={post._id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:border-brand-200 hover:shadow-md">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap gap-2">
-                            <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700">{post.category}</span>
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${badge.className}`}>{badge.text}</span>
-                          </div>
-                          <h2 className="mt-3 text-xl font-display font-bold text-slate-950">{post.title}</h2>
-                          <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
-                            <Building2 size={15} />
-                            {post.company}
-                          </p>
-                        </div>
-                        <button onClick={() => handleDelete(post)} title="Delete opening" className="rounded-xl border border-red-100 bg-red-50 p-2 text-red-600 transition-all hover:bg-red-100">
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
+                <div className="mt-4">
+                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${categoryTone[post.category] || categoryTone.Internship}`}>
+                    {post.category}
+                  </span>
+                  <h2 className="mt-3 font-display text-xl font-bold text-charcoal">{post.title}</h2>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
+                    <Building2 size={15} /> {post.company}
+                  </p>
+                </div>
 
-                      <p className="mt-3 text-sm leading-6 text-slate-600">{post.summary}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{post.summary}</p>
 
-                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-                        <span className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-2">
-                          <MapPin size={14} />
-                          {post.location || 'Location not added'}
-                        </span>
-                        <span className="flex items-center gap-1.5 rounded-lg bg-slate-50 px-3 py-2">
-                          <CalendarDays size={14} />
-                          {formatDate(post.deadline)}
-                        </span>
-                      </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <span className="flex items-center gap-1.5 rounded-lg bg-parchment-light px-3 py-2 text-xs font-medium text-slate-600">
+                    <MapPin size={14} /> {post.location || post.mode || 'Location not added'}
+                  </span>
+                  <span className="flex items-center gap-1.5 rounded-lg bg-parchment-light px-3 py-2 text-xs font-medium text-slate-600">
+                    <CalendarDays size={14} /> Posted {formatDate(post.createdAt)}
+                  </span>
+                </div>
 
-                      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                        <p className="text-xs text-slate-400">Posted {formatDate(post.createdAt)}</p>
-                        <a href={post.applyUrl} target="_blank" rel="noreferrer" onClick={() => recordApplication(post)} className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-3.5 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-700">
-                          Apply
-                          <ArrowUpRight size={15} />
-                        </a>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-10 text-center">
-                <BriefcaseBusiness size={36} className="mx-auto mb-3 text-slate-300" />
-                <h2 className="text-lg font-semibold text-slate-900">No shared openings yet</h2>
-                <p className="mt-1 text-sm text-slate-500">Use the form to add the first update for everyone.</p>
-              </div>
-            )}
-          </section>
+                <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <UserRound size={14} />
+                    Posted by <span className="font-semibold text-slate-700">{post.posterName || post.postedBy?.name || 'Student'}</span>
+                    {posterRole && <span className="rounded-full bg-slate-100 px-2 py-0.5 font-semibold capitalize text-slate-600">{posterRole}</span>}
+                  </p>
+                  <a
+                    href={post.applyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => recordApplication(post)}
+                    className="btn btn-primary px-4 py-2 text-sm"
+                  >
+                    Apply <ArrowUpRight size={15} />
+                  </a>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+      ) : (
+        <section className="card p-10 text-center">
+          <BriefcaseBusiness size={38} className="mx-auto mb-3 text-slate-300" />
+          <h2 className="font-display text-xl font-bold text-charcoal">{emptyTitle}</h2>
+          <p className="mt-1 text-sm text-slate-500">{emptyText}</p>
+        </section>
+      )}
+
+      {canLoadMore && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => loadPosts({ nextPage: page + 1, append: true })}
+            disabled={loadingMore}
+            className="btn btn-secondary px-5 py-3 text-sm"
+          >
+            {loadingMore ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {loadingMore ? 'Loading...' : 'Load more'}
+          </button>
+        </div>
+      )}
+
+      <section className="card p-5 sm:p-6">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-display text-xl font-bold text-charcoal">Common Portals</h2>
+            <p className="text-sm text-slate-500">Fixed links students can check anytime.</p>
+          </div>
+          <span className="font-mono text-xs font-semibold uppercase tracking-wide text-slate-400">{portals.length} verified links</span>
         </div>
 
-        <section className="mt-8 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
-          <h2 className="font-display text-xl font-bold text-slate-950">Common portals</h2>
-          <p className="mt-1 text-sm text-slate-500">Fixed links students can check anytime. These are separate from posted openings.</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {portals.map((portal) => {
+            const Icon = portal.icon;
+            return (
+              <a key={portal.label} href={portal.href} target="_blank" rel="noopener noreferrer" className="group rounded-xl border border-slate-200 bg-parchment-light p-4 transition-colors hover:border-brand-200 hover:bg-brand-50/70">
+                <div className="flex gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-100">
+                    <Icon size={19} />
+                  </span>
+                  <span>
+                    <span className="flex items-center gap-2 font-semibold text-charcoal">
+                      {portal.label}
+                      <ExternalLink size={14} className="text-slate-300 group-hover:text-brand-600" />
+                    </span>
+                    <span className="mt-1 block text-sm leading-5 text-slate-500">{portal.text}</span>
+                  </span>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </section>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {portals.map((portal) => {
-              const Icon = portal.icon;
-              return (
-                <a key={portal.label} href={portal.href} target="_blank" rel="noreferrer" className="group rounded-xl border border-slate-200 p-4 transition-all hover:border-brand-200 hover:bg-brand-50/40">
-                  <div className="flex gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                      <Icon size={19} />
-                    </span>
-                    <span>
-                      <span className="flex items-center gap-2 font-semibold text-slate-950">
-                        {portal.label}
-                        <ExternalLink size={14} className="text-slate-300 group-hover:text-brand-600" />
-                      </span>
-                      <span className="mt-1 block text-sm leading-5 text-slate-500">{portal.text}</span>
-                    </span>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      </main>
+      {composerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/35 backdrop-blur-sm" role="dialog" aria-modal="true">
+          <button type="button" className="absolute inset-0 cursor-default" aria-label="Close composer" onClick={() => setComposerOpen(false)} />
+          <form onSubmit={handleSubmit} className="relative flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+              <div>
+                <h2 className="font-display text-xl font-bold text-charcoal">Post Opening</h2>
+                <p className="text-xs text-slate-500">Share a real opportunity with students.</p>
+              </div>
+              <button type="button" onClick={() => setComposerOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-parchment-light text-slate-600 hover:bg-parchment">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+              <input className="input-field" value={form.title} onChange={(event) => updateForm('title', event.target.value)} placeholder="Role title" required />
+              <input className="input-field" value={form.company} onChange={(event) => updateForm('company', event.target.value)} placeholder="Company / source" required />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select className="input-field" value={form.category} onChange={(event) => updateForm('category', event.target.value)}>
+                  {categories.map((item) => <option key={item}>{item}</option>)}
+                </select>
+                <select className="input-field" value={form.mode} onChange={(event) => updateForm('mode', event.target.value)}>
+                  {['Remote', 'On-site', 'Hybrid', 'Online'].map((item) => <option key={item}>{item}</option>)}
+                </select>
+              </div>
+              <input className="input-field" value={form.location} onChange={(event) => updateForm('location', event.target.value)} placeholder="Location or Remote" />
+              <input className="input-field" type="date" value={form.deadline} onChange={(event) => updateForm('deadline', event.target.value)} />
+              <input className="input-field" type="url" value={form.applyUrl} onChange={(event) => updateForm('applyUrl', event.target.value)} placeholder="https://apply-link.com" required />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input className="input-field" value={form.stipend} onChange={(event) => updateForm('stipend', event.target.value)} placeholder="Stipend / CTC" />
+                <input className="input-field" value={form.eligibility} onChange={(event) => updateForm('eligibility', event.target.value)} placeholder="Eligibility" />
+              </div>
+              <input className="input-field" value={form.tags} onChange={(event) => updateForm('tags', event.target.value)} placeholder="Tags, comma separated" />
+              <textarea className="input-field min-h-28" value={form.summary} onChange={(event) => updateForm('summary', event.target.value)} placeholder="Short note for students" required />
+            </div>
+
+            <div className="border-t border-slate-100 p-5">
+              <button disabled={saving} className="btn btn-primary w-full py-3">
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                {saving ? 'Posting...' : 'Post update'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };
