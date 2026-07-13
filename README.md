@@ -301,6 +301,7 @@ SMTP_USER=your_sender_email@gmail.com
 SMTP_PASS=your_app_password
 RESEND_API_KEY=your_resend_api_key
 EMAIL_FROM=BPSMV Hub <onboarding@resend.dev>
+EMAIL_TIMEOUT_MS=10000
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key

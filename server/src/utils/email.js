@@ -1,6 +1,16 @@
 const nodemailer = require('nodemailer');
 const { cleanEnvValue } = require('./env');
 
+const EMAIL_TIMEOUT_MS = Number.parseInt(cleanEnvValue(process.env.EMAIL_TIMEOUT_MS || '10000'), 10);
+
+const withTimeout = (promise, label) => {
+  let timer;
+  const timeout = new Promise((resolve, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${EMAIL_TIMEOUT_MS}ms`)), EMAIL_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
 const createTransporter = () => {
   const host = cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com');
   const port = Number.parseInt(cleanEnvValue(process.env.SMTP_PORT || '587'), 10);
@@ -13,6 +23,9 @@ const createTransporter = () => {
     host,
     port,
     secure: port === 465,
+    connectionTimeout: EMAIL_TIMEOUT_MS,
+    greetingTimeout: EMAIL_TIMEOUT_MS,
+    socketTimeout: EMAIL_TIMEOUT_MS,
     auth: { user, pass }
   });
 };
@@ -25,20 +38,28 @@ const isEmailConfigured = () => Boolean(
 const sendWithResend = async ({ to, subject, html }) => {
   const apiKey = cleanEnvValue(process.env.RESEND_API_KEY);
   if (!apiKey) return false;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), EMAIL_TIMEOUT_MS);
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: cleanEnvValue(process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>'),
-      to,
-      subject,
-      html
-    })
-  });
+  let response;
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: cleanEnvValue(process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>'),
+        to,
+        subject,
+        html
+      })
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const details = await response.text();
@@ -70,12 +91,12 @@ const sendEmail = async ({ to, subject, html }) => {
     throw resendError || new Error('Email provider is not configured');
   }
 
-  await transporter.sendMail({
+  await withTimeout(transporter.sendMail({
     from: `"BPSMV Hub" <${cleanEnvValue(process.env.SMTP_USER)}>`,
     to,
     subject,
     html
-  });
+  }), 'SMTP email');
   return { delivered: true, provider: 'smtp' };
 };
 
