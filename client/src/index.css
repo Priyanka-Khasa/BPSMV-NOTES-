@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -21,6 +21,7 @@
   --radius-full: 9999px;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-display: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @layer base {
@@ -141,6 +142,50 @@
 
   .toast-error {
     @apply bg-red-50 text-red-800 border border-red-200 rounded-xl px-4 py-3 shadow-lg;
+  }
+
+  .profile-id-card {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .profile-id-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-55%) skewX(-18deg);
+    background: linear-gradient(105deg, transparent 22%, rgba(255,255,255,0.08) 38%, rgba(154, 215, 206, 0.24) 48%, rgba(255, 221, 165, 0.22) 57%, transparent 74%);
+  }
+
+  .profile-id-card:hover::after {
+    animation: idSheen 1.2s ease-out;
+  }
+
+  .profile-id-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .id-photo-edge {
+    clip-path: polygon(32% 0, 100% 0, 100% 100%, 32% 100%, 0 92%, 32% 84%, 0 76%, 32% 68%, 0 60%, 32% 52%, 0 44%, 32% 36%, 0 28%, 32% 20%, 0 12%);
+  }
+
+  .cgpa-seal {
+    @apply grid h-20 w-20 shrink-0 place-items-center rounded-full border-2 border-brand-700 bg-brand-50 text-brand-800;
+    box-shadow: inset 0 0 0 5px rgba(255,255,255,0.8), 0 10px 24px rgba(92, 52, 37, 0.1);
+  }
+
+  .cgpa-seal span {
+    @apply text-[10px] font-bold uppercase tracking-wide;
+    line-height: 1;
+  }
+
+  .cgpa-seal strong {
+    @apply text-xl font-bold;
+    line-height: 1;
   }
 }
 
@@ -342,6 +387,12 @@
   0%, 42% { transform: translateX(-130%) skewX(-16deg); opacity: 0; }
   52% { opacity: 0.9; }
   76%, 100% { transform: translateX(160%) skewX(-16deg); opacity: 0; }
+}
+
+@keyframes idSheen {
+  0% { opacity: 0; transform: translateX(-60%) skewX(-18deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(65%) skewX(-18deg); }
 }
 
 /* Staggered list animations */
