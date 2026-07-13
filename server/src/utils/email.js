@@ -60,6 +60,21 @@ const isEmailConfigured = () => Boolean(
   (cleanEnvValue(process.env.SMTP_USER) && cleanEnvValue(process.env.SMTP_PASS))
 );
 
+const getEmailConfigStatus = () => {
+  const smtpConfig = getPrimarySmtpConfig();
+  return {
+    resendConfigured: Boolean(cleanEnvValue(process.env.RESEND_API_KEY)),
+    resendFromConfigured: Boolean(cleanEnvValue(process.env.EMAIL_FROM)),
+    smtpConfigured: Boolean(smtpConfig),
+    smtpHost: smtpConfig?.host || cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com'),
+    smtpPort: smtpConfig?.port || Number.parseInt(cleanEnvValue(process.env.SMTP_PORT || '587'), 10),
+    smtpSecure: smtpConfig?.secure ?? parseBoolean(process.env.SMTP_SECURE, false),
+    timeoutMs: EMAIL_TIMEOUT_MS
+  };
+};
+
+const isResendSandboxError = (error) => /only send testing emails/i.test(error?.message || '');
+
 const sendWithResend = async ({ to, subject, html }) => {
   const apiKey = cleanEnvValue(process.env.RESEND_API_KEY);
   if (!apiKey) return false;
@@ -102,6 +117,9 @@ const sendEmail = async ({ to, subject, html }) => {
   } catch (error) {
     resendError = error;
     console.error('Resend email failed, trying SMTP fallback:', error.message);
+    if (isResendSandboxError(error)) {
+      console.error('Resend is in testing mode. Verify a sending domain in Resend or unset RESEND_API_KEY and use SMTP.');
+    }
   }
 
   const smtpConfigs = getSmtpConfigs();
@@ -136,4 +154,4 @@ const sendEmail = async ({ to, subject, html }) => {
   throw smtpError || resendError || new Error('Email delivery failed');
 };
 
-module.exports = { isEmailConfigured, sendEmail };
+module.exports = { getEmailConfigStatus, isEmailConfigured, sendEmail };

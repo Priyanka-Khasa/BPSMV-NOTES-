@@ -8,7 +8,7 @@ const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
 const { cleanEnvValue } = require('../utils/env');
-const { isEmailConfigured, sendEmail } = require('../utils/email');
+const { getEmailConfigStatus, isEmailConfigured, sendEmail } = require('../utils/email');
 const {
   SESSION_MAX_AGE,
   createSessionId,
@@ -240,7 +240,7 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
     }
 
     if (process.env.NODE_ENV === 'production' && !isEmailConfigured()) {
-      console.error('Password reset requested but email provider is not configured');
+      console.error('Password reset requested but email provider is not configured:', getEmailConfigStatus());
       return res.status(503).json({ message: 'OTP email service is not configured yet. Please contact the admin.' });
     }
 
@@ -268,7 +268,10 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
         });
       }
     } catch (emailError) {
-      console.error('Password reset OTP email failed:', emailError);
+      console.error('Password reset OTP email failed:', {
+        message: emailError.message,
+        emailConfig: getEmailConfigStatus()
+      });
       return res.status(500).json({ message: 'Could not send OTP. Please try again later.' });
     }
 
