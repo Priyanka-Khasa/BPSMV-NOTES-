@@ -30,7 +30,7 @@ const portals = [
   { label: 'Internshala', text: 'Remote and office internships for students.', href: 'https://internshala.com/internships/', icon: Laptop },
   { label: 'Unstop', text: 'Hackathons, hiring challenges, and competitions.', href: 'https://unstop.com/', icon: Code2 },
   { label: 'LinkedIn Fresher Jobs', text: 'Search fresher and graduate roles.', href: 'https://www.linkedin.com/jobs/search/?keywords=fresher%20software%20engineer%20india', icon: Building2 },
-  { label: 'TCS NextStep', text: 'TCS fresher registration and hiring portal.', href: 'https://nextstep.tcs.com/', icon: ShieldCheck },
+  { label: 'PM Internship Scheme', text: 'Government internship opportunities for students.', href: 'https://pminternship.mca.gov.in/login/', icon: ShieldCheck },
 ];
 
 const emptyForm = {
