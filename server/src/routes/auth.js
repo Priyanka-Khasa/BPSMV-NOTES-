@@ -241,7 +241,10 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
 
     if (process.env.NODE_ENV === 'production' && !isEmailConfigured()) {
       console.error('Password reset requested but email provider is not configured:', getEmailConfigStatus());
-      return res.status(503).json({ message: 'OTP email service is not configured yet. Please contact the admin.' });
+      return res.status(503).json({
+        code: 'OTP_EMAIL_NOT_CONFIGURED',
+        message: 'OTP email service is not configured yet. Please contact the admin.'
+      });
     }
 
     if (user.passwordResetRequestedAt && Date.now() - user.passwordResetRequestedAt.getTime() < 60 * 1000) {
@@ -272,7 +275,10 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
         message: emailError.message,
         emailConfig: getEmailConfigStatus()
       });
-      return res.status(500).json({ message: 'Could not send OTP. Please try again later.' });
+      return res.status(503).json({
+        code: 'OTP_EMAIL_DELIVERY_FAILED',
+        message: 'OTP email service is temporarily unavailable. Please contact the admin.'
+      });
     }
 
     res.json({ message: genericMessage });

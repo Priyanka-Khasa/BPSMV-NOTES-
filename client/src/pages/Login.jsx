@@ -121,7 +121,12 @@ const Login = () => {
         setMode('login');
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Could not reset password. Please try again.');
+      const errorCode = err.response?.data?.code;
+      if (errorCode === 'OTP_EMAIL_DELIVERY_FAILED' || errorCode === 'OTP_EMAIL_NOT_CONFIGURED') {
+        setError('OTP email service is temporarily unavailable. Please contact the admin.');
+      } else {
+        setError(err.response?.data?.message || err.message || 'Could not reset password. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
