@@ -1,6 +1,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/User');
+const { cleanEnvValue } = require('../utils/env');
 
 const hasCompleteAcademicProfile = (user) => Boolean(
   user?.onboarded &&
@@ -10,17 +11,6 @@ const hasCompleteAcademicProfile = (user) => Boolean(
   user?.yearOfStudy &&
   user?.semester
 );
-
-const cleanEnvValue = (value) => {
-  const trimmed = (value || '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-};
 
 // Validate that Google credentials look real (not a placeholder or copy-paste error)
 const googleClientId = cleanEnvValue(process.env.GOOGLE_CLIENT_ID);

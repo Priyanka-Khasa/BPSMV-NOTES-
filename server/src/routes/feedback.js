@@ -2,8 +2,17 @@ const express = require('express');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const fs = require('fs/promises');
+const rateLimit = require('express-rate-limit');
 const Feedback = require('../models/Feedback');
-const { feedbackUpload } = require('../config/storage');
+const { feedbackUpload, getUploadedFileUrl } = require('../config/storage');
+
+const feedbackLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many feedback submissions. Please wait and try again.' }
+});
 
 const escapeHtml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
@@ -43,7 +52,7 @@ const sendWithResend = async ({ to, subject, html, attachment }) => {
     html
   };
 
-  if (attachment) {
+  if (attachment?.path && !/^https?:\/\//i.test(attachment.path)) {
     payload.attachments = [{
       filename: attachment.filename,
       content: await fs.readFile(attachment.path, 'base64')
@@ -67,14 +76,8 @@ const sendWithResend = async ({ to, subject, html, attachment }) => {
   return true;
 };
 
-// Helper: build public file URL from multer file
-const buildFileUrl = (req, filename) => {
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return `${baseUrl}/uploads/${filename}`;
-};
-
 // POST /api/feedback - Submit Gift form data with a required screenshot
-router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
+router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (req, res) => {
   try {
     const { fullName, email, phone, issueType, description, additionalComments } = req.body;
 
@@ -85,7 +88,7 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
       return res.status(400).json({ message: 'Screenshot is required' });
     }
 
-    const screenshotUrl = buildFileUrl(req, req.file.filename);
+    const screenshotUrl = getUploadedFileUrl(req, req.file);
 
     const feedback = await Feedback.create({
       fullName: fullName.trim(),
@@ -117,6 +120,7 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
           <tr><td style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">Description</td><td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${safeDescription}</td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">Additional Comments</td><td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${safeAdditionalComments}</td></tr>
         </table>
+        <p style="margin-top: 16px;"><a href="${escapeHtml(screenshotUrl)}" style="color: #c17a5c;">View screenshot</a></p>
         <p style="margin-top: 20px; color: #666; font-size: 12px;">Submitted on ${new Date().toLocaleString()}</p>
       </div>
     `;
@@ -164,10 +168,12 @@ router.post('/', feedbackUpload.single('screenshot'), async (req, res) => {
             to: adminEmail,
             subject: `New Gift Submission: ${issueType} from ${fullName}`,
             html: emailHtml,
-            attachments: [{
-              filename: req.file.originalname,
-              path: req.file.path
-            }]
+            attachments: req.file.path && !/^https?:\/\//i.test(req.file.path)
+              ? [{
+                  filename: req.file.originalname,
+                  path: req.file.path
+                }]
+              : []
           });
 
           await transporter.sendMail({

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const JobUpdate = require('../models/JobUpdate');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
+const { makeSafeContainsRegex } = require('../utils/regex');
 
 const canDelete = (user, update) => {
   return user.role === 'admin' || update.postedBy.toString() === user.id;
@@ -16,12 +17,13 @@ router.get('/', verifyToken, async (req, res) => {
 
     if (category && category !== 'All') filter.category = category;
     if (mode && mode !== 'All') filter.mode = mode;
-    if (search) {
+    const safeSearch = makeSafeContainsRegex(search);
+    if (safeSearch) {
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { company: { $regex: search, $options: 'i' } },
-        { summary: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
+        { title: safeSearch },
+        { company: safeSearch },
+        { summary: safeSearch },
+        { tags: safeSearch }
       ];
     }
 

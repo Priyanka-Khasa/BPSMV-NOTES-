@@ -3,19 +3,15 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
+const { Readable } = require('stream');
 const Resource = require('../models/Resource');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
-const { upload, uploadDir } = require('../config/storage');
+const { upload, uploadDir, getUploadedFileUrl } = require('../config/storage');
 const { seedSubjects } = require('../../seedSubjects');
 const { applyAcademicProgression, normalizeBranch } = require('../utils/academicProgression');
-
-// Helper to build public file URL from multer file
-const buildFileUrl = (req, filename) => {
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return `${baseUrl}/uploads/${filename}`;
-};
+const { makeSafeContainsRegex } = require('../utils/regex');
 
 const getStoredFilename = (fileUrl) => {
   if (!fileUrl) return null;
@@ -39,12 +35,21 @@ const canDelete = (user, resource) => {
 
 const findSubjects = (filter) => Subject.find(filter).sort({ semester: 1, name: 1 });
 
+const isCloudinaryUrl = (fileUrl) => {
+  try {
+    const url = new URL(fileUrl);
+    return url.protocol === 'https:' && url.hostname.endsWith('cloudinary.com');
+  } catch {
+    return false;
+  }
+};
+
 // Get all resources with search & filter
 router.get('/all', verifyToken, async (req, res) => {
   try {
     const { degree, branch, semester, year, subjectId, resourceType, search, page = 1, limit = 20 } = req.query;
     const filter = {};
-    if (req.query.isApproved !== undefined) {
+    if (req.query.isApproved !== undefined && req.user.role === 'admin') {
       filter.isApproved = req.query.isApproved === 'true' || req.query.isApproved === true;
     } else {
       filter.isApproved = true;
@@ -55,10 +60,11 @@ router.get('/all', verifyToken, async (req, res) => {
     if (year) filter.year = parseInt(year);
     if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) filter.subjectId = subjectId;
     if (resourceType) filter.resourceType = resourceType;
-    if (search) {
+    const safeSearch = makeSafeContainsRegex(search);
+    if (safeSearch) {
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { subjectName: { $regex: search, $options: 'i' } }
+        { title: safeSearch },
+        { subjectName: safeSearch }
       ];
     }
 
@@ -205,6 +211,17 @@ router.get('/:id/file', verifyToken, async (req, res) => {
     const resource = await Resource.findById(req.params.id);
     if (!resource || !resource.fileUrl) return res.status(404).json({ message: 'File not found' });
 
+    if (isCloudinaryUrl(resource.fileUrl)) {
+      const upstream = await fetch(resource.fileUrl);
+      if (!upstream.ok || !upstream.body) {
+        return res.status(404).json({ message: 'File not found' });
+      }
+      res.setHeader('Content-Type', upstream.headers.get('content-type') || (resource.fileType === 'pdf' ? 'application/pdf' : 'application/octet-stream'));
+      res.setHeader('Content-Disposition', `inline; filename="${getStoredFilename(resource.fileUrl) || 'resource'}"`);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      return Readable.fromWeb(upstream.body).pipe(res);
+    }
+
     const filename = getStoredFilename(resource.fileUrl);
     const filePath = filename ? path.join(uploadDir, filename) : null;
     const resolvedUploads = path.resolve(uploadDir);
@@ -279,7 +296,7 @@ router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
       resourceData.linkUrl = req.body.linkUrl;
       resourceData.fileType = 'link';
     } else {
-      resourceData.fileUrl = buildFileUrl(req, req.file.filename);
+      resourceData.fileUrl = getUploadedFileUrl(req, req.file);
       resourceData.fileType = req.file.mimetype === 'application/pdf' ? 'pdf' : 'image';
     }
 

@@ -5,12 +5,7 @@ const Comment = require('../models/Comment');
 const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
-const { audioUpload } = require('../config/storage');
-
-const buildFileUrl = (req, filename) => {
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  return `${baseUrl}/uploads/${filename}`;
-};
+const { audioUpload, getUploadedFileUrl } = require('../config/storage');
 
 // Get comments for a subject
 router.get('/:subjectId', verifyToken, async (req, res) => {
@@ -83,7 +78,7 @@ router.post('/:subjectId/voice', verifyToken, audioUpload.single('audio'), async
     const comment = await Comment.create({
       text: 'Voice message',
       type: 'voice',
-      audioUrl: buildFileUrl(req, req.file.filename),
+      audioUrl: getUploadedFileUrl(req, req.file),
       userId: user._id,
       userName: user.name,
       subjectId: subject._id,

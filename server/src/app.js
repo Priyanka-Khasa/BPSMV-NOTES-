@@ -8,22 +8,12 @@ const { seedSubjects } = require('../seedSubjects');
 const { router: paymentRouter, webhook: paymentWebhook } = require('./routes/payments');
 const { verifyToken } = require('./routes/auth');
 const { requireActiveSubscription } = require('./utils/subscription');
+const { cleanEnvValue } = require('./utils/env');
 
 // Initialize express app
 const app = express();
 
 const passport = require('./config/passport');
-
-const cleanEnvValue = (value) => {
-  const trimmed = (value || '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
-};
 
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'bpsmv_fallback_secret_2026') {

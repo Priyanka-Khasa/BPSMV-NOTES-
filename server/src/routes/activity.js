@@ -69,7 +69,7 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/public/:identifier', async (req, res) => {
+router.get('/public/:identifier', verifyToken, async (req, res) => {
   try {
     const identifier = String(req.params.identifier || '').trim();
     if (!identifier || identifier === 'undefined' || identifier === 'null') {
@@ -82,6 +82,9 @@ router.get('/public/:identifier', async (req, res) => {
 
     const user = await User.findOne(query).select('name avatar bio degree branch yearOfStudy semester socialLinks semesterCgpa role');
     if (!user) return res.status(404).json({ message: 'Profile not found' });
+    if (req.user.role !== 'admin' && user._id.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Profiles are private unless you are viewing your own account' });
+    }
 
     const activity = await buildSummary(user._id);
     res.json({ profile: user, activity });

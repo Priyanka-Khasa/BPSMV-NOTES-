@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
+const { cleanEnvValue } = require('../utils/env');
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
@@ -15,6 +16,14 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many attempts. Please wait and try again.' }
+});
+
+const guestLoginLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many guest login attempts. Please wait and try again.' }
 });
 
 const SESSION_DAYS = Math.max(1, Number(process.env.AUTH_SESSION_DAYS || 30));
@@ -84,17 +93,6 @@ const startSingleDeviceSession = async (res, user) => {
   user.lastLoginAt = lastLoginAt;
   setAuthCookie(res, user, sessionId);
   return sessionId;
-};
-
-const cleanEnvValue = (value) => {
-  const trimmed = (value || '').trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
 };
 
 const getClientUrl = () => cleanEnvValue(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -383,7 +381,7 @@ router.post('/logout', verifyToken, async (req, res) => {
 });
 
 // Guest Login
-router.post('/guest', (req, res) => {
+router.post('/guest', guestLoginLimiter, (req, res) => {
   if (process.env.ENABLE_GUEST_LOGIN !== 'true') {
     return res.status(404).json({ message: 'Guest login is disabled' });
   }
@@ -416,14 +414,14 @@ const guestLoginHandler = async (req, res) => {
 };
 
 // Avatar upload
-const { upload: localUpload } = require('../config/storage');
+const { upload: localUpload, getUploadedFileUrl } = require('../config/storage');
 
 router.post('/avatar', verifyToken, localUpload.single('avatar'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const fileUrl = getUploadedFileUrl(req, req.file);
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { avatar: fileUrl },
