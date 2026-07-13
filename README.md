@@ -519,7 +519,7 @@ All protected routes use the HTTP-only `token` cookie set during login.
 - Search input is escaped before MongoDB regex filters are created.
 - Feedback and guest-login routes are rate limited.
 - Students cannot request unapproved resources through the `isApproved` query filter.
-- Shareable profile/activity lookup is private to the profile owner and admins.
+- Shareable profile/activity lookup requires login, so profile links work for students without allowing anonymous scraping.
 - Legacy local file preview paths are resolved safely inside the upload directory.
 - CORS uses configured frontend origins.
 - Production startup rejects weak or missing critical configuration.
