@@ -27,7 +27,7 @@ services:
       - key: COOKIE_SAME_SITE
         value: none
       - key: ADMIN_EMAIL
-        value: priyankakhasa937@gmail.com
+        sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET

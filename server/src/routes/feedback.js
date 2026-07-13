@@ -87,6 +87,11 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
     if (!req.file) {
       return res.status(400).json({ message: 'Screenshot is required' });
     }
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      console.error('Gift submission failed: ADMIN_EMAIL is not configured');
+      return res.status(500).json({ message: 'Gift submissions are not configured yet' });
+    }
 
     const screenshotUrl = getUploadedFileUrl(req, req.file);
 
@@ -100,7 +105,6 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
       additionalComments: additionalComments ? additionalComments.trim() : undefined
     });
 
-    const adminEmail = process.env.ADMIN_EMAIL || 'priyankakhasa937@gmail.com';
     const safeFullName = escapeHtml(fullName);
     const safeEmail = escapeHtml(email);
     const safePhone = escapeHtml(phone || 'N/A');

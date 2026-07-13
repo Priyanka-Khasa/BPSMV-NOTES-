@@ -3,11 +3,16 @@ const router = express.Router();
 require('../config/passport');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
 const { cleanEnvValue } = require('../utils/env');
+const {
+  SESSION_MAX_AGE,
+  createSessionId,
+  createAuthToken,
+  isActiveSession
+} = require('../utils/authSession');
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
@@ -25,10 +30,6 @@ const guestLoginLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'Too many guest login attempts. Please wait and try again.' }
 });
-
-const SESSION_DAYS = Math.max(1, Number(process.env.AUTH_SESSION_DAYS || 30));
-const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60 * 1000;
-const SESSION_EXPIRES_IN = `${SESSION_DAYS}d`;
 
 const cookieOptions = {
   httpOnly: true,
@@ -75,18 +76,13 @@ const isAcademicProfileComplete = (user) => Boolean(
 // Helper to sign JWT and set cookie. The session id is checked against the
 // database on every protected request so only the newest login remains valid.
 const setAuthCookie = (res, user, sessionId) => {
-  const secret = process.env.JWT_SECRET || 'bpsmv_fallback_secret_2026';
-  const token = jwt.sign(
-    { id: user._id, onboarded: user.onboarded, role: user.role, sessionId },
-    secret,
-    { expiresIn: SESSION_EXPIRES_IN }
-  );
+  const token = createAuthToken(user, sessionId);
   res.cookie('token', token, cookieOptions);
   return token;
 };
 
 const startSingleDeviceSession = async (res, user) => {
-  const sessionId = crypto.randomUUID();
+  const sessionId = createSessionId();
   const lastLoginAt = new Date();
   await User.findByIdAndUpdate(user._id, { activeSessionId: sessionId, lastLoginAt });
   user.activeSessionId = sessionId;
@@ -219,7 +215,7 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    if (user.activeSessionId !== decoded.sessionId) {
+    if (!isActiveSession(user, decoded)) {
       clearAuthCookie(res);
       return res.status(401).json({ message: 'This account is active on another device. Please log in again on this device.' });
     }

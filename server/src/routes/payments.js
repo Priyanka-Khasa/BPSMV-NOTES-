@@ -1,11 +1,15 @@
 const express = require('express');
-const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const Razorpay = require('razorpay');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { subscriptionSummary } = require('../utils/subscription');
+const { asString } = require('../utils/request');
+const {
+  verifyRazorpayPaymentSignature,
+  verifyRazorpayWebhookSignature
+} = require('../utils/paymentSignatures');
 
 const router = express.Router();
 const PLANS = Object.freeze({
@@ -80,7 +84,8 @@ router.get('/status', verifyToken, async (req, res) => {
 
 router.post('/order', verifyToken, paymentLimiter, async (req, res) => {
   try {
-    const plan = PLANS[req.body.plan];
+    const selectedPlan = asString(req.body.plan, 20);
+    const plan = PLANS[selectedPlan];
     if (!plan) return res.status(400).json({ message: 'Choose a valid access plan' });
 
     const user = await User.findById(req.user.id);
@@ -93,12 +98,12 @@ router.post('/order', verifyToken, paymentLimiter, async (req, res) => {
       amount: plan.amount,
       currency: 'INR',
       receipt,
-      notes: { userId: String(user._id), plan: req.body.plan }
+      notes: { userId: String(user._id), plan: selectedPlan }
     });
 
     await Payment.create({
       user: user._id,
-      plan: req.body.plan,
+      plan: selectedPlan,
       amount: plan.amount,
       razorpayOrderId: order.id
     });
@@ -131,12 +136,12 @@ router.post('/verify', verifyToken, paymentLimiter, async (req, res) => {
     });
     if (!payment) return res.status(404).json({ message: 'Payment order not found' });
 
-    const expected = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-    const signatureValid = expected.length === razorpay_signature.length &&
-      crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(razorpay_signature));
+    const signatureValid = verifyRazorpayPaymentSignature({
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+      secret: process.env.RAZORPAY_KEY_SECRET
+    });
     if (!signatureValid) return res.status(400).json({ message: 'Payment verification failed' });
 
     payment.razorpayPaymentId = razorpay_payment_id;
@@ -160,12 +165,11 @@ const webhook = async (req, res) => {
       return res.status(503).json({ message: 'Webhook is not configured' });
     }
     const signature = req.get('X-Razorpay-Signature') || '';
-    const expected = crypto
-      .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET || '')
-      .update(req.body)
-      .digest('hex');
-    const valid = signature.length === expected.length &&
-      crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    const valid = verifyRazorpayWebhookSignature({
+      body: req.body,
+      signature,
+      secret: process.env.RAZORPAY_WEBHOOK_SECRET
+    });
     if (!valid) return res.status(400).json({ message: 'Invalid webhook signature' });
 
     const event = JSON.parse(req.body.toString('utf8'));

@@ -5,6 +5,7 @@ const JobUpdate = require('../models/JobUpdate');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { makeSafeContainsRegex } = require('../utils/regex');
+const { asBoolean, asInteger, asString } = require('../utils/request');
 
 const canDelete = (user, update) => {
   return user.role === 'admin' || update.postedBy.toString() === user.id;
@@ -12,7 +13,11 @@ const canDelete = (user, update) => {
 
 router.get('/', verifyToken, async (req, res) => {
   try {
-    const { category, mode, search, page = 1, limit = 30 } = req.query;
+    const category = asString(req.query.category, 60);
+    const mode = asString(req.query.mode, 60);
+    const search = asString(req.query.search, 100);
+    const page = asInteger(req.query.page, { min: 1, max: 10000 }) || 1;
+    const limit = asInteger(req.query.limit, { min: 1, max: 50 }) || 30;
     const filter = { isApproved: true };
 
     if (category && category !== 'All') filter.category = category;
@@ -27,14 +32,11 @@ router.get('/', verifyToken, async (req, res) => {
       ];
     }
 
-    const parsedPage = Math.max(parseInt(page, 10), 1);
-    const parsedLimit = Math.min(Math.max(parseInt(limit, 10), 1), 50);
-
     const [updates, total] = await Promise.all([
       JobUpdate.find(filter)
         .sort({ isPinned: -1, createdAt: -1 })
-        .skip((parsedPage - 1) * parsedLimit)
-        .limit(parsedLimit)
+        .skip((page - 1) * limit)
+        .limit(limit)
         .populate('postedBy', 'name email role'),
       JobUpdate.countDocuments(filter)
     ]);
@@ -42,8 +44,8 @@ router.get('/', verifyToken, async (req, res) => {
     res.json({
       updates,
       total,
-      page: parsedPage,
-      pages: Math.ceil(total / parsedLimit)
+      page,
+      pages: Math.ceil(total / limit)
     });
   } catch (error) {
     console.error('Error fetching job updates:', error);
@@ -53,20 +55,17 @@ router.get('/', verifyToken, async (req, res) => {
 
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const {
-      title,
-      company,
-      category,
-      mode,
-      location,
-      stipend,
-      eligibility,
-      deadline,
-      applyUrl,
-      sourceName,
-      summary,
-      tags
-    } = req.body;
+    const title = asString(req.body.title, 180);
+    const company = asString(req.body.company, 120);
+    const category = asString(req.body.category, 60);
+    const mode = asString(req.body.mode, 60);
+    const location = asString(req.body.location, 120);
+    const stipend = asString(req.body.stipend, 120);
+    const eligibility = asString(req.body.eligibility, 500);
+    const deadline = asString(req.body.deadline, 40);
+    const applyUrl = asString(req.body.applyUrl, 2000);
+    const sourceName = asString(req.body.sourceName, 120);
+    const summary = asString(req.body.summary, 1500);
 
     if (!title || !company || !applyUrl || !summary) {
       return res.status(400).json({ message: 'Title, company, apply link, and summary are required' });
@@ -75,11 +74,11 @@ router.post('/', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(401).json({ message: 'User not found' });
 
-    const tagList = Array.isArray(tags)
-      ? tags
-      : String(tags || '')
+    const tagList = Array.isArray(req.body.tags)
+      ? req.body.tags.map((tag) => asString(tag, 40)).filter(Boolean)
+      : asString(req.body.tags, 300)
         .split(',')
-        .map((tag) => tag.trim())
+        .map((tag) => asString(tag, 40))
         .filter(Boolean);
 
     const update = await JobUpdate.create({
@@ -97,7 +96,7 @@ router.post('/', verifyToken, async (req, res) => {
       tags: tagList.slice(0, 8),
       postedBy: user._id,
       posterName: user.name,
-      isPinned: user.role === 'admin' && req.body.isPinned === true
+      isPinned: user.role === 'admin' && asBoolean(req.body.isPinned) === true
     });
 
     const populatedUpdate = await JobUpdate.findById(update._id).populate('postedBy', 'name email role');
@@ -110,12 +109,13 @@ router.post('/', verifyToken, async (req, res) => {
 
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const updateId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(updateId)) {
       return res.status(400).json({ message: 'Invalid update ID' });
     }
 
     const [update, user] = await Promise.all([
-      JobUpdate.findById(req.params.id),
+      JobUpdate.findById(updateId),
       User.findById(req.user.id)
     ]);
     if (!update) return res.status(404).json({ message: 'Job update not found' });
@@ -125,7 +125,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this update' });
     }
 
-    await JobUpdate.findByIdAndDelete(req.params.id);
+    await JobUpdate.findByIdAndDelete(updateId);
     res.json({ message: 'Job update deleted successfully' });
   } catch (error) {
     console.error('Error deleting job update:', error);

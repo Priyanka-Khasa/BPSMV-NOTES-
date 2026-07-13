@@ -293,7 +293,7 @@ CLIENT_URLS=http://localhost:5173
 API_URL=http://localhost:5000
 COOKIE_SAME_SITE=lax
 
-ADMIN_EMAIL=priyankakhasa937@gmail.com
+ADMIN_EMAIL=admin@example.com
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -518,11 +518,15 @@ All protected routes use the HTTP-only `token` cookie set during login.
 - Admin routes are guarded by role checks.
 - Search input is escaped before MongoDB regex filters are created.
 - Feedback and guest-login routes are rate limited.
+- Resource uploads, text comments, and voice comments are rate limited.
+- Helmet sets baseline HTTP security headers.
 - Students cannot request unapproved resources through the `isApproved` query filter.
+- Direct resource metadata and file routes reject unapproved resources unless the user is the owner or an admin.
 - Shareable profile/activity lookup requires login, so profile links work for students without allowing anonymous scraping.
 - Legacy local file preview paths are resolved safely inside the upload directory.
 - CORS uses configured frontend origins.
 - Production startup rejects weak or missing critical configuration.
+- Backend tests cover JWT session invalidation helpers and Razorpay signature verification.
 
 ## Deployment Notes
 
@@ -541,6 +545,7 @@ Before deploying:
 - Add the live Razorpay keys and webhook secret, then test a real Rs. 10 transaction before launch.
 - Keep Razorpay Test Mode and Live Mode credentials separate.
 - Confirm uploads work after a redeploy by opening an uploaded PDF/avatar again.
+- `render.yaml` currently uses `plan: free`. Render free services can spin down after inactivity, so the first request after idle may feel slow. Upgrade the plan when daily student usage matters.
 
 ## Build Commands
 

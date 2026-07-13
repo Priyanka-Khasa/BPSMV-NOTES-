@@ -68,4 +68,7 @@ const resourceSchema = new mongoose.Schema({
   timestamps: true
 });
 
+resourceSchema.index({ degree: 1, branch: 1, semester: 1, isApproved: 1, createdAt: -1 });
+resourceSchema.index({ subjectId: 1, isApproved: 1, resourceType: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Resource', resourceSchema);

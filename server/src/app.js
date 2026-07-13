@@ -2,6 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const { seedSubjects } = require('../seedSubjects');
@@ -9,6 +10,7 @@ const { router: paymentRouter, webhook: paymentWebhook } = require('./routes/pay
 const { verifyToken } = require('./routes/auth');
 const { requireActiveSubscription } = require('./utils/subscription');
 const { cleanEnvValue } = require('./utils/env');
+const { mongoSanitize } = require('./utils/request');
 
 // Initialize express app
 const app = express();
@@ -21,6 +23,9 @@ if (process.env.NODE_ENV === 'production') {
   }
   if (!process.env.CLIENT_URL && !process.env.CLIENT_URLS) {
     throw new Error('CLIENT_URL or CLIENT_URLS must be set in production');
+  }
+  if (!process.env.ADMIN_EMAIL) {
+    throw new Error('ADMIN_EMAIL must be set in production');
   }
   const optionalIntegrations = [
     'RAZORPAY_KEY_ID',
@@ -37,6 +42,9 @@ if (process.env.NODE_ENV === 'production') {
 
 // Middleware
 app.set('trust proxy', 1);
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173')
   .split(',')
@@ -55,6 +63,7 @@ app.use(cors({
 app.post('/api/payments/webhook', express.raw({ type: 'application/json', limit: '256kb' }), paymentWebhook);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize);
 app.use(cookieParser());
 app.use(passport.initialize());
 

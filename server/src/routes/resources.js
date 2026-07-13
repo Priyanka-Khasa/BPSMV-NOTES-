@@ -12,6 +12,8 @@ const { upload, uploadDir, getUploadedFileUrl } = require('../config/storage');
 const { seedSubjects } = require('../../seedSubjects');
 const { applyAcademicProgression, normalizeBranch } = require('../utils/academicProgression');
 const { makeSafeContainsRegex } = require('../utils/regex');
+const { asBoolean, asInteger, asString } = require('../utils/request');
+const { uploadLimiter } = require('../utils/rateLimiters');
 
 const getStoredFilename = (fileUrl) => {
   if (!fileUrl) return null;
@@ -33,6 +35,10 @@ const canDelete = (user, resource) => {
   return user.role === 'admin' || resource.uploadedBy.toString() === user.id;
 };
 
+const canViewResource = (user, resource) => {
+  return resource.isApproved || user.role === 'admin' || resource.uploadedBy.toString() === user.id;
+};
+
 const findSubjects = (filter) => Subject.find(filter).sort({ semester: 1, name: 1 });
 
 const isCloudinaryUrl = (fileUrl) => {
@@ -47,17 +53,26 @@ const isCloudinaryUrl = (fileUrl) => {
 // Get all resources with search & filter
 router.get('/all', verifyToken, async (req, res) => {
   try {
-    const { degree, branch, semester, year, subjectId, resourceType, search, page = 1, limit = 20 } = req.query;
+    const degree = asString(req.query.degree, 80);
+    const branch = asString(req.query.branch, 120);
+    const subjectId = asString(req.query.subjectId, 40);
+    const resourceType = asString(req.query.resourceType, 40);
+    const search = asString(req.query.search, 100);
+    const page = asInteger(req.query.page, { min: 1, max: 10000 }) || 1;
+    const limit = asInteger(req.query.limit, { min: 1, max: 50 }) || 20;
     const filter = {};
     if (req.query.isApproved !== undefined && req.user.role === 'admin') {
-      filter.isApproved = req.query.isApproved === 'true' || req.query.isApproved === true;
+      const approved = asBoolean(req.query.isApproved);
+      filter.isApproved = approved === null ? true : approved;
     } else {
       filter.isApproved = true;
     }
     if (degree) filter.degree = degree;
     if (branch) filter.branch = branch;
-    if (semester) filter.semester = parseInt(semester);
-    if (year) filter.year = parseInt(year);
+    const semester = asInteger(req.query.semester, { min: 1, max: 10 });
+    const year = asInteger(req.query.year, { min: 2000, max: 2100 });
+    if (semester !== null) filter.semester = semester;
+    if (year !== null) filter.year = year;
     if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) filter.subjectId = subjectId;
     if (resourceType) filter.resourceType = resourceType;
     const safeSearch = makeSafeContainsRegex(search);
@@ -70,16 +85,16 @@ router.get('/all', verifyToken, async (req, res) => {
 
     const resources = await Resource.find(filter)
       .sort({ createdAt: -1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit))
+      .skip((page - 1) * limit)
+      .limit(limit)
       .populate('uploadedBy', 'name email');
 
     const total = await Resource.countDocuments(filter);
     res.json({
       resources: resources.map(sanitizeResource),
       total,
-      page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit))
+      page,
+      pages: Math.ceil(total / limit)
     });
   } catch (error) {
     console.error('Error fetching resources:', error);
@@ -129,7 +144,9 @@ router.get('/public/stats', async (req, res) => {
 // Get subjects based on query (protected)
 router.get('/subjects', verifyToken, async (req, res) => {
   try {
-    const { degree, branch, semester, year, showAll } = req.query;
+    const degree = asString(req.query.degree, 80);
+    const branch = asString(req.query.branch, 120);
+    const showAll = asString(req.query.showAll, 10);
     const filter = {};
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -149,8 +166,10 @@ router.get('/subjects', verifyToken, async (req, res) => {
 
     if (degree) filter.degree = degree;
     if (branch) filter.branch = normalizeBranch(branch);
-    if (semester) filter.semester = parseInt(semester);
-    if (year) filter.year = parseInt(year);
+    const semester = asInteger(req.query.semester, { min: 1, max: 10 });
+    const year = asInteger(req.query.year, { min: 1, max: 4 });
+    if (semester !== null) filter.semester = semester;
+    if (year !== null) filter.year = year;
 
     let subjects = await findSubjects(filter);
     if (!subjects.length && filter.year) {
@@ -191,8 +210,12 @@ router.get('/filter-options', verifyToken, async (req, res) => {
 // Get resources for a specific subject
 router.get('/subject/:subjectId', verifyToken, async (req, res) => {
   try {
-    const { type } = req.query;
-    const filter = { subjectId: req.params.subjectId, isApproved: true };
+    const subjectId = asString(req.params.subjectId, 40);
+    if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+      return res.status(400).json({ message: 'Invalid subject ID' });
+    }
+    const type = asString(req.query.type, 40);
+    const filter = { subjectId, isApproved: true };
     if (type) filter.resourceType = type;
     const resources = await Resource.find(filter).sort({ createdAt: -1 }).populate('uploadedBy', 'name email');
     res.json(resources.map(sanitizeResource));
@@ -204,12 +227,16 @@ router.get('/subject/:subjectId', verifyToken, async (req, res) => {
 // Resource files are streamed only after authentication and subscription checks.
 router.get('/:id/file', verifyToken, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const resourceId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(resourceId)) {
       return res.status(400).json({ message: 'Invalid resource ID' });
     }
 
-    const resource = await Resource.findById(req.params.id);
+    const resource = await Resource.findById(resourceId);
     if (!resource || !resource.fileUrl) return res.status(404).json({ message: 'File not found' });
+    if (!canViewResource(req.user, resource)) {
+      return res.status(404).json({ message: 'File not found' });
+    }
 
     if (isCloudinaryUrl(resource.fileUrl)) {
       const upstream = await fetch(resource.fileUrl);
@@ -245,11 +272,15 @@ router.get('/:id/file', verifyToken, async (req, res) => {
 // Get single resource
 router.get('/:id', verifyToken, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const resourceId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(resourceId)) {
       return res.status(400).json({ message: 'Invalid resource ID' });
     }
-    const resource = await Resource.findById(req.params.id).populate('uploadedBy', 'name email');
+    const resource = await Resource.findById(resourceId).populate('uploadedBy', 'name email');
     if (!resource) return res.status(404).json({ message: 'Resource not found' });
+    if (!canViewResource(req.user, resource)) {
+      return res.status(404).json({ message: 'Resource not found' });
+    }
     res.json(sanitizeResource(resource));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching resource' });
@@ -257,9 +288,13 @@ router.get('/:id', verifyToken, async (req, res) => {
 });
 
 // Add a new resource (file upload)
-router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
+router.post('/add', verifyToken, uploadLimiter, upload.single('file'), async (req, res) => {
   try {
-    const { title, resourceType, year, semester, subjectId } = req.body;
+    const title = asString(req.body.title, 180);
+    const resourceType = asString(req.body.resourceType, 40);
+    const subjectId = asString(req.body.subjectId, 40);
+    const year = asInteger(req.body.year, { min: 2000, max: 2100 });
+    const semester = asInteger(req.body.semester, { min: 1, max: 10 });
     if (!title || !resourceType || !subjectId) {
       return res.status(400).json({ message: 'Title, resource type, and subject are required' });
     }
@@ -281,8 +316,8 @@ router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
     const resourceData = {
       title,
       resourceType,
-      year: year ? parseInt(year) : undefined,
-      semester: semester ? parseInt(semester) : subject.semester,
+      year: year || undefined,
+      semester: semester || subject.semester,
       subjectId: subject._id,
       subjectName: subject.name,
       degree: subject.degree,
@@ -292,8 +327,9 @@ router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
     };
 
     if (isLink) {
-      if (!req.body.linkUrl) return res.status(400).json({ message: 'Link URL is required for Link type' });
-      resourceData.linkUrl = req.body.linkUrl;
+      const linkUrl = asString(req.body.linkUrl, 2000);
+      if (!linkUrl) return res.status(400).json({ message: 'Link URL is required for Link type' });
+      resourceData.linkUrl = linkUrl;
       resourceData.fileType = 'link';
     } else {
       resourceData.fileUrl = getUploadedFileUrl(req, req.file);
@@ -311,17 +347,18 @@ router.post('/add', verifyToken, upload.single('file'), async (req, res) => {
 // Delete a resource
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    const resourceId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(resourceId)) {
       return res.status(400).json({ message: 'Invalid resource ID' });
     }
-    const resource = await Resource.findById(req.params.id);
+    const resource = await Resource.findById(resourceId);
     if (!resource) return res.status(404).json({ message: 'Resource not found' });
 
     if (!canDelete(req.user, resource)) {
       return res.status(403).json({ message: 'Not authorized to delete this resource' });
     }
 
-    await Resource.findByIdAndDelete(req.params.id);
+    await Resource.findByIdAndDelete(resourceId);
     res.json({ message: 'Resource deleted successfully' });
   } catch (error) {
     console.error('Delete error:', error);

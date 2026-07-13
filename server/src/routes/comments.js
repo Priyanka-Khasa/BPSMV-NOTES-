@@ -6,11 +6,13 @@ const Subject = require('../models/Subject');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
 const { audioUpload, getUploadedFileUrl } = require('../config/storage');
+const { asString } = require('../utils/request');
+const { commentLimiter, uploadLimiter } = require('../utils/rateLimiters');
 
 // Get comments for a subject
 router.get('/:subjectId', verifyToken, async (req, res) => {
   try {
-    const { subjectId } = req.params;
+    const subjectId = asString(req.params.subjectId, 40);
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
       return res.status(400).json({ message: 'Invalid subject ID' });
     }
@@ -25,14 +27,14 @@ router.get('/:subjectId', verifyToken, async (req, res) => {
 });
 
 // Add a text comment
-router.post('/:subjectId', verifyToken, async (req, res) => {
+router.post('/:subjectId', verifyToken, commentLimiter, async (req, res) => {
   try {
-    const { subjectId } = req.params;
-    const { text } = req.body;
+    const subjectId = asString(req.params.subjectId, 40);
+    const text = asString(req.body.text, 2000);
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
       return res.status(400).json({ message: 'Invalid subject ID' });
     }
-    if (!text || !text.trim()) {
+    if (!text) {
       return res.status(400).json({ message: 'Comment text is required' });
     }
 
@@ -43,7 +45,7 @@ router.post('/:subjectId', verifyToken, async (req, res) => {
     if (!user) return res.status(401).json({ message: 'User not found' });
 
     const comment = await Comment.create({
-      text: text.trim(),
+      text,
       type: 'text',
       userId: user._id,
       userName: user.name,
@@ -59,9 +61,9 @@ router.post('/:subjectId', verifyToken, async (req, res) => {
 });
 
 // Add a voice comment
-router.post('/:subjectId/voice', verifyToken, audioUpload.single('audio'), async (req, res) => {
+router.post('/:subjectId/voice', verifyToken, uploadLimiter, audioUpload.single('audio'), async (req, res) => {
   try {
-    const { subjectId } = req.params;
+    const subjectId = asString(req.params.subjectId, 40);
     if (!mongoose.Types.ObjectId.isValid(subjectId)) {
       return res.status(400).json({ message: 'Invalid subject ID' });
     }
@@ -95,7 +97,7 @@ router.post('/:subjectId/voice', verifyToken, audioUpload.single('audio'), async
 // Delete a comment
 router.delete('/:commentId', verifyToken, async (req, res) => {
   try {
-    const { commentId } = req.params;
+    const commentId = asString(req.params.commentId, 40);
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return res.status(400).json({ message: 'Invalid comment ID' });
     }
