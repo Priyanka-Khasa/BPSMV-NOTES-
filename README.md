@@ -330,6 +330,7 @@ Notes:
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
 - Password reset OTP delivery requires SMTP or Resend in production. In development, missing email credentials are logged to the console for testing.
+- On Render, add either `RESEND_API_KEY`/`EMAIL_FROM` or `SMTP_USER`/`SMTP_PASS`; otherwise forgot-password cannot email OTPs.
 - Cloudinary is required in production for durable uploads. Without these credentials, production startup fails so files are not silently saved to Render's ephemeral disk.
 - Uploaded PDFs, avatars, screenshots, and voice comments use Cloudinary when configured. Local `server/uploads` storage is only a development fallback.
 - In production, always use a strong `JWT_SECRET`.

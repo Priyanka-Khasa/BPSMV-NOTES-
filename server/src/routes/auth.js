@@ -8,7 +8,7 @@ const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
 const { cleanEnvValue } = require('../utils/env');
-const { sendEmail } = require('../utils/email');
+const { isEmailConfigured, sendEmail } = require('../utils/email');
 const {
   SESSION_MAX_AGE,
   createSessionId,
@@ -239,6 +239,11 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
       return res.json({ message: genericMessage });
     }
 
+    if (process.env.NODE_ENV === 'production' && !isEmailConfigured()) {
+      console.error('Password reset requested but email provider is not configured');
+      return res.status(503).json({ message: 'OTP email service is not configured yet. Please contact the admin.' });
+    }
+
     if (user.passwordResetRequestedAt && Date.now() - user.passwordResetRequestedAt.getTime() < 60 * 1000) {
       return res.status(429).json({ message: 'Please wait one minute before requesting another OTP.' });
     }
@@ -251,11 +256,17 @@ router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     try {
-      await sendEmail({
+      const emailResult = await sendEmail({
         to: user.email,
         subject: 'Your BPSMV Hub password reset OTP',
         html: passwordResetEmailHtml(otp)
       });
+      if (emailResult.provider === 'console') {
+        return res.json({
+          message: 'Development OTP generated. Check the server console.',
+          devOtp: otp
+        });
+      }
     } catch (emailError) {
       console.error('Password reset OTP email failed:', emailError);
       return res.status(500).json({ message: 'Could not send OTP. Please try again later.' });

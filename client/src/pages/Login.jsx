@@ -93,8 +93,10 @@ const Login = () => {
 
     try {
       if (resetStep === 'email') {
-        await axios.post('/auth/forgot-password', { email: resetForm.email });
-        setSuccess('OTP sent to your registered email if the account exists.');
+        const res = await axios.post('/auth/forgot-password', { email: resetForm.email });
+        setSuccess(res.data.devOtp
+          ? `Development OTP: ${res.data.devOtp}`
+          : 'OTP sent to your registered email if the account exists.');
         setResetStep('otp');
       } else if (resetStep === 'otp') {
         await axios.post('/auth/verify-reset-otp', { email: resetForm.email, otp: resetForm.otp });
