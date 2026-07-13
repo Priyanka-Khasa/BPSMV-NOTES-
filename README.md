@@ -160,7 +160,7 @@ BPSMV Resource Hub is not only a file repository. It is a study companion for th
 | Database | MongoDB, Mongoose |
 | Auth | JWT cookies, Passport Google OAuth, bcryptjs |
 | Uploads | Multer, Cloudinary in production, local fallback for development |
-| Email | Nodemailer |
+| Email | Nodemailer SMTP, optional Resend |
 | Deployment Config | Vercel config, Render blueprint |
 
 ## Project Structure
@@ -296,12 +296,13 @@ COOKIE_SAME_SITE=lax
 ADMIN_EMAIL=admin@example.com
 
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
+SMTP_SECURE=true
 SMTP_USER=your_sender_email@gmail.com
 SMTP_PASS=your_app_password
 RESEND_API_KEY=your_resend_api_key
-EMAIL_FROM=BPSMV Hub <onboarding@resend.dev>
-EMAIL_TIMEOUT_MS=10000
+EMAIL_FROM=BPSMV Hub <noreply@your-verified-domain.com>
+EMAIL_TIMEOUT_MS=20000
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
@@ -331,7 +332,9 @@ Notes:
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
 - Password reset OTP delivery requires SMTP or Resend in production. In development, missing email credentials are logged to the console for testing.
-- On Render, add either `RESEND_API_KEY`/`EMAIL_FROM` or `SMTP_USER`/`SMTP_PASS`; otherwise forgot-password cannot email OTPs.
+- For Gmail SMTP on Render, prefer `SMTP_PORT=465` with `SMTP_SECURE=true`; the mail sender also falls back to Gmail 465 if 587 times out.
+- Resend testing mode only sends to the Resend account owner's email. To send OTPs to students, verify a domain in Resend and use that domain in `EMAIL_FROM`, or leave `RESEND_API_KEY` unset and use SMTP.
+- On Render, add either verified-domain `RESEND_API_KEY`/`EMAIL_FROM` or `SMTP_USER`/`SMTP_PASS`; otherwise forgot-password cannot email OTPs.
 - Cloudinary is required in production for durable uploads. Without these credentials, production startup fails so files are not silently saved to Render's ephemeral disk.
 - Uploaded PDFs, avatars, screenshots, and voice comments use Cloudinary when configured. Local `server/uploads` storage is only a development fallback.
 - In production, always use a strong `JWT_SECRET`.
