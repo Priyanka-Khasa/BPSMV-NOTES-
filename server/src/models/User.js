@@ -117,6 +117,23 @@ const userSchema = new mongoose.Schema({
   lastLoginAt: {
     type: Date
   },
+  passwordResetOtpHash: {
+    type: String,
+    select: false
+  },
+  passwordResetOtpExpiresAt: {
+    type: Date,
+    select: false
+  },
+  passwordResetOtpAttempts: {
+    type: Number,
+    default: 0,
+    select: false
+  },
+  passwordResetRequestedAt: {
+    type: Date,
+    select: false
+  },
   subscription: {
     status: {
       type: String,

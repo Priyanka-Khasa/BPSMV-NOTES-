@@ -299,6 +299,8 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_sender_email@gmail.com
 SMTP_PASS=your_app_password
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=BPSMV Hub <onboarding@resend.dev>
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
@@ -327,6 +329,7 @@ Notes:
 
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
+- Password reset OTP delivery requires SMTP or Resend in production. In development, missing email credentials are logged to the console for testing.
 - Cloudinary is required in production for durable uploads. Without these credentials, production startup fails so files are not silently saved to Render's ephemeral disk.
 - Uploaded PDFs, avatars, screenshots, and voice comments use Cloudinary when configured. Local `server/uploads` storage is only a development fallback.
 - In production, always use a strong `JWT_SECRET`.
@@ -418,6 +421,9 @@ All protected routes use the HTTP-only `token` cookie set during login.
 | `GET` | `/api/auth/google/callback` | Google OAuth callback |
 | `POST` | `/api/auth/register` | Register with name, email, password, roll number |
 | `POST` | `/api/auth/login` | Login with email and password |
+| `POST` | `/api/auth/forgot-password` | Send password reset OTP to registered email |
+| `POST` | `/api/auth/verify-reset-otp` | Verify password reset OTP |
+| `POST` | `/api/auth/reset-password` | Update password using verified OTP |
 | `POST` | `/api/auth/logout` | Logout and clear active session |
 | `GET` | `/api/auth/me` | Get current user |
 | `POST` | `/api/auth/onboard` | Save academic onboarding |
@@ -506,6 +512,7 @@ All protected routes use the HTTP-only `token` cookie set during login.
 ## Security And Quality Notes
 
 - Passwords are hashed with bcryptjs.
+- Password reset uses a hashed 6-digit OTP with expiry, attempt limits, and session invalidation after password change.
 - JWTs are stored in HTTP-only cookies.
 - Protected routes validate the current session against the database.
 - Only the newest login session remains active for an account.
