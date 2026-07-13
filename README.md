@@ -159,7 +159,7 @@ BPSMV Resource Hub is not only a file repository. It is a study companion for th
 | Backend | Node.js, Express 5 |
 | Database | MongoDB, Mongoose |
 | Auth | JWT cookies, Passport Google OAuth, bcryptjs |
-| Uploads | Multer, local upload storage |
+| Uploads | Multer, Cloudinary in production, local fallback for development |
 | Email | Nodemailer |
 | Deployment Config | Vercel config, Render blueprint |
 
@@ -206,6 +206,7 @@ bpsmv-resource-hub/
 |-- server/
 |   |-- src/
 |   |   |-- config/
+|   |   |   |-- cloudinary.js
 |   |   |   |-- db.js
 |   |   |   |-- passport.js
 |   |   |   |-- storage.js
@@ -228,6 +229,8 @@ bpsmv-resource-hub/
 |   |   |   |-- reviews.js
 |   |   |-- utils/
 |   |   |   |-- academicProgression.js
+|   |   |   |-- env.js
+|   |   |   |-- regex.js
 |   |   |-- app.js
 |   |-- uploads/
 |   |-- .env.example
@@ -297,6 +300,10 @@ SMTP_PORT=587
 SMTP_USER=your_sender_email@gmail.com
 SMTP_PASS=your_app_password
 
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
 PORT=5000
 
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -320,6 +327,8 @@ Notes:
 
 - Email/password login works without Google OAuth.
 - Gift submissions are saved even if SMTP is not configured.
+- Cloudinary is required in production for durable uploads. Without these credentials, production startup fails so files are not silently saved to Render's ephemeral disk.
+- Uploaded PDFs, avatars, screenshots, and voice comments use Cloudinary when configured. Local `server/uploads` storage is only a development fallback.
 - In production, always use a strong `JWT_SECRET`.
 - `AUTH_SESSION_DAYS` controls how many days users stay logged in. The default is 30.
 - Use Razorpay test keys while developing. Never put `RAZORPAY_KEY_SECRET` in the client.
@@ -504,10 +513,14 @@ All protected routes use the HTTP-only `token` cookie set during login.
 - Razorpay checkout responses and webhooks are verified with HMAC-SHA256 signatures.
 - Payment records are unique and retained per student for an auditable access history.
 - Expired or unpaid students receive `402 SUBSCRIPTION_REQUIRED` before protected APIs run.
-- Uploaded files are streamed through authenticated, paid-access routes instead of public static hosting.
+- Uploaded files are stored durably in Cloudinary in production and streamed through authenticated, paid-access routes instead of public static hosting.
 - Resource deletion requires owner or admin access.
 - Admin routes are guarded by role checks.
-- File preview paths are resolved safely inside the upload directory.
+- Search input is escaped before MongoDB regex filters are created.
+- Feedback and guest-login routes are rate limited.
+- Students cannot request unapproved resources through the `isApproved` query filter.
+- Shareable profile/activity lookup is private to the profile owner and admins.
+- Legacy local file preview paths are resolved safely inside the upload directory.
 - CORS uses configured frontend origins.
 - Production startup rejects weak or missing critical configuration.
 
@@ -524,9 +537,10 @@ Before deploying:
 - Use MongoDB Atlas or another reachable MongoDB service.
 - Configure `CLIENT_URL`, `CLIENT_URLS`, and `API_URL` to match deployed domains.
 - Use a strong production `JWT_SECRET`.
+- Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` in Render before deploying. Render web service filesystems are ephemeral, so PDFs, avatars, screenshots, and voice comments must not rely on `server/uploads` in production.
 - Add the live Razorpay keys and webhook secret, then test a real Rs. 10 transaction before launch.
 - Keep Razorpay Test Mode and Live Mode credentials separate.
-- Decide whether uploads should remain local or move to persistent/cloud storage.
+- Confirm uploads work after a redeploy by opening an uploaded PDF/avatar again.
 
 ## Build Commands
 
@@ -576,7 +590,7 @@ For code contributions:
 - Better resource approval workflow.
 - Pagination and infinite scroll for very large resource collections.
 - Real-time discussion updates with WebSockets.
-- Cloud storage for production uploads.
+- Admin tools for cleaning or replacing old uploaded resources.
 - Notifications for new subject resources.
 - Saved resources and personal study lists.
 - AI-powered resource summaries and study planning.
