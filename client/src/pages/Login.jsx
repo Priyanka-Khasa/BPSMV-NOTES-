@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, ArrowRight, AlertCircle, Sparkles, Mail, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 
 const Login = () => {
@@ -10,9 +9,7 @@ const Login = () => {
   const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
   const [mode, setMode] = useState(initialMode);
   const [showPassword, setShowPassword] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -36,21 +33,13 @@ const Login = () => {
   }, [isAuthenticated, user, navigate, searchParams]);
 
   const [form, setForm] = useState({ name: '', email: '', password: '', rollNumber: '' });
-  const [resetForm, setResetForm] = useState({ email: '', otp: '', password: '', confirmPassword: '' });
-  const [resetStep, setResetStep] = useState('email');
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleResetChange = (e) => setResetForm({ ...resetForm, [e.target.name]: e.target.value });
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
     setError('');
-    setSuccess('');
     setLoading(false);
-    if (nextMode === 'reset') {
-      setResetStep('email');
-      setResetForm({ email: form.email, otp: '', password: '', confirmPassword: '' });
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -85,53 +74,6 @@ const Login = () => {
     }
   };
 
-  const handleResetSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
-
-    try {
-      if (resetStep === 'email') {
-        const res = await axios.post('/auth/forgot-password', { email: resetForm.email });
-        setSuccess(res.data.devOtp
-          ? `Development OTP: ${res.data.devOtp}`
-          : 'OTP sent to your registered email if the account exists.');
-        setResetStep('otp');
-      } else if (resetStep === 'otp') {
-        await axios.post('/auth/verify-reset-otp', { email: resetForm.email, otp: resetForm.otp });
-        setSuccess('OTP verified. Set your new password.');
-        setResetStep('password');
-      } else {
-        if (resetForm.password.length < 6) {
-          throw new Error('Password must be at least 6 characters');
-        }
-        if (resetForm.password !== resetForm.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        await axios.post('/auth/reset-password', {
-          email: resetForm.email,
-          otp: resetForm.otp,
-          password: resetForm.password,
-        });
-        setSuccess('Password updated successfully. Please log in with your new password.');
-        setForm((current) => ({ ...current, email: resetForm.email, password: '' }));
-        setResetForm({ email: '', otp: '', password: '', confirmPassword: '' });
-        setResetStep('email');
-        setMode('login');
-      }
-    } catch (err) {
-      const errorCode = err.response?.data?.code;
-      if (errorCode === 'OTP_EMAIL_DELIVERY_FAILED' || errorCode === 'OTP_EMAIL_NOT_CONFIGURED') {
-        setError('OTP email service is temporarily unavailable. Please contact the admin.');
-      } else {
-        setError(err.response?.data?.message || err.message || 'Could not reset password. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="relative flex items-center justify-center min-h-[82vh] overflow-hidden">
       <div className="orb -left-24 top-12 w-72 h-72 bg-amber-300/20 animate-drift"></div>
@@ -147,19 +89,16 @@ const Login = () => {
               <Sparkles size={13} /> BPSMV Resource Hub
             </div>
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-slate-900 mb-2">
-              {mode === 'login' ? 'Welcome back' : mode === 'signup' ? 'Create account' : 'Reset password'}
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
             </h1>
             <p className="text-slate-500 text-sm">
               {mode === 'login'
                 ? 'Sign in to access your resources'
-                : mode === 'signup'
-                  ? 'Join BPSMV Resource Hub today'
-                  : 'Use the OTP sent to your registered email'}
+                : 'Join BPSMV Resource Hub today'}
             </p>
           </div>
 
           {/* Toggle */}
-          {mode !== 'reset' && (
           <div className="flex bg-white/65 rounded-xl p-1 mb-6 ring-1 ring-white/80 shadow-inner">
             <button
               onClick={() => switchMode('login')}
@@ -174,7 +113,6 @@ const Login = () => {
               Sign up
             </button>
           </div>
-          )}
 
           {/* Error */}
           {error && (
@@ -183,103 +121,8 @@ const Login = () => {
               <span>{error}</span>
             </div>
           )}
-          {success && (
-            <div className="mb-5 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-200 flex items-start gap-2">
-              <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0" />
-              <span>{success}</span>
-            </div>
-          )}
 
           {/* Form */}
-          {mode === 'reset' ? (
-          <form onSubmit={handleResetSubmit} className="space-y-4">
-            <div className="rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-800">
-              Step {resetStep === 'email' ? '1' : resetStep === 'otp' ? '2' : '3'} of 3
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Registered Email</label>
-              <div className="relative">
-                <Mail size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={resetForm.email}
-                  onChange={handleResetChange}
-                  className="input-field pl-10"
-                  required
-                  disabled={resetStep !== 'email'}
-                />
-              </div>
-            </div>
-
-            {resetStep !== 'email' && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">6-digit OTP</label>
-                <div className="relative">
-                  <KeyRound size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    name="otp"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter OTP"
-                    value={resetForm.otp}
-                    onChange={handleResetChange}
-                    className="input-field pl-10 font-mono tracking-[0.3em]"
-                    required
-                    disabled={resetStep === 'password'}
-                  />
-                </div>
-              </div>
-            )}
-
-            {resetStep === 'password' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">New Password</label>
-                  <div className="relative">
-                    <input
-                      name="password"
-                      type={showResetPassword ? 'text' : 'password'}
-                      placeholder="New password"
-                      value={resetForm.password}
-                      onChange={handleResetChange}
-                      className="input-field pr-10"
-                      required
-                      minLength={6}
-                    />
-                    <button type="button" onClick={() => setShowResetPassword(!showResetPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {showResetPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Confirm Password</label>
-                  <input
-                    name="confirmPassword"
-                    type={showResetPassword ? 'text' : 'password'}
-                    placeholder="Confirm new password"
-                    value={resetForm.confirmPassword}
-                    onChange={handleResetChange}
-                    className="input-field"
-                    required
-                    minLength={6}
-                  />
-                </div>
-              </>
-            )}
-
-            <button type="submit" disabled={loading} className="btn btn-primary w-full py-3.5 shadow-lg shadow-brand-500/20">
-              {loading ? 'Please wait...' : resetStep === 'email' ? 'Send OTP' : resetStep === 'otp' ? 'Verify OTP' : 'Update password'}
-              <ArrowRight size={16} />
-            </button>
-
-            <button type="button" onClick={() => switchMode('login')} className="w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700">
-              Back to login
-            </button>
-          </form>
-          ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <>
@@ -323,13 +166,8 @@ const Login = () => {
               />
             </div>
             <div>
-              <div className="mb-1.5 flex items-center justify-between gap-3">
+              <div className="mb-1.5">
                 <label className="block text-sm font-medium text-slate-700">Password</label>
-                {mode === 'login' && (
-                  <button type="button" onClick={() => switchMode('reset')} className="text-xs font-semibold text-brand-700 hover:text-brand-800">
-                    Forgot password?
-                  </button>
-                )}
               </div>
               <div className="relative">
                 <input
@@ -370,9 +208,7 @@ const Login = () => {
               )}
             </button>
           </form>
-          )}
 
-          {mode !== 'reset' && (
             <>
               {/* Divider */}
               <div className="flex items-center gap-3 my-6">
@@ -396,7 +232,6 @@ const Login = () => {
                 Continue with Google
               </button>
             </>
-          )}
         </div>
       </div>
     </div>

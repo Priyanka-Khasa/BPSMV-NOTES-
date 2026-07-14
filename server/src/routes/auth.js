@@ -3,12 +3,10 @@ const router = express.Router();
 require('../config/passport');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/User');
 const { applyAcademicProgression, normalizeBranch, normalizeYearSemester, yearFromSemester } = require('../utils/academicProgression');
 const { subscriptionSummary } = require('../utils/subscription');
 const { cleanEnvValue } = require('../utils/env');
-const { getEmailConfigStatus, isEmailConfigured, sendEmail } = require('../utils/email');
 const {
   SESSION_MAX_AGE,
   createSessionId,
@@ -31,14 +29,6 @@ const guestLoginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many guest login attempts. Please wait and try again.' }
-});
-
-const passwordResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { message: 'Too many password reset attempts. Please wait and try again.' }
 });
 
 const cookieOptions = {
@@ -102,24 +92,6 @@ const startSingleDeviceSession = async (res, user) => {
 };
 
 const getClientUrl = () => cleanEnvValue(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
-
-const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
-
-const hashOtp = (otp) => crypto
-  .createHash('sha256')
-  .update(`${otp}:${process.env.JWT_SECRET || 'bpsmv_fallback_secret_2026'}`)
-  .digest('hex');
-
-const createOtp = () => String(crypto.randomInt(100000, 1000000));
-
-const passwordResetEmailHtml = (otp) => `
-  <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e8e0d0; border-radius: 12px;">
-    <h2 style="margin: 0 0 12px; color: #2d2d2d;">Reset your BPSMV Hub password</h2>
-    <p style="margin: 0 0 16px; color: #6b5f4e;">Use this OTP to reset your password. It expires in 10 minutes.</p>
-    <div style="letter-spacing: 8px; font-size: 28px; font-weight: 700; color: #8f5239; background: #fdf6f3; border: 1px solid #f0d5c8; border-radius: 10px; padding: 16px; text-align: center;">${otp}</div>
-    <p style="margin: 16px 0 0; color: #8a7d68; font-size: 13px;">If you did not request this, you can ignore this email.</p>
-  </div>
-`;
 
 // Google OAuth routes (only if credentials are valid)
 if (passport.googleEnabled) {
@@ -222,146 +194,6 @@ router.post('/login', authLimiter, async (req, res) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Server error during login' });
-  }
-});
-
-// Request password reset OTP
-router.post('/forgot-password', passwordResetLimiter, async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    if (!email) {
-      return res.status(400).json({ message: 'Email is required' });
-    }
-
-    const genericMessage = 'If this email is registered, an OTP has been sent.';
-    const user = await User.findOne({ email }).select('+passwordResetRequestedAt');
-    if (!user) {
-      return res.json({ message: genericMessage });
-    }
-
-    if (process.env.NODE_ENV === 'production' && !isEmailConfigured()) {
-      console.error('Password reset requested but email provider is not configured:', getEmailConfigStatus());
-      return res.status(503).json({
-        code: 'OTP_EMAIL_NOT_CONFIGURED',
-        message: 'OTP email service is not configured yet. Please contact the admin.'
-      });
-    }
-
-    if (user.passwordResetRequestedAt && Date.now() - user.passwordResetRequestedAt.getTime() < 60 * 1000) {
-      return res.status(429).json({ message: 'Please wait one minute before requesting another OTP.' });
-    }
-
-    const otp = createOtp();
-    user.passwordResetOtpHash = hashOtp(otp);
-    user.passwordResetOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-    user.passwordResetOtpAttempts = 0;
-    user.passwordResetRequestedAt = new Date();
-    await user.save({ validateBeforeSave: false });
-
-    try {
-      const emailResult = await sendEmail({
-        to: user.email,
-        subject: 'Your BPSMV Hub password reset OTP',
-        html: passwordResetEmailHtml(otp)
-      });
-      if (emailResult.provider === 'console') {
-        return res.json({
-          message: 'Development OTP generated. Check the server console.',
-          devOtp: otp
-        });
-      }
-    } catch (emailError) {
-      console.error('Password reset OTP email failed:', {
-        message: emailError.message,
-        emailConfig: getEmailConfigStatus()
-      });
-      return res.status(503).json({
-        code: 'OTP_EMAIL_DELIVERY_FAILED',
-        message: 'OTP email service is temporarily unavailable. Please contact the admin.'
-      });
-    }
-
-    res.json({ message: genericMessage });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ message: 'Could not start password reset' });
-  }
-});
-
-// Verify password reset OTP before showing the new-password step
-router.post('/verify-reset-otp', passwordResetLimiter, async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const otp = String(req.body.otp || '').trim();
-    if (!email || !/^\d{6}$/.test(otp)) {
-      return res.status(400).json({ message: 'Valid email and 6-digit OTP are required' });
-    }
-
-    const user = await User.findOne({ email }).select('+passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpAttempts');
-    if (!user || !user.passwordResetOtpHash || !user.passwordResetOtpExpiresAt) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
-    if (user.passwordResetOtpExpiresAt < new Date()) {
-      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
-    }
-    if (user.passwordResetOtpAttempts >= 5) {
-      return res.status(429).json({ message: 'Too many wrong OTP attempts. Please request a new OTP.' });
-    }
-
-    if (user.passwordResetOtpHash !== hashOtp(otp)) {
-      user.passwordResetOtpAttempts += 1;
-      await user.save({ validateBeforeSave: false });
-      return res.status(400).json({ message: 'Incorrect OTP' });
-    }
-
-    res.json({ message: 'OTP verified. You can set a new password.' });
-  } catch (error) {
-    console.error('Verify reset OTP error:', error);
-    res.status(500).json({ message: 'Could not verify OTP' });
-  }
-});
-
-// Reset password using verified OTP details
-router.post('/reset-password', passwordResetLimiter, async (req, res) => {
-  try {
-    const email = normalizeEmail(req.body.email);
-    const otp = String(req.body.otp || '').trim();
-    const password = String(req.body.password || '');
-    if (!email || !/^\d{6}$/.test(otp) || !password) {
-      return res.status(400).json({ message: 'Email, OTP, and new password are required' });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    }
-
-    const user = await User.findOne({ email }).select('+password +activeSessionId +passwordResetOtpHash +passwordResetOtpExpiresAt +passwordResetOtpAttempts');
-    if (!user || !user.passwordResetOtpHash || !user.passwordResetOtpExpiresAt) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
-    }
-    if (user.passwordResetOtpExpiresAt < new Date()) {
-      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
-    }
-    if (user.passwordResetOtpAttempts >= 5) {
-      return res.status(429).json({ message: 'Too many wrong OTP attempts. Please request a new OTP.' });
-    }
-    if (user.passwordResetOtpHash !== hashOtp(otp)) {
-      user.passwordResetOtpAttempts += 1;
-      await user.save({ validateBeforeSave: false });
-      return res.status(400).json({ message: 'Incorrect OTP' });
-    }
-
-    user.password = password;
-    user.passwordResetOtpHash = undefined;
-    user.passwordResetOtpExpiresAt = undefined;
-    user.passwordResetOtpAttempts = 0;
-    user.passwordResetRequestedAt = undefined;
-    user.activeSessionId = undefined;
-    await user.save();
-
-    res.json({ message: 'Password updated successfully. Please log in with your new password.' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ message: 'Could not reset password' });
   }
 });
 

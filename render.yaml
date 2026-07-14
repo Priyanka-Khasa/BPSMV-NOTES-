@@ -44,8 +44,6 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
-      - key: EMAIL_TIMEOUT_MS
-        value: 20000
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
