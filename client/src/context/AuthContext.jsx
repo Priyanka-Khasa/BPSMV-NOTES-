@@ -86,6 +86,16 @@ export const AuthProvider = ({ children }) => {
     return res.data.user;
   };
 
+  const requestOtp = async (email) => {
+    const res = await axios.post('/auth/request-otp', { email });
+    return res.data;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const res = await axios.post('/auth/verify-otp', { email, otp });
+    return res.data;
+  };
+
   const logout = async () => {
     setUser(null);
     try {
@@ -127,6 +137,8 @@ export const AuthProvider = ({ children }) => {
       updateProfile,
       onboard,
       fetchUser,
+      requestOtp,
+      verifyOtp,
       isAuthenticated: !!user,
       isAdmin: user?.role === 'admin'
     }}>

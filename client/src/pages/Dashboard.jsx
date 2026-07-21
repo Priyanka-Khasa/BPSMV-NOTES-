@@ -141,50 +141,52 @@ const Dashboard = () => {
     <div className="relative animate-fade-in">
       <style>{`
         :root {
-          --dashboard-surface: #ffffff;
-          --dashboard-soft: #f8fafc;
-          --dashboard-muted: #f5f7fb;
-          --dashboard-border: rgba(203, 213, 225, 0.82);
-          --dashboard-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
-          --dashboard-accent: #334155;
-          --dashboard-accent-soft: #f1f5f9;
-          --dashboard-good: #059669;
-          --dashboard-empty: #64748b;
+          --dashboard-surface: rgba(11, 12, 29, 0.92);
+          --dashboard-soft: rgba(255, 255, 255, 0.08);
+          --dashboard-muted: rgba(255, 255, 255, 0.06);
+          --dashboard-border: rgba(255, 255, 255, 0.14);
+          --dashboard-shadow: 0 20px 50px rgba(5, 7, 16, 0.32);
+          --dashboard-accent: #7c4dff;
+          --dashboard-accent-soft: rgba(124, 77, 255, 0.18);
+          --dashboard-good: #5eead4;
+          --dashboard-empty: #94a3b8;
         }
         .dashboard-shell {
           background: var(--dashboard-surface);
           border: 1px solid var(--dashboard-border);
           box-shadow: var(--dashboard-shadow);
+          backdrop-filter: blur(20px);
         }
         .dashboard-card {
           background: var(--dashboard-surface);
           border: 1px solid var(--dashboard-border);
           box-shadow: var(--dashboard-shadow);
+          backdrop-filter: blur(20px);
         }
         .dashboard-panel {
-          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%);
           border: 1px solid var(--dashboard-border);
         }
         .subject-button {
           min-width: 0;
           border: 1px solid transparent;
-          background: #ffffff;
+          background: rgba(255,255,255,0.04);
           transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
         }
         .subject-button:hover, .subject-button:focus-visible {
-          background: #f8fafc;
-          border-color: rgba(51, 65, 85, 0.22);
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(124, 77, 255, 0.28);
+          box-shadow: 0 12px 28px rgba(7, 5, 15, 0.24);
           outline: none;
         }
         .subject-button.active {
           background: var(--dashboard-accent-soft);
-          border-color: rgba(51, 65, 85, 0.28);
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+          border-color: rgba(124, 77, 255, 0.35);
+          box-shadow: 0 14px 32px rgba(7, 5, 15, 0.28);
         }
         .metric-pill {
-          background: #f8fafc;
-          border: 1px solid rgba(226, 232, 240, 0.95);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
         }
         .widget-row {
           display: grid;
@@ -193,12 +195,12 @@ const Dashboard = () => {
         .subject-icon {
           width: 2rem;
           height: 2rem;
-          background: #f1f5f9;
-          color: #475569;
+          background: rgba(255,255,255,0.08);
+          color: #cbd5e1;
         }
         .subject-button.active .subject-icon {
-          background: #334155;
-          color: #ffffff;
+          background: rgba(124, 77, 255, 0.3);
+          color: #f8fbff;
         }
         .status-chip {
           display: inline-flex;
@@ -212,12 +214,12 @@ const Dashboard = () => {
           white-space: nowrap;
         }
         .status-chip.ready {
-          background: #ecfdf5;
-          color: #047857;
+          background: rgba(34, 197, 94, 0.14);
+          color: #5eead4;
         }
         .status-chip.empty {
-          background: #f1f5f9;
-          color: #64748b;
+          background: rgba(255,255,255,0.06);
+          color: #cbd5e1;
         }
         .dashboard-text-safe {
           overflow-wrap: anywhere;

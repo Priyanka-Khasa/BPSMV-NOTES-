@@ -290,10 +290,10 @@ const Profile = () => {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <main className="space-y-6">
-          <section className="profile-id-card overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-sm">
+          <section className="profile-id-card overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-[0_24px_70px_rgba(7,5,15,0.25)] backdrop-blur-xl">
             <div className="grid min-h-[280px] lg:grid-cols-[220px_minmax(0,1fr)]">
               <div className="relative flex items-center justify-center bg-brand-800 p-6">
-                <div className="id-photo-edge absolute right-0 top-0 h-full w-8 bg-white/90" />
+                <div className="id-photo-edge absolute right-0 top-0 h-full w-8 bg-white/10" />
                 <div className="relative z-10">
                   <img
                     src={previewAvatar || user.avatar || fallbackAvatar(user.name)}
@@ -316,7 +316,7 @@ const Profile = () => {
               <div className="relative flex flex-col justify-between p-6 sm:p-8">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h1 className="font-display text-3xl font-bold text-charcoal sm:text-4xl">{user.name}</h1>
+                    <h1 className="font-display text-3xl font-bold text-slate-50 sm:text-4xl">{user.name}</h1>
                     <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
                       <ShieldCheck size={14} /> Verified
                     </span>
@@ -325,11 +325,11 @@ const Profile = () => {
                     <span className="font-mono rounded-md border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-brand-800">
                       Roll No. {user.rollNumber || 'Not issued'}
                     </span>
-                    <span className="rounded-md border border-slate-200 bg-parchment-light px-3 py-1.5 text-xs font-semibold text-slate-600">
+                    <span className="rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-300">
                       Semester {user.semester || '-'}
                     </span>
                   </div>
-                  <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
+                  <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300">
                     {user.bio || 'Academic profile ready for notes, activity, CGPA history, and campus collaboration.'}
                   </p>
                   {visibleSocialLinks.length > 0 && (
@@ -354,7 +354,7 @@ const Profile = () => {
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium text-slate-600">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm font-medium text-slate-300">
                     <span>{user.degree || 'Degree'}</span>
                     <span className="text-slate-300">/</span>
                     <span>{user.branch || 'Branch'}</span>
@@ -382,7 +382,7 @@ const Profile = () => {
               <div className="flex items-center gap-2">
                 <GraduationCap size={20} className="text-brand-700" />
                 <div>
-                  <h2 className="font-display text-xl font-bold text-charcoal">CGPA Transcript</h2>
+                  <h2 className="font-display text-xl font-bold text-slate-50">CGPA Transcript</h2>
                   <p className="text-xs text-slate-500">Semester ledger for completed marks.</p>
                 </div>
               </div>
@@ -416,19 +416,19 @@ const Profile = () => {
           <section className="card p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="font-display text-lg font-bold text-charcoal">Profile Strength</h2>
+                <h2 className="font-display text-lg font-bold text-slate-50">Profile Strength</h2>
                 <p className="text-xs text-slate-500">Academic record completeness</p>
               </div>
               <div className="relative grid h-16 w-16 place-items-center rounded-full bg-brand-50 ring-1 ring-brand-100">
                 <span className="font-mono text-lg font-bold text-brand-800">{completeness.percent}</span>
               </div>
             </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-parchment">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
               <div className="h-full rounded-full bg-brand-700 transition-all duration-500" style={{ width: `${completeness.percent}%` }} />
             </div>
             <div className="mt-4 grid gap-2">
               {completeness.checks.map((item) => (
-                <div key={item.label} className="flex items-center justify-between rounded-lg bg-parchment-light px-3 py-2 text-xs">
+                <div key={item.label} className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2 text-xs">
                   <span className="font-medium text-slate-600">{item.label}</span>
                   <span className={item.done ? 'text-emerald-600' : 'text-slate-300'}>{item.done ? <Check size={14} /> : '--'}</span>
                 </div>
@@ -437,14 +437,14 @@ const Profile = () => {
           </section>
 
           <section className="card p-5">
-            <h2 className="font-display text-lg font-bold text-charcoal">Student Data</h2>
+            <h2 className="font-display text-lg font-bold text-slate-50">Student Data</h2>
             <div className="mt-4 grid grid-cols-3 gap-2">
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="rounded-xl bg-parchment-light p-3 text-center ring-1 ring-white/70">
+                  <div key={stat.label} className="rounded-xl bg-white/10 p-3 text-center ring-1 ring-white/15">
                     <Icon size={16} className="mx-auto text-brand-700" />
-                    <p className="mt-2 font-mono text-xl font-bold leading-none text-charcoal">{stat.value}</p>
+                    <p className="mt-2 font-mono text-xl font-bold leading-none text-slate-50">{stat.value}</p>
                     <p className="mt-1 text-[11px] font-medium text-slate-500">{stat.label}</p>
                   </div>
                 );
@@ -453,7 +453,7 @@ const Profile = () => {
           </section>
 
           <section className="card p-5">
-            <h2 className="font-display text-lg font-bold text-charcoal">Links</h2>
+            <h2 className="font-display text-lg font-bold text-slate-50">Links</h2>
             {visibleSocialLinks.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {visibleSocialLinks.map((field) => {
@@ -464,7 +464,7 @@ const Profile = () => {
                       href={normalizeUrl(form.socialLinks[field.key])}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-100 bg-parchment-light text-brand-800 transition-colors hover:border-brand-300 hover:bg-brand-50"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-400/20 bg-white/10 text-brand-200 transition-colors hover:border-brand-300/40 hover:bg-white/15"
                       title={field.label}
                     >
                       <Icon size={16} />
@@ -478,12 +478,12 @@ const Profile = () => {
           </section>
 
           <section className="card p-5">
-            <h2 className="font-display text-lg font-bold text-charcoal">Recent Activity</h2>
+            <h2 className="font-display text-lg font-bold text-slate-50">Recent Activity</h2>
             <div className="mt-4 space-y-2">
               {(activity.recent || []).length ? (
                 activity.recent.slice(0, 8).map((item) => (
-                  <div key={item._id} className="rounded-xl border border-slate-100 bg-parchment-light px-3 py-2.5">
-                    <p className="line-clamp-1 text-sm font-semibold text-charcoal">{item.title}</p>
+                  <div key={item._id} className="rounded-xl border border-white/10 bg-white/10 px-3 py-2.5">
+                    <p className="line-clamp-1 text-sm font-semibold text-slate-50">{item.title}</p>
                     <p className="mt-0.5 font-mono text-[11px] uppercase tracking-wide text-slate-400">
                       {item.subjectName || item.company || item.type}
                     </p>

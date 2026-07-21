@@ -31,12 +31,23 @@ const sanitizeResource = (resource) => {
 };
 
 // Helper: check ownership or admin
-const canDelete = (user, resource) => {
-  return user.role === 'admin' || resource.uploadedBy.toString() === user.id;
+const getResourceOwnerId = (resource) => {
+  if (!resource?.uploadedBy) return null;
+  if (typeof resource.uploadedBy === 'string') return resource.uploadedBy;
+  if (resource.uploadedBy?.toString) return resource.uploadedBy.toString();
+  return null;
+};
+
+const canDeleteResource = (user, resource) => {
+  return user.role === 'admin' || getResourceOwnerId(resource) === user.id;
 };
 
 const canViewResource = (user, resource) => {
-  return resource.isApproved || user.role === 'admin' || resource.uploadedBy.toString() === user.id;
+  return Boolean(resource.isApproved || user.role === 'admin' || getResourceOwnerId(resource) === user.id);
+};
+
+const canApproveResource = (user) => {
+  return user.role === 'admin';
 };
 
 const findSubjects = (filter) => Subject.find(filter).sort({ semester: 1, name: 1 });
@@ -354,7 +365,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
     const resource = await Resource.findById(resourceId);
     if (!resource) return res.status(404).json({ message: 'Resource not found' });
 
-    if (!canDelete(req.user, resource)) {
+    if (!canDeleteResource(req.user, resource)) {
       return res.status(403).json({ message: 'Not authorized to delete this resource' });
     }
 
@@ -366,4 +377,59 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Approve a resource (Admin only)
+router.patch('/:id/approve', verifyToken, async (req, res) => {
+  try {
+    if (!canApproveResource(req.user)) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const resourceId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(resourceId)) {
+      return res.status(400).json({ message: 'Invalid resource ID' });
+    }
+
+    const resource = await Resource.findByIdAndUpdate(
+      resourceId,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!resource) return res.status(404).json({ message: 'Resource not found' });
+    res.json(sanitizeResource(resource));
+  } catch (error) {
+    console.error('Approve error:', error);
+    res.status(500).json({ message: 'Error approving resource' });
+  }
+});
+
+// Reject a resource (Admin only)
+router.patch('/:id/reject', verifyToken, async (req, res) => {
+  try {
+    if (!canApproveResource(req.user)) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    const resourceId = asString(req.params.id, 40);
+    if (!mongoose.Types.ObjectId.isValid(resourceId)) {
+      return res.status(400).json({ message: 'Invalid resource ID' });
+    }
+
+    const resource = await Resource.findByIdAndUpdate(
+      resourceId,
+      { isApproved: false },
+      { new: true }
+    );
+
+    if (!resource) return res.status(404).json({ message: 'Resource not found' });
+    res.json(sanitizeResource(resource));
+  } catch (error) {
+    console.error('Reject error:', error);
+    res.status(500).json({ message: 'Error rejecting resource' });
+  }
+});
+
 module.exports = router;
+module.exports.canDeleteResource = canDeleteResource;
+module.exports.canViewResource = canViewResource;
+module.exports.canApproveResource = canApproveResource;

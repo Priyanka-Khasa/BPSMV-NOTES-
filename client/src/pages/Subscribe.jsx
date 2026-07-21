@@ -151,15 +151,15 @@ const Subscribe = () => {
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-10">
-      <div className="cinematic-card overflow-hidden rounded-2xl border border-white/70 bg-white/80">
+      <div className="cinematic-card overflow-hidden rounded-2xl border border-white/15 bg-white/10">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="relative overflow-hidden border-b border-parchment-dark/70 bg-gradient-to-br from-parchment-light via-white to-brand-50/55 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
+          <section className="relative overflow-hidden border-b border-white/15 bg-gradient-to-br from-white/10 via-white/5 to-brand-500/10 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
             <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-brand-200/30 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-28 left-8 h-72 w-72 rounded-full bg-amber-200/35 blur-3xl" />
             <div className="relative inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white/75 px-3 py-1 text-xs font-semibold text-brand-800 shadow-sm">
               <ShieldCheck size={14} /> Secure student access
             </div>
-            <h1 className="relative mt-5 max-w-2xl text-3xl font-bold leading-tight text-charcoal sm:text-4xl lg:text-5xl">
+            <h1 className="relative mt-5 max-w-2xl text-3xl font-bold leading-tight text-slate-50 sm:text-4xl lg:text-5xl">
               Unlock BPSMV Resource Hub for serious study.
             </h1>
             <p className="relative mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
@@ -168,22 +168,22 @@ const Subscribe = () => {
 
             <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
               {featureGroups.map(({ icon: Icon, title, text }) => (
-                <div key={title} className="rounded-xl border border-brand-100/80 bg-white/72 p-4 shadow-sm shadow-brand-100/30">
+                <div key={title} className="rounded-xl border border-brand-400/20 bg-white/10 p-4 shadow-sm shadow-brand-500/10">
                   <div className="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-brand-50 text-brand-700 ring-1 ring-brand-100">
                     <Icon size={18} />
                   </div>
-                  <h2 className="text-sm font-semibold text-charcoal">{title}</h2>
+                  <h2 className="text-sm font-semibold text-slate-50">{title}</h2>
                   <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">{text}</p>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="bg-white/86 p-5 sm:p-7 lg:p-8">
-            <div className="inline-flex items-center gap-2 rounded-full bg-parchment-light px-3 py-1 text-xs font-semibold text-brand-800 ring-1 ring-parchment-dark">
+          <section className="bg-slate-950/35 p-5 sm:p-7 lg:p-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-brand-200 ring-1 ring-white/15">
               <Sparkles size={14} /> Choose access
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-charcoal">Simple pricing for students</h2>
+            <h2 className="mt-4 text-2xl font-bold text-slate-50">Simple pricing for students</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
               Payment activates access only for your logged-in account. Dashboard opens after successful verification.
             </p>
@@ -200,14 +200,14 @@ const Subscribe = () => {
                     onClick={() => setSelected(plan.id)}
                     className={`relative w-full rounded-xl border p-5 text-left transition-all ${
                       active
-                        ? 'border-brand-500 bg-brand-50/70 ring-2 ring-brand-100 shadow-lg shadow-brand-100/80'
-                        : 'border-parchment-dark bg-white/80 hover:border-brand-200 hover:bg-parchment-light/70'
+                        ? 'border-brand-400/40 bg-brand-500/15 ring-2 ring-brand-400/25 shadow-lg shadow-brand-500/20'
+                        : 'border-white/15 bg-white/10 hover:border-brand-300/40 hover:bg-white/15'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-charcoal">{plan.label}</p>
-                        <p className="mt-2 text-3xl font-bold text-charcoal">
+                        <p className="text-sm font-semibold text-slate-50">{plan.label}</p>
+                        <p className="mt-2 text-3xl font-bold text-slate-50">
                           Rs. {plan.amount / 100}
                           <span className="text-sm font-medium text-[var(--text-secondary)]"> / {yearly ? 'year' : 'month'}</span>
                         </p>
@@ -217,12 +217,12 @@ const Subscribe = () => {
                           </p>
                         )}
                       </div>
-                      <span className={`mt-1 h-5 w-5 rounded-full border ${active ? 'border-brand-600 bg-brand-600 shadow-inner' : 'border-parchment-dark'}`}>
+                      <span className={`mt-1 h-5 w-5 rounded-full border ${active ? 'border-brand-500 bg-brand-500 shadow-inner' : 'border-white/15'}`}>
                         {active && <span className="mx-auto mt-1 block h-2.5 w-2.5 rounded-full bg-white" />}
                       </span>
                     </div>
                     {yearly && (
-                      <span className="mt-4 inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800">
+                      <span className="mt-4 inline-flex rounded-full bg-brand-500/15 px-3 py-1 text-xs font-semibold text-brand-200">
                         Best value
                       </span>
                     )}
@@ -231,8 +231,8 @@ const Subscribe = () => {
               })}
             </div>
 
-            <div className="mt-5 rounded-xl border border-parchment-dark bg-parchment-light/70 p-4">
-              <div className="grid gap-2 text-sm text-charcoal sm:grid-cols-2">
+            <div className="mt-5 rounded-xl border border-white/15 bg-white/10 p-4">
+              <div className="grid gap-2 text-sm text-slate-50 sm:grid-cols-2">
                 <p className="flex items-center gap-2"><Check size={16} className="text-brand-700" /> Notes and papers</p>
                 <p className="flex items-center gap-2"><Check size={16} className="text-brand-700" /> Upload resources</p>
                 <p className="flex items-center gap-2"><Check size={16} className="text-brand-700" /> Jobs and internships</p>

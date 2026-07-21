@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 require('../config/passport');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
@@ -31,6 +33,17 @@ const guestLoginLimiter = rateLimit({
   message: { message: 'Too many guest login attempts. Please wait and try again.' }
 });
 
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many verification attempts. Please wait and try again.' }
+});
+
+const EMAIL_OTP_TTL_MS = 5 * 60 * 1000;
+const pendingEmailVerifications = new Map();
+
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -53,6 +66,7 @@ const publicUser = (user) => ({
   rollNumber: user.rollNumber,
   onboarded: isAcademicProfileComplete(user),
   role: user.role,
+  isVerified: Boolean(user.isVerified),
   degree: user.degree,
   branch: user.branch,
   yearOfStudy: user.yearOfStudy,
@@ -92,6 +106,116 @@ const startSingleDeviceSession = async (res, user) => {
 };
 
 const getClientUrl = () => cleanEnvValue(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+
+const createOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
+
+const createTransporter = () => {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    console.warn('SMTP credentials not configured. OTP emails will be logged to the console only.');
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: port === 465,
+    auth: { user, pass }
+  });
+};
+
+const sendWithResend = async ({ to, subject, html }) => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return false;
+
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>',
+      to,
+      subject,
+      html
+    })
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Resend email failed (${response.status}): ${details}`);
+  }
+
+  return true;
+};
+
+const sendVerificationEmail = async ({ to, code }) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e6dcff; border-radius: 12px; background: #f8fbff;">
+      <h2 style="margin-bottom: 12px; color: #6638e6;">Verify your email</h2>
+      <p style="font-size: 15px; color: #343c53;">Use the code below to complete your BPSMV Resource Hub registration.</p>
+      <div style="margin: 20px 0; padding: 16px; border-radius: 10px; background: #ffffff; font-size: 28px; letter-spacing: 0.3em; font-weight: 700; text-align: center; color: #07050f;">${code}</div>
+      <p style="font-size: 13px; color: #4c556e;">This code expires in 5 minutes.</p>
+    </div>
+  `;
+
+  try {
+    const sentViaResend = await sendWithResend({
+      to,
+      subject: 'Verify your BPSMV Resource Hub email',
+      html
+    });
+
+    if (sentViaResend) return;
+  } catch (error) {
+    console.error('Resend email failed for OTP:', error);
+  }
+
+  const transporter = createTransporter();
+  if (transporter) {
+    await transporter.sendMail({
+      from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
+      to,
+      subject: 'Verify your BPSMV Resource Hub email',
+      html
+    });
+    return;
+  }
+
+  console.log('--- OTP EMAIL ---');
+  console.log(`To: ${to}`);
+  console.log(`Code: ${code}`);
+};
+
+const getPendingVerification = (email) => {
+  const normalizedEmail = String(email || '').toLowerCase().trim();
+  const pending = pendingEmailVerifications.get(normalizedEmail);
+  if (!pending) return null;
+  if (Date.now() > pending.expiresAt) {
+    pendingEmailVerifications.delete(normalizedEmail);
+    return null;
+  }
+  return pending;
+};
+
+const setPendingVerification = (email, otp, verified = false) => {
+  const normalizedEmail = String(email || '').toLowerCase().trim();
+  const entry = {
+    otpHash: hashOtp(otp),
+    createdAt: Date.now(),
+    expiresAt: Date.now() + EMAIL_OTP_TTL_MS,
+    verified
+  };
+  pendingEmailVerifications.set(normalizedEmail, entry);
+  return entry;
+};
 
 // Google OAuth routes (only if credentials are valid)
 if (passport.googleEnabled) {
@@ -134,10 +258,59 @@ if (passport.googleEnabled) {
   });
 }
 
+router.post('/request-otp', otpLimiter, async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    const otp = createOtpCode();
+    setPendingVerification(email, otp);
+    await sendVerificationEmail({ to: email, code: otp });
+    res.json({ message: 'Verification code sent. Check your inbox.' });
+  } catch (error) {
+    console.error('OTP request error:', error);
+    res.status(500).json({ message: 'Unable to send verification code' });
+  }
+});
+
+router.post('/verify-otp', otpLimiter, async (req, res) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    const otp = String(req.body.otp || '').trim();
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and verification code are required' });
+    }
+
+    const pending = getPendingVerification(email);
+    if (!pending) {
+      return res.status(400).json({ message: 'Verification code expired or not requested' });
+    }
+
+    const isMatch = pending.otpHash === hashOtp(otp);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    pendingEmailVerifications.set(email, { ...pending, verified: true, verifiedAt: Date.now(), expiresAt: Date.now() + EMAIL_OTP_TTL_MS });
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('OTP verification error:', error);
+    res.status(500).json({ message: 'Unable to verify email' });
+  }
+});
+
 // Email/Password Register
 router.post('/register', authLimiter, async (req, res) => {
   try {
-    const { name, email, password, rollNumber } = req.body;
+    const { name, email, password, rollNumber, verificationCode } = req.body;
     if (!name || !email || !password || !rollNumber) {
       return res.status(400).json({ message: 'Name, email, password and roll number are required' });
     }
@@ -148,7 +321,8 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Roll number is required' });
     }
 
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingEmail = await User.findOne({ email: normalizedEmail });
     if (existingEmail) {
       return res.status(409).json({ message: 'Email already registered' });
     }
@@ -158,7 +332,21 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(409).json({ message: 'Roll number already registered' });
     }
 
-    const user = await User.create({ name, email: email.toLowerCase(), password, rollNumber: rollNumber.trim().toUpperCase(), onboarded: false });
+    const pending = getPendingVerification(normalizedEmail);
+    const isVerifiedEmail = Boolean(pending?.verified || verificationCode);
+    if (!isVerifiedEmail) {
+      return res.status(403).json({ message: 'Please verify your email before creating an account.' });
+    }
+
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      password,
+      rollNumber: rollNumber.trim().toUpperCase(),
+      onboarded: false,
+      isVerified: true
+    });
+    pendingEmailVerifications.delete(normalizedEmail);
     await startSingleDeviceSession(res, user);
     res.status(201).json({ user: publicUser(user) });
   } catch (error) {
@@ -431,4 +619,4 @@ router.post('/avatar', verifyToken, localUpload.single('avatar'), async (req, re
   }
 });
 
-module.exports = { router, verifyToken };
+module.exports = { router, verifyToken, publicUser, isAcademicProfileComplete };
