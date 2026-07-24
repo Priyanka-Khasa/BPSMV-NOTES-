@@ -111,14 +111,14 @@ const PDFViewer = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-800 sm:flex-row sm:items-center sm:justify-between">
         <span>Open the document here, or use Open/Download for a smoother phone reading experience.</span>
         {isPdf && (
           <button
             type="button"
             onClick={markCompleted}
             disabled={completeSaving}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-emerald-700 disabled:opacity-60"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition-all hover:bg-brand-700 disabled:opacity-60"
           >
             {completeSaving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
             Mark completed
@@ -127,7 +127,7 @@ const PDFViewer = () => {
       </div>
 
       {completeMessage && (
-        <div className={`rounded-2xl border px-4 py-3 text-sm ${completeMessage.includes('updated') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
+        <div className={`rounded-2xl border px-4 py-3 text-sm ${completeMessage.includes('updated') ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {completeMessage}
         </div>
       )}

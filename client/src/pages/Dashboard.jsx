@@ -347,7 +347,7 @@ const Dashboard = () => {
                     alt=""
                     className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md shadow-slate-200"
                   />
-                  <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" />
+                  <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-brand-500" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-semibold text-slate-900">Hi, {firstName}</p>
@@ -551,7 +551,7 @@ const Dashboard = () => {
                           </span>
                         </div>
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                          <CircleCheckBig size={15} className={hasResources ? 'text-emerald-600' : 'text-slate-400'} />
+                          <CircleCheckBig size={15} className={hasResources ? 'text-brand-600' : 'text-slate-400'} />
                           <span>{subject.notes || 0} notes</span>
                           <span className="h-1 w-1 rounded-full bg-slate-300" />
                           <span>{subject.papers || 0} papers</span>

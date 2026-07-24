@@ -627,7 +627,7 @@ const Chat = () => {
                   <button
                     type="button"
                     onClick={() => setShowEmoji(v => !v)}
-                    className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-brand-500 hover:bg-brand-50 rounded-lg transition-colors"
                   >
                     <Smile size={18} />
                   </button>

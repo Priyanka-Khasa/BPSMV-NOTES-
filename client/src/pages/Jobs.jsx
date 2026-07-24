@@ -63,16 +63,16 @@ const formatDeadline = (deadline) => {
 
 const deadlineTone = {
   danger: 'border-red-200 bg-red-50 text-red-700',
-  warning: 'border-amber-200 bg-amber-50 text-amber-700',
-  safe: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  warning: 'border-brand-200 bg-brand-50 text-brand-700',
+  safe: 'border-brand-200 bg-brand-50 text-brand-700',
   neutral: 'border-slate-200 bg-parchment-light text-slate-600',
 };
 
 const categoryTone = {
   Internship: 'bg-brand-50 text-brand-700 border-brand-100',
-  Job: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  'Hiring Challenge': 'bg-indigo-50 text-indigo-700 border-indigo-100',
-  Scholarship: 'bg-amber-50 text-amber-700 border-amber-100',
+  Job: 'bg-brand-50 text-brand-700 border-brand-100',
+  'Hiring Challenge': 'bg-brand-100 text-brand-800 border-brand-200',
+  Scholarship: 'bg-brand-50 text-brand-700 border-brand-100',
   'Career News': 'bg-slate-100 text-slate-700 border-slate-200',
 };
 
@@ -236,7 +236,7 @@ const Jobs = () => {
         <div
           className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium ${
             message.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              ? 'border-brand-200 bg-brand-50 text-brand-700'
               : 'border-red-200 bg-red-50 text-red-700'
           }`}
         >

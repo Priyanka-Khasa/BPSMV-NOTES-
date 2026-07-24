@@ -91,8 +91,8 @@ const Admin = () => {
     { label: 'Total Resources', value: resources.length, icon: FileText, color: 'text-brand-600', bg: 'bg-brand-50' },
     { label: 'Pending', value: resources.filter(r => !r.isApproved).length, icon: AlertTriangle, color: 'text-brand-700', bg: 'bg-brand-100' },
     { label: 'Approved', value: resources.filter(r => r.isApproved).length, icon: CheckCircle, color: 'text-brand-600', bg: 'bg-brand-50' },
-    { label: 'Total Reviews', value: reviews.length, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Pending Reviews', value: reviews.filter(r => !r.isApproved).length, icon: MessageSquare, color: 'text-amber-700', bg: 'bg-amber-100' },
+    { label: 'Total Reviews', value: reviews.length, icon: Star, color: 'text-brand-600', bg: 'bg-brand-50' },
+    { label: 'Pending Reviews', value: reviews.filter(r => !r.isApproved).length, icon: MessageSquare, color: 'text-brand-700', bg: 'bg-brand-100' },
   ];
 
   return (
@@ -317,7 +317,7 @@ const Admin = () => {
                         <td className="px-4 py-3">
                           <div className="flex gap-0.5">
                             {Array.from({ length: 5 }).map((_, si) => (
-                              <Star key={si} size={14} className={si < r.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200'} />
+                              <Star key={si} size={14} className={si < r.rating ? 'text-brand-500 fill-brand-500' : 'text-slate-200'} />
                             ))}
                           </div>
                         </td>
@@ -327,7 +327,7 @@ const Admin = () => {
                           <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${
                             r.isApproved
                               ? 'bg-brand-50 text-brand-600 ring-1 ring-brand-200/50'
-                              : 'bg-amber-50 text-amber-700 ring-1 ring-amber-300/50'
+                              : 'bg-brand-50 text-brand-700 ring-1 ring-brand-300/50'
                           }`}>
                             {r.isApproved ? <CheckCircle size={12} /> : <Clock size={12} />}
                             {r.isApproved ? 'Approved' : 'Pending'}
@@ -337,7 +337,7 @@ const Admin = () => {
                           {!r.isApproved && (
                             <button
                               onClick={() => handleApproveReview(r._id)}
-                              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-300 hover:scale-110 mr-1"
+                              className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-all duration-300 hover:scale-110 mr-1"
                               title="Approve"
                             >
                               <CheckCircle size={16} />

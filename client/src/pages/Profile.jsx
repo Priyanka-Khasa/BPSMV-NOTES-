@@ -317,7 +317,7 @@ const Profile = () => {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="font-display text-3xl font-bold text-charcoal sm:text-4xl">{user.name}</h1>
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700">
                       <ShieldCheck size={14} /> Verified
                     </span>
                   </div>
@@ -430,7 +430,7 @@ const Profile = () => {
               {completeness.checks.map((item) => (
                 <div key={item.label} className="flex items-center justify-between rounded-lg bg-parchment-light px-3 py-2 text-xs">
                   <span className="font-medium text-slate-600">{item.label}</span>
-                  <span className={item.done ? 'text-emerald-600' : 'text-slate-300'}>{item.done ? <Check size={14} /> : '--'}</span>
+                  <span className={item.done ? 'text-brand-600' : 'text-slate-300'}>{item.done ? <Check size={14} /> : '--'}</span>
                 </div>
               ))}
             </div>
