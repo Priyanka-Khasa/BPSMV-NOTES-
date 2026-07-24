@@ -132,7 +132,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-slate-200 border-t-slate-700" />
+        <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-700" />
       </div>
     );
   }
@@ -141,15 +141,16 @@ const Dashboard = () => {
     <div className="relative animate-fade-in">
       <style>{`
         :root {
-          --dashboard-surface: #ffffff;
-          --dashboard-soft: #f8fafc;
-          --dashboard-muted: #f5f7fb;
-          --dashboard-border: rgba(203, 213, 225, 0.82);
-          --dashboard-shadow: 0 18px 48px rgba(15, 23, 42, 0.07);
-          --dashboard-accent: #334155;
-          --dashboard-accent-soft: #f1f5f9;
-          --dashboard-good: #059669;
-          --dashboard-empty: #64748b;
+          --dashboard-surface: rgba(255, 255, 255, 0.9);
+          --dashboard-soft: #faf8f2;
+          --dashboard-muted: #f5f1e8;
+          --dashboard-border: rgba(212, 201, 181, 0.82);
+          --dashboard-shadow: 0 18px 48px rgba(61, 53, 44, 0.08);
+          --dashboard-accent: #8f5239;
+          --dashboard-accent-hover: #76432f;
+          --dashboard-accent-soft: #f9ebe4;
+          --dashboard-good: #a86548;
+          --dashboard-empty: #8a7d68;
         }
         .dashboard-shell {
           background: var(--dashboard-surface);
@@ -162,7 +163,7 @@ const Dashboard = () => {
           box-shadow: var(--dashboard-shadow);
         }
         .dashboard-panel {
-          background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+          background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, #faf8f2 100%);
           border: 1px solid var(--dashboard-border);
         }
         .subject-button {
@@ -172,19 +173,19 @@ const Dashboard = () => {
           transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
         }
         .subject-button:hover, .subject-button:focus-visible {
-          background: #f8fafc;
-          border-color: rgba(51, 65, 85, 0.22);
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+          background: #faf8f2;
+          border-color: rgba(193, 122, 92, 0.22);
+          box-shadow: 0 10px 24px rgba(61, 53, 44, 0.08);
           outline: none;
         }
         .subject-button.active {
           background: var(--dashboard-accent-soft);
-          border-color: rgba(51, 65, 85, 0.28);
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+          border-color: rgba(193, 122, 92, 0.34);
+          box-shadow: 0 12px 28px rgba(92, 52, 37, 0.10);
         }
         .metric-pill {
-          background: #f8fafc;
-          border: 1px solid rgba(226, 232, 240, 0.95);
+          background: #faf8f2;
+          border: 1px solid rgba(232, 224, 208, 0.95);
         }
         .widget-row {
           display: grid;
@@ -193,11 +194,11 @@ const Dashboard = () => {
         .subject-icon {
           width: 2rem;
           height: 2rem;
-          background: #f1f5f9;
-          color: #475569;
+          background: #f5f1e8;
+          color: #6b5f4e;
         }
         .subject-button.active .subject-icon {
-          background: #334155;
+          background: #8f5239;
           color: #ffffff;
         }
         .status-chip {
@@ -212,12 +213,12 @@ const Dashboard = () => {
           white-space: nowrap;
         }
         .status-chip.ready {
-          background: #ecfdf5;
-          color: #047857;
+          background: #f9ebe4;
+          color: #8f5239;
         }
         .status-chip.empty {
-          background: #f1f5f9;
-          color: #64748b;
+          background: #f5f1e8;
+          color: #8a7d68;
         }
         .dashboard-text-safe {
           overflow-wrap: anywhere;
@@ -244,7 +245,7 @@ const Dashboard = () => {
           width: 0.35rem;
         }
         .dashboard-compact-subjects::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
+          background: #d4c9b5;
           border-radius: 999px;
         }
         .widget-bar {
@@ -252,41 +253,41 @@ const Dashboard = () => {
           overflow: hidden;
           height: 0.5rem;
           border-radius: 999px;
-          background: #e2e8f0;
+          background: #e8e0d0;
         }
         .widget-bar > span {
           display: block;
           height: 100%;
           border-radius: inherit;
-          background: linear-gradient(90deg, #334155 0%, #0f766e 100%);
+          background: linear-gradient(90deg, #8f5239 0%, #c17a5c 100%);
         }
         .empty-illustration {
           background:
-            radial-gradient(circle at 22% 22%, rgba(51, 65, 85, 0.12), transparent 28%),
-            linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            radial-gradient(circle at 22% 22%, rgba(193, 122, 92, 0.16), transparent 28%),
+            linear-gradient(135deg, #ffffff 0%, #f5f1e8 100%);
         }
         .dashboard-action-primary {
-          background: #334155;
+          background: #8f5239;
           color: #ffffff;
-          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+          box-shadow: 0 10px 24px rgba(92, 52, 37, 0.18);
         }
         .dashboard-action-primary:hover {
-          background: #1f2937;
+          background: var(--dashboard-accent-hover);
           color: #ffffff;
         }
         .dashboard-action-secondary {
           background: #ffffff;
-          border: 1px solid #dbe3ef;
-          color: #334155;
+          border: 1px solid #e8e0d0;
+          color: #5c3425;
         }
         .dashboard-action-secondary:hover {
-          background: #f8fafc;
-          color: #0f172a;
+          background: #faf8f2;
+          color: #5c3425;
         }
         @media (max-width: 640px) {
           .dashboard-shell,
           .dashboard-card {
-            box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+            box-shadow: 0 10px 26px rgba(61, 53, 44, 0.08);
           }
           .dashboard-mobile-actions {
             display: grid;
@@ -343,7 +344,7 @@ const Dashboard = () => {
               <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <img
-                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=334155&color=fff`}
+                    src={user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'Student')}&background=8f5239&color=fff`}
                     alt=""
                     className="h-14 w-14 rounded-2xl object-cover ring-2 ring-white shadow-md shadow-slate-200"
                   />
