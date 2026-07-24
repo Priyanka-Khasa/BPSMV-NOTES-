@@ -28,6 +28,12 @@ services:
         value: none
       - key: ADMIN_EMAIL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: BPSMV Hub
+      - key: BREVO_SENDER_EMAIL
+        sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -35,11 +41,11 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: SMTP_HOST
-        value: smtp.gmail.com
+        value: smtp-relay.brevo.com
       - key: SMTP_PORT
-        value: 465
+        value: 587
       - key: SMTP_SECURE
-        value: true
+        value: false
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS

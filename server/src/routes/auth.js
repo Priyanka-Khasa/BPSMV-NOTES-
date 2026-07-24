@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
 require('../config/passport');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
@@ -15,6 +14,7 @@ const {
   createAuthToken,
   isActiveSession
 } = require('../utils/authSession');
+const { sendEmail } = require('../utils/email');
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
@@ -111,51 +111,6 @@ const createOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
 
-const createTransporter = () => {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!user || !pass) {
-    console.warn('SMTP credentials not configured. OTP emails will be logged to the console only.');
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass }
-  });
-};
-
-const sendWithResend = async ({ to, subject, html }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return false;
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from: process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>',
-      to,
-      subject,
-      html
-    })
-  });
-
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(`Resend email failed (${response.status}): ${details}`);
-  }
-
-  return true;
-};
-
 const sendVerificationEmail = async ({ to, code }) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; border: 1px solid #e6dcff; border-radius: 12px; background: #f8fbff;">
@@ -166,32 +121,12 @@ const sendVerificationEmail = async ({ to, code }) => {
     </div>
   `;
 
-  try {
-    const sentViaResend = await sendWithResend({
-      to,
-      subject: 'Verify your BPSMV Resource Hub email',
-      html
-    });
-
-    if (sentViaResend) return;
-  } catch (error) {
-    console.error('Resend email failed for OTP:', error);
-  }
-
-  const transporter = createTransporter();
-  if (transporter) {
-    await transporter.sendMail({
-      from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
-      to,
-      subject: 'Verify your BPSMV Resource Hub email',
-      html
-    });
-    return;
-  }
-
-  console.log('--- OTP EMAIL ---');
-  console.log(`To: ${to}`);
-  console.log(`Code: ${code}`);
+  await sendEmail({
+    to,
+    subject: 'Verify your BPSMV Resource Hub email',
+    html,
+    logLabel: 'OTP EMAIL'
+  });
 };
 
 const getPendingVerification = (email) => {

@@ -1,10 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
-const fs = require('fs/promises');
 const rateLimit = require('express-rate-limit');
 const Feedback = require('../models/Feedback');
 const { feedbackUpload, getUploadedFileUrl } = require('../config/storage');
+const { sendEmail } = require('../utils/email');
 
 const feedbackLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -20,61 +19,6 @@ const escapeHtml = (value = '') => String(value)
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
-
-// Configure nodemailer transporter
-const createTransporter = () => {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT) || 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!user || !pass) {
-    console.warn('SMTP credentials not configured. Emails will be logged to console only.');
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass }
-  });
-};
-
-const sendWithResend = async ({ to, subject, html, attachment }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return false;
-
-  const payload = {
-    from: process.env.EMAIL_FROM || 'BPSMV Hub <onboarding@resend.dev>',
-    to,
-    subject,
-    html
-  };
-
-  if (attachment?.path && !/^https?:\/\//i.test(attachment.path)) {
-    payload.attachments = [{
-      filename: attachment.filename,
-      content: await fs.readFile(attachment.path, 'base64')
-    }];
-  }
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    const details = await response.text();
-    throw new Error(`Resend email failed (${response.status}): ${details}`);
-  }
-
-  return true;
-};
 
 // POST /api/feedback - Submit Gift form data with a required screenshot
 router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (req, res) => {
@@ -141,63 +85,23 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
     res.status(201).json({ message: 'Gift submitted successfully', feedback });
 
     setImmediate(async () => {
-      try {
-        const sentAdminWithResend = await sendWithResend({
-          to: adminEmail,
-          subject: `New Gift Submission: ${issueType} from ${fullName}`,
-          html: emailHtml,
-          attachment: {
-            filename: req.file.originalname,
-            path: req.file.path
-          }
-        });
+      await sendEmail({
+        to: adminEmail,
+        subject: `New Gift Submission: ${issueType} from ${fullName}`,
+        html: emailHtml,
+        attachment: {
+          filename: req.file.originalname,
+          path: req.file.path
+        },
+        logLabel: 'GIFT EMAIL (Admin)'
+      });
 
-        if (sentAdminWithResend) {
-          await sendWithResend({
-            to: email,
-            subject: 'Thank you for your Gift submission',
-            html: confirmationHtml
-          });
-          return;
-        }
-      } catch (resendErr) {
-        console.error('Resend email failed:', resendErr);
-      }
-
-      const transporter = createTransporter();
-      if (transporter) {
-        try {
-          await transporter.sendMail({
-            from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
-            to: adminEmail,
-            subject: `New Gift Submission: ${issueType} from ${fullName}`,
-            html: emailHtml,
-            attachments: req.file.path && !/^https?:\/\//i.test(req.file.path)
-              ? [{
-                  filename: req.file.originalname,
-                  path: req.file.path
-                }]
-              : []
-          });
-
-          await transporter.sendMail({
-            from: `"BPSMV Hub" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Thank you for your Gift submission',
-            html: confirmationHtml
-          });
-        } catch (emailErr) {
-          console.error('Email sending failed:', emailErr);
-        }
-      } else {
-        console.log('--- GIFT EMAIL (Admin) ---');
-        console.log(`To: ${adminEmail}`);
-        console.log(`Subject: New Gift Submission: ${issueType} from ${fullName}`);
-        console.log(emailHtml);
-        console.log('--- CONFIRMATION EMAIL ---');
-        console.log(`To: ${email}`);
-        console.log(confirmationHtml);
-      }
+      await sendEmail({
+        to: email,
+        subject: 'Thank you for your Gift submission',
+        html: confirmationHtml,
+        logLabel: 'CONFIRMATION EMAIL'
+      });
     });
   } catch (error) {
     console.error('Gift submission error:', error);
