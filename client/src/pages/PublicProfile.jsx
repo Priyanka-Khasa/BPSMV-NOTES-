@@ -100,7 +100,7 @@ const PublicProfile = () => {
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-16 animate-fade-in">
       {/* Identity card */}
-      <section className="overflow-hidden rounded-3xl border border-white/15 bg-white/10 shadow-[0_24px_70px_rgba(7,5,15,0.25)] backdrop-blur-xl">
+      <section className="overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-sm">
         <div className="relative bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 px-6 py-10 text-white sm:px-10">
           {/* faint ruled texture to nod at the academic-record theme, kept subtle */}
           <div
@@ -154,7 +154,7 @@ const PublicProfile = () => {
                   <Icon size={18} />
                 </span>
                 <div>
-                  <p className="text-2xl font-bold leading-none text-slate-50">{stat.value}</p>
+                  <p className="text-2xl font-bold leading-none text-charcoal">{stat.value}</p>
                   <p className="mt-1 text-xs font-medium text-slate-500">{stat.label}</p>
                 </div>
               </div>
@@ -166,7 +166,7 @@ const PublicProfile = () => {
       {/* Links */}
       {links.length > 0 && (
         <section className="card p-5 sm:p-6">
-          <h2 className="font-display text-lg font-bold text-slate-50">Links</h2>
+          <h2 className="font-display text-lg font-bold text-charcoal">Links</h2>
           <div className="mt-4 flex flex-wrap gap-2.5">
             {links.map((field) => {
               const Icon = field.icon;
@@ -176,7 +176,7 @@ const PublicProfile = () => {
                   href={profile.socialLinks[field.key]}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border border-brand-400/20 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-brand-300/40 hover:bg-white/15 hover:text-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                  className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-parchment-light px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
                 >
                   <Icon size={15} />
                   {field.label}
@@ -193,7 +193,7 @@ const PublicProfile = () => {
           <div className="flex items-center gap-2">
             <GraduationCap size={19} className="text-brand-700" />
             <div>
-              <h2 className="font-display text-lg font-bold text-slate-50">Academic progress</h2>
+              <h2 className="font-display text-lg font-bold text-charcoal">Academic progress</h2>
               <p className="mt-0.5 text-xs text-slate-500">
                 {completedCgpaRows.length > 0
                   ? `${completedCgpaRows.length} of 8 semesters recorded`
@@ -249,7 +249,7 @@ const PublicProfile = () => {
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-white/15 bg-white/10 px-4 py-6 text-center text-sm text-slate-400">
+          <div className="rounded-xl border border-dashed border-slate-200 bg-parchment-light px-4 py-6 text-center text-sm text-slate-400">
             CGPA hasn&apos;t been added for any semester yet.
           </div>
         )}

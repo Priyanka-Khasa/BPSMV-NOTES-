@@ -11,9 +11,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [otpStep, setOtpStep] = useState('idle');
-  const [otpCode, setOtpCode] = useState('');
-  const { login, register, googleLogin, requestOtp, verifyOtp, user, isAuthenticated } = useAuth();
+  const { login, register, googleLogin, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,37 +42,6 @@ const Login = () => {
     setLoading(false);
   };
 
-  const handleOtpRequest = async () => {
-    if (!form.email) {
-      setError('Enter an email before requesting a verification code.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    try {
-      await requestOtp(form.email);
-      setOtpStep('requested');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Unable to send verification code.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpVerify = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      await verifyOtp(form.email, otpCode);
-      setOtpStep('verified');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Unable to verify code.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -89,9 +56,6 @@ const Login = () => {
         }
         if (!form.rollNumber.trim()) {
           throw new Error('Roll number is required');
-        }
-        if (otpStep !== 'verified') {
-          throw new Error('Please verify your email before creating an account.');
         }
         await register(form.name, form.email, form.password, form.rollNumber.trim());
         navigate('/onboarding');
@@ -112,8 +76,8 @@ const Login = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-[82vh] overflow-hidden">
-      <div className="orb -left-24 top-12 w-72 h-72 bg-amber-300/20 animate-drift"></div>
-      <div className="orb -right-24 bottom-8 w-80 h-80 bg-emerald-300/16 animate-spotlight"></div>
+      <div className="orb -left-24 top-12 w-72 h-72 bg-brand-200/30 animate-drift"></div>
+      <div className="orb -right-24 bottom-8 w-80 h-80 bg-brand-300/20 animate-spotlight"></div>
       <div className="w-full max-w-md relative z-10">
         <div className="cinematic-card p-8 sm:p-10 animate-cinematic-rise">
           {/* Header */}
@@ -196,34 +160,10 @@ const Login = () => {
                 type="email"
                 placeholder="you@example.com"
                 value={form.email}
-                onChange={(e) => {
-                  handleChange(e);
-                  setOtpStep('idle');
-                  setOtpCode('');
-                }}
+                onChange={handleChange}
                 className="input-field"
                 required
               />
-              {mode === 'signup' && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button type="button" onClick={handleOtpRequest} disabled={loading} className="text-xs font-semibold text-brand-700 hover:text-brand-800">
-                    {otpStep === 'requested' ? 'Resend code' : 'Send verification code'}
-                  </button>
-                  {otpStep === 'requested' && (
-                    <>
-                      <input
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value)}
-                        placeholder="Enter OTP"
-                        className="input-field py-2 text-sm"
-                      />
-                      <button type="button" onClick={handleOtpVerify} disabled={loading || !otpCode} className="text-xs font-semibold text-teal-600 hover:text-teal-700">
-                        Verify code
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
             <div>
               <div className="mb-1.5">

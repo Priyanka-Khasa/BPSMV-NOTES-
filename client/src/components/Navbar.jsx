@@ -99,7 +99,7 @@ const Navbar = () => {
               <button
                 type="button"
                 onClick={() => navigate('/gift')}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-amber-600 shadow-sm transition-all hover:bg-white hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/70 bg-white/80 text-brand-600 shadow-sm transition-all hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
                 aria-label="Gift"
                 title="Gift"
               >

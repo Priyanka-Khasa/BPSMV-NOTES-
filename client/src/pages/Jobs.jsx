@@ -206,18 +206,18 @@ const Jobs = () => {
 
   return (
     <div className="space-y-6 pb-12 animate-fade-in">
-      <section className="overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-[0_24px_70px_rgba(7,5,15,0.25)] backdrop-blur-xl">
+      <section className="overflow-hidden rounded-2xl border border-white/70 bg-white/90 shadow-sm">
         <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
           <div>
             <p className="text-sm font-semibold text-brand-700">Career Board</p>
-            <h1 className="mt-1 font-display text-3xl font-bold text-slate-50 sm:text-4xl">Jobs, internships, scholarships</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+            <h1 className="mt-1 font-display text-3xl font-bold text-charcoal sm:text-4xl">Jobs, internships, scholarships</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
               Scan urgency first, check who posted it, then apply. Shared openings stay separate from common career portals.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 rounded-xl border border-white/15 bg-white/10 p-2">
-            <div className="rounded-lg bg-white/10 px-3 py-3 text-center">
-              <p className="font-mono text-xl font-bold text-slate-50">{total}</p>
+          <div className="grid grid-cols-3 gap-2 rounded-xl border border-slate-100 bg-parchment-light p-2">
+            <div className="rounded-lg bg-white px-3 py-3 text-center">
+              <p className="font-mono text-xl font-bold text-charcoal">{total}</p>
               <p className="text-[11px] font-semibold uppercase text-slate-400">Live</p>
             </div>
             <div className="rounded-lg bg-white px-3 py-3 text-center">
@@ -310,19 +310,19 @@ const Jobs = () => {
                   <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${categoryTone[post.category] || categoryTone.Internship}`}>
                     {post.category}
                   </span>
-                  <h2 className="mt-3 font-display text-xl font-bold text-slate-50">{post.title}</h2>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-300">
+                  <h2 className="mt-3 font-display text-xl font-bold text-charcoal">{post.title}</h2>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-600">
                     <Building2 size={15} /> {post.company}
                   </p>
                 </div>
 
-                <p className="mt-3 text-sm leading-6 text-slate-300">{post.summary}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{post.summary}</p>
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <span className="flex items-center gap-1.5 rounded-lg bg-parchment-light px-3 py-2 text-xs font-medium text-slate-600">
                     <MapPin size={14} /> {post.location || post.mode || 'Location not added'}
                   </span>
-                  <span className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-slate-300">
+                  <span className="flex items-center gap-1.5 rounded-lg bg-parchment-light px-3 py-2 text-xs font-medium text-slate-600">
                     <CalendarDays size={14} /> Posted {formatDate(post.createdAt)}
                   </span>
                 </div>
@@ -350,7 +350,7 @@ const Jobs = () => {
       ) : (
         <section className="card p-10 text-center">
           <BriefcaseBusiness size={38} className="mx-auto mb-3 text-slate-300" />
-          <h2 className="font-display text-xl font-bold text-slate-50">{emptyTitle}</h2>
+          <h2 className="font-display text-xl font-bold text-charcoal">{emptyTitle}</h2>
           <p className="mt-1 text-sm text-slate-500">{emptyText}</p>
         </section>
       )}
@@ -372,7 +372,7 @@ const Jobs = () => {
       <section className="card p-5 sm:p-6">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="font-display text-xl font-bold text-slate-50">Common Portals</h2>
+            <h2 className="font-display text-xl font-bold text-charcoal">Common Portals</h2>
             <p className="text-sm text-slate-500">Fixed links students can check anytime.</p>
           </div>
           <span className="font-mono text-xs font-semibold uppercase tracking-wide text-slate-400">{portals.length} verified links</span>
@@ -382,13 +382,13 @@ const Jobs = () => {
           {portals.map((portal) => {
             const Icon = portal.icon;
             return (
-              <a key={portal.label} href={portal.href} target="_blank" rel="noopener noreferrer" className="group rounded-xl border border-white/15 bg-white/10 p-4 transition-colors hover:border-brand-300/40 hover:bg-white/15">
+              <a key={portal.label} href={portal.href} target="_blank" rel="noopener noreferrer" className="group rounded-xl border border-slate-200 bg-parchment-light p-4 transition-colors hover:border-brand-200 hover:bg-brand-50/70">
                 <div className="flex gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-100">
                     <Icon size={19} />
                   </span>
                   <span>
-                    <span className="flex items-center gap-2 font-semibold text-slate-50">
+                    <span className="flex items-center gap-2 font-semibold text-charcoal">
                       {portal.label}
                       <ExternalLink size={14} className="text-slate-300 group-hover:text-brand-600" />
                     </span>
@@ -407,10 +407,10 @@ const Jobs = () => {
           <form onSubmit={handleSubmit} className="relative flex h-full w-full max-w-xl flex-col overflow-hidden bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
               <div>
-                <h2 className="font-display text-xl font-bold text-slate-50">Post Opening</h2>
+                <h2 className="font-display text-xl font-bold text-charcoal">Post Opening</h2>
                 <p className="text-xs text-slate-500">Share a real opportunity with students.</p>
               </div>
-              <button type="button" onClick={() => setComposerOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-slate-300 hover:bg-white/15">
+              <button type="button" onClick={() => setComposerOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl bg-parchment-light text-slate-600 hover:bg-parchment">
                 <X size={18} />
               </button>
             </div>

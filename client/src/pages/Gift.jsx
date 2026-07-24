@@ -98,12 +98,12 @@ const GiftPage = () => {
     <div className="max-w-2xl mx-auto animate-fade-in">
       <div className="card p-8 sm:p-10">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-amber-100 via-pink-100 to-emerald-100 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm ring-1 ring-amber-200/60">
+          <div className="w-12 h-12 bg-gradient-to-br from-brand-50 via-brand-100 to-parchment-light text-brand-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm ring-1 ring-brand-200/60">
             <Gift size={24} />
           </div>
           <h1 className="text-2xl font-display font-bold text-slate-900 mb-1">Gift</h1>
           <p className="text-slate-500 text-sm">Report a real and genuine issue or bug in BPSMV Resource Hub.</p>
-          <p className="mt-2 inline-flex items-center justify-center rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+          <p className="mt-2 inline-flex items-center justify-center rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-200">
             Genuine accepted issue = Rs. 10 gift
           </p>
         </div>

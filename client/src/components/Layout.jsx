@@ -74,7 +74,7 @@ const Footer = () => {
 
   return (
     <footer className="mt-auto border-t border-slate-200/80 bg-[#fbfaf7] text-slate-800">
-      <div className="h-1 bg-gradient-to-r from-brand-600 via-emerald-500 to-amber-400" />
+      <div className="h-1 bg-gradient-to-r from-brand-700 via-brand-500 to-brand-200" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.85fr_0.75fr_0.9fr]">
@@ -160,7 +160,7 @@ const Footer = () => {
                 href="tel:+911263283038"
                 className="flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-slate-700 transition-all duration-300 hover:bg-white hover:text-brand-700 hover:shadow-sm"
               >
-                <Phone size={16} className="text-emerald-600" />
+                <Phone size={16} className="text-brand-600" />
                 +91 01263-283038
               </a>
               <a
@@ -173,7 +173,7 @@ const Footer = () => {
                 {contactEmail}
               </a>
               <p className="flex items-start gap-2 rounded-lg px-2.5 py-2">
-                <MapPin size={16} className="mt-0.5 shrink-0 text-amber-600" />
+                <MapPin size={16} className="mt-0.5 shrink-0 text-brand-600" />
                 <span>Khanpur Kalan, Sonepat, Haryana 131305</span>
               </p>
             </div>
@@ -183,7 +183,7 @@ const Footer = () => {
         <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>Copyright © {year} BPSMV Resource Hub. Built by Priyanka Khasa.</p>
           <p className="flex items-center gap-1.5">
-            Made with <Heart size={13} className="fill-red-500 text-red-500" /> for BPSMV students
+            Made with <Heart size={13} className="fill-brand-500 text-brand-500" /> for BPSMV students
           </p>
         </div>
       </div>
@@ -193,7 +193,7 @@ const Footer = () => {
 
 const Layout = ({ children }) => {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(255,214,153,0.28),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(94,214,172,0.16),transparent_32%),linear-gradient(135deg,#faf8f2,#f5f1e8_55%,#fffdf8)] flex flex-col">
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,rgba(193,122,92,0.14),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(143,82,57,0.10),transparent_32%),linear-gradient(135deg,#faf8f2,#f5f1e8_55%,#fffdf8)] flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-7xl mx-auto w-full px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
         {children}

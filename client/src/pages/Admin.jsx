@@ -48,24 +48,6 @@ const Admin = () => {
     }
   };
 
-  const handleApproveResource = async (id) => {
-    try {
-      await axios.patch(`/resources/${id}/approve`);
-      fetchResources();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve resource');
-    }
-  };
-
-  const handleRejectResource = async (id) => {
-    try {
-      await axios.patch(`/resources/${id}/reject`);
-      fetchResources();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject resource');
-    }
-  };
-
   const fetchReviews = async () => {
     setReviewsLoading(true);
     try {
@@ -249,28 +231,12 @@ const Admin = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => handleApproveResource(r._id)}
-                              className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-300 hover:scale-110"
-                              title="Approve resource"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleRejectResource(r._id)}
-                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all duration-300 hover:scale-110"
-                              title="Reject resource"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(r._id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handleDelete(r._id)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-300 hover:scale-110 hover:rotate-12"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </td>
                       </tr>
                     ))
