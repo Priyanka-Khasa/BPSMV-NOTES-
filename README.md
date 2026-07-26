@@ -194,7 +194,7 @@ node fixDB.js
 - Search input is escaped before MongoDB regex filters are built.
 - Helmet adds baseline HTTP security headers.
 - Unapproved resources are restricted to owner/admin access.
-- Public profile lookup requires login to avoid anonymous scraping.
+- Public profile lookup is rate limited and returns only share-safe profile/activity fields.
 - Production startup rejects missing or weak critical configuration.
 
 ## Deployment Notes

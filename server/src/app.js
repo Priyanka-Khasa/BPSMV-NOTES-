@@ -106,6 +106,7 @@ app.get('/uploads/:filename', verifyToken, requireActiveSubscription, (req, res)
 app.use('/api', (req, res, next) => {
   const publicRequest =
     (req.method === 'GET' && req.path === '/resources/public/stats') ||
+    (req.method === 'GET' && req.path.startsWith('/activity/public/')) ||
     (req.method === 'GET' && req.path === '/reviews/approved') ||
     (req.method === 'POST' && req.path === '/feedback');
   if (publicRequest) return next();

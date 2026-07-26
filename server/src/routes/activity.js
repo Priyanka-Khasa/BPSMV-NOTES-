@@ -6,6 +6,7 @@ const Resource = require('../models/Resource');
 const JobUpdate = require('../models/JobUpdate');
 const User = require('../models/User');
 const { verifyToken } = require('./auth');
+const { publicProfileLimiter } = require('../utils/rateLimiters');
 
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
@@ -69,7 +70,7 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/public/:identifier', verifyToken, async (req, res) => {
+router.get('/public/:identifier', publicProfileLimiter, async (req, res) => {
   try {
     const identifier = String(req.params.identifier || '').trim();
     if (!identifier || identifier === 'undefined' || identifier === 'null') {
@@ -80,11 +81,11 @@ router.get('/public/:identifier', verifyToken, async (req, res) => {
       ? { _id: identifier }
       : { rollNumber: identifier.toUpperCase() };
 
-    const user = await User.findOne(query).select('name avatar bio degree branch yearOfStudy semester socialLinks semesterCgpa role');
+    const user = await User.findOne(query).select('name avatar bio degree branch yearOfStudy semester socialLinks semesterCgpa');
     if (!user) return res.status(404).json({ message: 'Profile not found' });
 
-    const activity = await buildSummary(user._id);
-    res.json({ profile: user, activity });
+    const { totals, daily } = await buildSummary(user._id);
+    res.json({ profile: user, activity: { totals, daily } });
   } catch (error) {
     console.error('Public profile error:', error);
     res.status(500).json({ message: 'Error loading profile' });
