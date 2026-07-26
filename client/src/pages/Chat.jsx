@@ -3,82 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import EmojiPicker from '../components/chat/EmojiPicker';
 import {
   MessageSquare, Send, Trash2, BookOpen, ArrowLeft,
   Mic, MicOff, StopCircle, Play, Pause, Smile, X
 } from 'lucide-react';
 
-const EMOJI_GROUPS = [
-  {
-    title: 'Smileys',
-    emojis: [
-      '\u{1F600}', '\u{1F603}', '\u{1F604}', '\u{1F601}', '\u{1F606}', '\u{1F605}',
-      '\u{1F602}', '\u{1F923}', '\u{1F60A}', '\u{1F607}', '\u{1F642}', '\u{1F609}',
-      '\u{1F60C}', '\u{1F60D}', '\u{1F970}', '\u{1F618}', '\u{1F60B}', '\u{1F61B}',
-      '\u{1F61C}', '\u{1F92A}', '\u{1F914}', '\u{1F60E}', '\u{1F973}', '\u{1F634}',
-      '\u{1F62D}', '\u{1F621}', '\u{1F631}', '\u{1F917}', '\u{1F92D}', '\u{1F910}'
-    ]
-  },
-  {
-    title: 'Gestures',
-    emojis: [
-      '\u{1F44D}', '\u{1F44E}', '\u{1F44C}', '\u{270C}\u{FE0F}', '\u{1F91E}', '\u{1F91F}',
-      '\u{1F918}', '\u{1F919}', '\u{1F44F}', '\u{1F64C}', '\u{1F64F}', '\u{1F91D}',
-      '\u{1F4AA}', '\u{1F44A}', '\u{270A}', '\u{1F448}', '\u{1F449}', '\u{1F447}',
-      '\u{1F446}', '\u{270B}', '\u{1F44B}', '\u{1FAF6}', '\u{1FAF0}', '\u{1FAF1}'
-    ]
-  },
-  {
-    title: 'Hearts',
-    emojis: [
-      '\u{2764}\u{FE0F}', '\u{1F9E1}', '\u{1F49B}', '\u{1F49A}', '\u{1F499}', '\u{1F49C}',
-      '\u{1F90E}', '\u{1F5A4}', '\u{1F90D}', '\u{1F496}', '\u{1F497}', '\u{1F498}',
-      '\u{1F49D}', '\u{1F49E}', '\u{1F495}', '\u{1F493}', '\u{1F49F}', '\u{2763}\u{FE0F}'
-    ]
-  },
-  {
-    title: 'Symbols',
-    emojis: [
-      '\u{1F525}', '\u{2728}', '\u{1F31F}', '\u{2B50}', '\u{1F4A5}', '\u{1F4AB}',
-      '\u{26A1}', '\u{1F389}', '\u{1F38A}', '\u{1F381}', '\u{1F3C6}', '\u{1F947}',
-      '\u{1F948}', '\u{1F949}', '\u{2705}', '\u{274C}', '\u{2757}', '\u{2753}',
-      '\u{1F4AF}', '\u{1F514}', '\u{1F4A1}', '\u{1F680}', '\u{1F3AF}', '\u{1F512}'
-    ]
-  },
-  {
-    title: 'Nature',
-    emojis: [
-      '\u{1F338}', '\u{1F339}', '\u{1F33A}', '\u{1F33B}', '\u{1F33C}', '\u{1F337}',
-      '\u{1F340}', '\u{1F33F}', '\u{1F331}', '\u{1F333}', '\u{1F334}', '\u{1F335}',
-      '\u{1F341}', '\u{1F342}', '\u{1F343}', '\u{1F308}', '\u{2600}\u{FE0F}', '\u{1F319}',
-      '\u{1F30A}', '\u{2744}\u{FE0F}', '\u{2601}\u{FE0F}', '\u{1F327}\u{FE0F}'
-    ]
-  },
-  {
-    title: 'Food',
-    emojis: [
-      '\u{1F34E}', '\u{1F355}', '\u{1F354}', '\u{1F35F}', '\u{1F37F}', '\u{1F369}',
-      '\u{1F36A}', '\u{1F36B}', '\u{1F370}', '\u{1F382}', '\u{1F349}', '\u{1F353}',
-      '\u{1F347}', '\u{1F352}', '\u{1F34C}', '\u{2615}', '\u{1F375}', '\u{1F9CB}'
-    ]
-  },
-  {
-    title: 'Activities',
-    emojis: [
-      '\u{26BD}', '\u{1F3C0}', '\u{1F3BE}', '\u{1F3D3}', '\u{1F3AE}', '\u{1F3B2}',
-      '\u{1F9E9}', '\u{1F3B8}', '\u{1F3A4}', '\u{1F3A7}', '\u{1F3AC}', '\u{1F4F7}',
-      '\u{1F3A8}', '\u{2708}\u{FE0F}', '\u{1F697}', '\u{1F6B2}', '\u{1F3D5}\u{FE0F}'
-    ]
-  },
-  {
-    title: 'Objects',
-    emojis: [
-      '\u{1F4BB}', '\u{1F4F1}', '\u{231A}', '\u{1F5A5}\u{FE0F}', '\u{2328}\u{FE0F}', '\u{1F5B1}\u{FE0F}',
-      '\u{1F4E1}', '\u{1F4BE}', '\u{1F50B}', '\u{1F50C}', '\u{1F4DA}', '\u{1F4D6}',
-      '\u{1F4DD}', '\u{1F4CC}', '\u{1F4CE}', '\u{1F4BC}', '\u{1F6E0}\u{FE0F}'
-    ]
-  }
-];
 const Chat = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -617,34 +547,8 @@ const Chat = () => {
 
         {/* Input */}
         <div className="p-4 border-t border-slate-200/80 bg-white/80 backdrop-blur-sm relative">
-          {/* Emoji picker */}
           {showEmoji && (
-            <div className="absolute bottom-full left-4 mb-2 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-20 w-80 max-h-72">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500">Emoji</span>
-                <button onClick={() => setShowEmoji(false)} className="text-slate-400 hover:text-slate-600">
-                  <X size={14} />
-                </button>
-              </div>
-              <div className="max-h-56 overflow-y-auto pr-1 space-y-3">
-                {EMOJI_GROUPS.map((group) => (
-                  <div key={group.title}>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">{group.title}</p>
-                    <div className="grid grid-cols-6 gap-1">
-                      {group.emojis.map((emoji) => (
-                        <button
-                          key={emoji}
-                          onClick={() => addEmoji(emoji)}
-                          className="text-xl hover:bg-slate-50 rounded-lg p-1 transition-colors"
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EmojiPicker onSelect={addEmoji} onClose={() => setShowEmoji(false)} />
           )}
 
           {previewUrl ? (
