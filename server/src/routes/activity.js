@@ -10,6 +10,8 @@ const { publicProfileLimiter } = require('../utils/rateLimiters');
 
 const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
+const publicActivitySummary = ({ totals = {}, daily = [] } = {}) => ({ totals, daily });
+
 const buildSummary = async (userId) => {
   const since = startOfDay(new Date());
   since.setDate(since.getDate() - 364);
@@ -84,8 +86,8 @@ router.get('/public/:identifier', publicProfileLimiter, async (req, res) => {
     const user = await User.findOne(query).select('name avatar bio degree branch yearOfStudy semester socialLinks semesterCgpa');
     if (!user) return res.status(404).json({ message: 'Profile not found' });
 
-    const { totals, daily } = await buildSummary(user._id);
-    res.json({ profile: user, activity: { totals, daily } });
+    const summary = await buildSummary(user._id);
+    res.json({ profile: user, activity: publicActivitySummary(summary) });
   } catch (error) {
     console.error('Public profile error:', error);
     res.status(500).json({ message: 'Error loading profile' });
@@ -193,3 +195,4 @@ router.post('/job-apply/:jobUpdateId', verifyToken, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.publicActivitySummary = publicActivitySummary;
