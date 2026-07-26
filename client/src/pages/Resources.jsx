@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { Search, Filter, FileText, ExternalLink, Trash2, BookOpen, X, Sparkles, Grid, List, ArrowUpDown } from 'lucide-react';
 
 const Resources = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast, confirmAction } = useNotification();
   const [resources, setResources] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [filterOptions, setFilterOptions] = useState({ degrees: [], branches: [] });
@@ -72,12 +74,18 @@ const Resources = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this resource?')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete resource?',
+      message: 'This resource will be removed for students.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`/resources/${id}`);
       fetchResources();
+      toast({ type: 'success', title: 'Resource deleted', message: 'The resource was removed.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete');
+      toast({ type: 'error', title: 'Delete failed', message: err.response?.data?.message || 'Failed to delete.' });
     }
   };
 

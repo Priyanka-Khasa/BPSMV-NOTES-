@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Trash2, FileText, CheckCircle, XCircle, AlertTriangle, BarChart3, TrendingUp, Users, Clock, Star, MessageSquare } from 'lucide-react';
 
 const Admin = () => {
   const { user, isAdmin } = useAuth();
+  const { toast, confirmAction } = useNotification();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('resources');
   const [resources, setResources] = useState([]);
@@ -39,12 +41,18 @@ const Admin = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this resource?')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete resource?',
+      message: 'This resource will be removed from the hub.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`/resources/${id}`);
       fetchResources();
+      toast({ type: 'success', title: 'Resource deleted', message: 'The resource was removed.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete');
+      toast({ type: 'error', title: 'Delete failed', message: err.response?.data?.message || 'Failed to delete.' });
     }
   };
 
@@ -67,18 +75,25 @@ const Admin = () => {
     try {
       await axios.put(`/reviews/${id}/approve`);
       fetchReviews();
+      toast({ type: 'success', title: 'Review approved', message: 'The review can now appear publicly.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to approve review');
+      toast({ type: 'error', title: 'Approval failed', message: err.response?.data?.message || 'Failed to approve review.' });
     }
   };
 
   const handleDeleteReview = async (id) => {
-    if (!confirm('Delete this review?')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete review?',
+      message: 'This review will be permanently removed.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`/reviews/${id}`);
       fetchReviews();
+      toast({ type: 'success', title: 'Review deleted', message: 'The review was removed.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete review');
+      toast({ type: 'error', title: 'Delete failed', message: err.response?.data?.message || 'Failed to delete review.' });
     }
   };
 

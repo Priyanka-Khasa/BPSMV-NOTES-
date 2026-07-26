@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const categories = ['Internship', 'Job', 'Hiring Challenge', 'Scholarship', 'Career News'];
 
@@ -80,6 +81,7 @@ const safeUrl = (url) => /^https?:\/\//i.test(String(url || '').trim());
 
 const Jobs = () => {
   const { user } = useAuth();
+  const { confirmAction } = useNotification();
   const [posts, setPosts] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [search, setSearch] = useState('');
@@ -178,7 +180,12 @@ const Jobs = () => {
   };
 
   const handleDelete = async (post) => {
-    if (!confirm('Delete this opening for all students?')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete opening?',
+      message: 'This career update will be removed for all students.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`/job-updates/${post._id}`);
       setPosts((current) => current.filter((item) => item._id !== post._id));

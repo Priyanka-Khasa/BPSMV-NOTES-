@@ -2,6 +2,7 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import {
   MessageSquare, Send, Trash2, BookOpen, ArrowLeft,
   Mic, MicOff, StopCircle, Play, Pause, Smile, X
@@ -82,6 +83,7 @@ const Chat = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast, confirmAction } = useNotification();
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(searchParams.get('subject') || '');
   const [comments, setComments] = useState([]);
@@ -226,7 +228,7 @@ const Chat = () => {
       setShowEmoji(false);
       fetchComments(selectedSubject);
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to post comment');
+      toast({ type: 'error', title: 'Message not sent', message: error.response?.data?.message || 'Failed to post comment.' });
     } finally {
       setSending(false);
     }
@@ -249,7 +251,7 @@ const Chat = () => {
       discardPreview();
       fetchComments(selectedSubject);
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to send voice message');
+      toast({ type: 'error', title: 'Voice message not sent', message: error.response?.data?.message || 'Failed to send voice message.' });
     } finally {
       setSending(false);
       setUploadProgress(0);
@@ -257,14 +259,20 @@ const Chat = () => {
   };
 
   const deleteComment = async (id) => {
-    if (!confirm('Are you sure you want to delete this message? This action cannot be undone.')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete message?',
+      message: 'This message will be removed from the discussion.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       // Optimistic UI update: instantly remove the message
       setComments(prev => prev.filter(c => c._id !== id));
       
       await axios.delete(`/comments/${id}`);
+      toast({ type: 'success', title: 'Message deleted', message: 'The discussion was updated.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete message');
+      toast({ type: 'error', title: 'Delete failed', message: err.response?.data?.message || 'Failed to delete message.' });
       fetchComments(selectedSubject);
     }
   };
@@ -284,7 +292,7 @@ const Chat = () => {
       audio.onended = () => setPreviewPlaying(false);
       audio.onerror = () => {
         setPreviewPlaying(false);
-        alert('Failed to play preview');
+        toast({ type: 'error', title: 'Preview failed', message: 'Failed to play preview.' });
       };
       audio.play();
       previewAudioRef.current = audio;
@@ -363,7 +371,7 @@ const Chat = () => {
       audio.onerror = () => {
         setPlayingId(null);
         setAudioProgress({ currentTime: 0, duration: 0 });
-        alert('Failed to play audio');
+        toast({ type: 'error', title: 'Audio failed', message: 'Failed to play audio.' });
       };
       audio.play();
       audioPlayerRef.current = audio;

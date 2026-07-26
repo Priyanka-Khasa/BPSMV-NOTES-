@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import {
   BookOpen,
   FileText,
@@ -23,6 +24,7 @@ import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { toast, confirmAction } = useNotification();
   const navigate = useNavigate();
   const [subjects, setSubjects] = useState([]);
   const [subjectOverview, setSubjectOverview] = useState([]);
@@ -103,12 +105,18 @@ const Dashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this resource?')) return;
+    const confirmed = await confirmAction({
+      title: 'Delete resource?',
+      message: 'This resource will disappear from this subject.',
+      confirmLabel: 'Delete'
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`/resources/${id}`);
       fetchResources(selectedSubject);
+      toast({ type: 'success', title: 'Resource deleted', message: 'The subject list has been updated.' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete');
+      toast({ type: 'error', title: 'Delete failed', message: err.response?.data?.message || 'Failed to delete.' });
     }
   };
 
