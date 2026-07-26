@@ -1,6 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { canDeleteResource, canViewResource, canApproveResource } = require('../src/routes/resources');
+const {
+  canDeleteResource,
+  canViewResource,
+  canApproveResource,
+  normalizeResourceLinkUrl
+} = require('../src/routes/resources');
 
 test('admins can delete and approve resources they do not own', () => {
   const admin = { id: 'admin-1', role: 'admin' };
@@ -36,4 +41,13 @@ test('approved resources are visible to everyone', () => {
   };
 
   assert.equal(canViewResource(viewer, resource), true);
+});
+
+test('resource links must be http or https URLs', () => {
+  assert.equal(normalizeResourceLinkUrl('https://example.com/notes?id=1'), 'https://example.com/notes?id=1');
+  assert.equal(normalizeResourceLinkUrl(' http://example.com/path '), 'http://example.com/path');
+  assert.equal(normalizeResourceLinkUrl('javascript:alert(1)'), '');
+  assert.equal(normalizeResourceLinkUrl('ftp://example.com/file.pdf'), '');
+  assert.equal(normalizeResourceLinkUrl('/relative/path'), '');
+  assert.equal(normalizeResourceLinkUrl('not-a-url'), '');
 });

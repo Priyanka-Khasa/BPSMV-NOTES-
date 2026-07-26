@@ -61,6 +61,21 @@ const isCloudinaryUrl = (fileUrl) => {
   }
 };
 
+const normalizeResourceLinkUrl = (value) => {
+  const rawUrl = asString(value, 2000);
+  if (!rawUrl) return '';
+
+  try {
+    const parsed = new URL(rawUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) {
+      return '';
+    }
+    return parsed.href;
+  } catch {
+    return '';
+  }
+};
+
 // Get all resources with search & filter
 router.get('/all', verifyToken, async (req, res) => {
   try {
@@ -338,8 +353,10 @@ router.post('/add', verifyToken, uploadLimiter, upload.single('file'), async (re
     };
 
     if (isLink) {
-      const linkUrl = asString(req.body.linkUrl, 2000);
-      if (!linkUrl) return res.status(400).json({ message: 'Link URL is required for Link type' });
+      const linkUrl = normalizeResourceLinkUrl(req.body.linkUrl);
+      if (!linkUrl) {
+        return res.status(400).json({ message: 'Link URL must start with http:// or https://' });
+      }
       resourceData.linkUrl = linkUrl;
       resourceData.fileType = 'link';
     } else {
@@ -433,3 +450,4 @@ module.exports = router;
 module.exports.canDeleteResource = canDeleteResource;
 module.exports.canViewResource = canViewResource;
 module.exports.canApproveResource = canApproveResource;
+module.exports.normalizeResourceLinkUrl = normalizeResourceLinkUrl;
