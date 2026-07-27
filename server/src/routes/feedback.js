@@ -39,15 +39,7 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
 
     const screenshotUrl = getUploadedFileUrl(req, req.file);
 
-    const feedback = await Feedback.create({
-      fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone ? phone.trim() : undefined,
-      issueType,
-      description: description.trim(),
-      screenshotUrl,
-      additionalComments: additionalComments ? additionalComments.trim() : undefined
-    });
+    const normalizedEmail = email.trim().toLowerCase();
 
     const safeFullName = escapeHtml(fullName);
     const safeEmail = escapeHtml(email);
@@ -82,26 +74,48 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
       </div>
     `;
 
-    res.status(201).json({ message: 'Gift submitted successfully', feedback });
+    const adminMailSent = await sendEmail({
+      to: adminEmail,
+      subject: `New Gift Submission: ${issueType} from ${fullName}`,
+      html: emailHtml,
+      attachment: {
+        filename: req.file.originalname,
+        path: req.file.path
+      },
+      replyTo: normalizedEmail,
+      logLabel: 'GIFT EMAIL (Admin)'
+    });
+
+    if (!adminMailSent) {
+      console.error('Gift submission failed: no configured email provider delivered the admin email');
+      return res.status(502).json({
+        message: 'Gift could not be sent to the admin email. Please check the email provider settings and try again.'
+      });
+    }
+
+    const feedback = await Feedback.create({
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      phone: phone ? phone.trim() : undefined,
+      issueType,
+      description: description.trim(),
+      screenshotUrl,
+      additionalComments: additionalComments ? additionalComments.trim() : undefined
+    });
+
+    res.status(201).json({ message: 'Gift submitted successfully and sent to admin email', feedback });
 
     setImmediate(async () => {
-      await sendEmail({
-        to: adminEmail,
-        subject: `New Gift Submission: ${issueType} from ${fullName}`,
-        html: emailHtml,
-        attachment: {
-          filename: req.file.originalname,
-          path: req.file.path
-        },
-        logLabel: 'GIFT EMAIL (Admin)'
-      });
-
-      await sendEmail({
-        to: email,
-        subject: 'Thank you for your Gift submission',
-        html: confirmationHtml,
-        logLabel: 'CONFIRMATION EMAIL'
-      });
+      try {
+        await sendEmail({
+          to: normalizedEmail,
+          subject: 'Thank you for your Gift submission',
+          html: confirmationHtml,
+          logLabel: 'CONFIRMATION EMAIL'
+        });
+      } catch (error) {
+        console.error('Gift confirmation email failed:', error);
+      }
     });
   } catch (error) {
     console.error('Gift submission error:', error);

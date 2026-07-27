@@ -27,7 +27,7 @@ services:
       - key: COOKIE_SAME_SITE
         value: none
       - key: ADMIN_EMAIL
-        sync: false
+        value: priyankakhasa937@gmail.com
       - key: BREVO_API_KEY
         sync: false
       - key: BREVO_SENDER_NAME

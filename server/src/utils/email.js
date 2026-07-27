@@ -42,7 +42,7 @@ const buildApiAttachment = async (attachment) => {
   };
 };
 
-const sendWithBrevo = async ({ to, subject, html, attachment }) => {
+const sendWithBrevo = async ({ to, subject, html, attachment, replyTo }) => {
   const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
   if (!apiKey) return false;
 
@@ -57,6 +57,8 @@ const sendWithBrevo = async ({ to, subject, html, attachment }) => {
     subject,
     htmlContent: html
   };
+
+  if (replyTo) payload.replyTo = { email: replyTo };
 
   const apiAttachment = await buildApiAttachment(attachment);
   if (apiAttachment) payload.attachment = [apiAttachment];
@@ -79,7 +81,7 @@ const sendWithBrevo = async ({ to, subject, html, attachment }) => {
   return true;
 };
 
-const sendWithResend = async ({ to, subject, html, attachment }) => {
+const sendWithResend = async ({ to, subject, html, attachment, replyTo }) => {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
@@ -89,6 +91,8 @@ const sendWithResend = async ({ to, subject, html, attachment }) => {
     subject,
     html
   };
+
+  if (replyTo) payload.reply_to = replyTo;
 
   const apiAttachment = await buildApiAttachment(attachment);
   if (apiAttachment?.content) {
@@ -131,7 +135,7 @@ const createTransporter = () => {
   });
 };
 
-const sendWithSmtp = async ({ to, subject, html, attachment }) => {
+const sendWithSmtp = async ({ to, subject, html, attachment, replyTo }) => {
   const transporter = createTransporter();
   if (!transporter) return false;
 
@@ -141,6 +145,8 @@ const sendWithSmtp = async ({ to, subject, html, attachment }) => {
     subject,
     html
   };
+
+  if (replyTo) mail.replyTo = replyTo;
 
   if (attachment?.path && !/^https?:\/\//i.test(attachment.path)) {
     mail.attachments = [{
@@ -153,21 +159,21 @@ const sendWithSmtp = async ({ to, subject, html, attachment }) => {
   return true;
 };
 
-const sendEmail = async ({ to, subject, html, attachment, logLabel = 'EMAIL' }) => {
+const sendEmail = async ({ to, subject, html, attachment, replyTo, logLabel = 'EMAIL' }) => {
   try {
-    if (await sendWithBrevo({ to, subject, html, attachment })) return true;
+    if (await sendWithBrevo({ to, subject, html, attachment, replyTo })) return true;
   } catch (error) {
     console.error('Brevo email failed:', error);
   }
 
   try {
-    if (await sendWithResend({ to, subject, html, attachment })) return true;
+    if (await sendWithResend({ to, subject, html, attachment, replyTo })) return true;
   } catch (error) {
     console.error('Resend email failed:', error);
   }
 
   try {
-    if (await sendWithSmtp({ to, subject, html, attachment })) return true;
+    if (await sendWithSmtp({ to, subject, html, attachment, replyTo })) return true;
   } catch (error) {
     console.error('SMTP email failed:', error);
   }
@@ -175,6 +181,7 @@ const sendEmail = async ({ to, subject, html, attachment, logLabel = 'EMAIL' }) 
   console.warn('Email provider credentials are not configured. Email was logged instead.');
   console.log(`--- ${logLabel} ---`);
   console.log(`To: ${to}`);
+  if (replyTo) console.log(`Reply-To: ${replyTo}`);
   console.log(`Subject: ${subject}`);
   console.log(html);
   return false;

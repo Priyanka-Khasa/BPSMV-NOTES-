@@ -91,7 +91,7 @@ CLIENT_URLS=http://localhost:5173
 API_URL=http://localhost:5000
 COOKIE_SAME_SITE=lax
 
-ADMIN_EMAIL=admin@example.com
+ADMIN_EMAIL=priyankakhasa937@gmail.com
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
