@@ -3,7 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const Feedback = require('../models/Feedback');
 const { feedbackUpload, getUploadedFileUrl } = require('../config/storage');
-const { sendEmail } = require('../utils/email');
+const { sendEmail, sendEmailWithStatus } = require('../utils/email');
 
 const feedbackLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -74,7 +74,7 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
       </div>
     `;
 
-    const adminMailSent = await sendEmail({
+    const adminMailResult = await sendEmailWithStatus({
       to: adminEmail,
       subject: `New Gift Submission: ${issueType} from ${fullName}`,
       html: emailHtml,
@@ -86,10 +86,10 @@ router.post('/', feedbackLimiter, feedbackUpload.single('screenshot'), async (re
       logLabel: 'GIFT EMAIL (Admin)'
     });
 
-    if (!adminMailSent) {
-      console.error('Gift submission failed: no configured email provider delivered the admin email');
+    if (!adminMailResult.sent) {
+      console.error(`Gift submission failed: ${adminMailResult.message}`);
       return res.status(502).json({
-        message: 'Gift could not be sent to the admin email. Please check the email provider settings and try again.'
+        message: adminMailResult.message || 'Gift could not be sent to the admin email. Please check the email provider settings and try again.'
       });
     }
 

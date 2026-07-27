@@ -184,20 +184,45 @@ const sendWithSmtp = async ({ to, subject, html, attachment, replyTo }) => {
   return true;
 };
 
-const sendEmail = async ({ to, subject, html, attachment, replyTo, logLabel = 'EMAIL' }) => {
+const getEmailFailureMessage = (errors = []) => {
+  const authError = errors.find((error) => (
+    error?.code === 'EAUTH' ||
+    error?.responseCode === 535 ||
+    /username and password not accepted|badcredentials|invalid login/i.test(error?.message || '')
+  ));
+
+  if (authError) {
+    return 'Gmail SMTP login failed. Please create a fresh Gmail App Password and update SMTP_PASS in Render.';
+  }
+
+  if (errors.length) {
+    return 'Email provider failed. Please check the Render email settings and backend logs.';
+  }
+
+  return 'Email provider credentials are not configured.';
+};
+
+const sendEmailWithStatus = async ({ to, subject, html, attachment, replyTo, logLabel = 'EMAIL' }) => {
   let providerConfigured = false;
+  const errors = [];
 
   try {
     providerConfigured = Boolean(createTransporter()) || providerConfigured;
-    if (await sendWithSmtp({ to, subject, html, attachment, replyTo })) return true;
+    if (await sendWithSmtp({ to, subject, html, attachment, replyTo })) {
+      return { sent: true, provider: 'smtp' };
+    }
   } catch (error) {
+    errors.push(error);
     console.error('SMTP email failed:', error);
   }
 
   try {
     providerConfigured = Boolean(process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY) || providerConfigured;
-    if (await sendWithBrevo({ to, subject, html, attachment, replyTo })) return true;
+    if (await sendWithBrevo({ to, subject, html, attachment, replyTo })) {
+      return { sent: true, provider: 'brevo' };
+    }
   } catch (error) {
+    errors.push(error);
     console.error('Brevo email failed:', error);
   }
 
@@ -206,8 +231,11 @@ const sendEmail = async ({ to, subject, html, attachment, replyTo, logLabel = 'E
       cleanEnvValue(process.env.DISABLE_RESEND).toLowerCase() !== 'true' &&
       Boolean(process.env.RESEND_API_KEY)
     ) || providerConfigured;
-    if (await sendWithResend({ to, subject, html, attachment, replyTo })) return true;
+    if (await sendWithResend({ to, subject, html, attachment, replyTo })) {
+      return { sent: true, provider: 'resend' };
+    }
   } catch (error) {
+    errors.push(error);
     console.error('Resend email failed:', error);
   }
 
@@ -219,7 +247,17 @@ const sendEmail = async ({ to, subject, html, attachment, replyTo, logLabel = 'E
   if (replyTo) console.log(`Reply-To: ${replyTo}`);
   console.log(`Subject: ${subject}`);
   console.log(html);
-  return false;
+  return {
+    sent: false,
+    configured: providerConfigured,
+    message: getEmailFailureMessage(errors),
+    errors
+  };
 };
 
-module.exports = { sendEmail };
+const sendEmail = async (options) => {
+  const result = await sendEmailWithStatus(options);
+  return result.sent;
+};
+
+module.exports = { sendEmail, sendEmailWithStatus };
