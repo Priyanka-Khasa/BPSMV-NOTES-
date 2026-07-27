@@ -195,6 +195,15 @@ const getEmailFailureMessage = (errors = []) => {
     return 'Gmail SMTP login failed. Please create a fresh Gmail App Password and update SMTP_PASS in Render.';
   }
 
+  const smtpNetworkError = errors.find((error) => (
+    ['ETIMEDOUT', 'ESOCKET', 'ECONNECTION', 'ENETUNREACH', 'ECONNREFUSED'].includes(error?.code) ||
+    /timeout|timed out|network is unreachable|connection refused|greeting never received/i.test(error?.message || '')
+  ));
+
+  if (smtpNetworkError) {
+    return 'Render free services block Gmail SMTP ports. Use an HTTPS email API like Resend/Brevo or upgrade Render to a paid instance.';
+  }
+
   if (errors.length) {
     return 'Email provider failed. Please check the Render email settings and backend logs.';
   }
