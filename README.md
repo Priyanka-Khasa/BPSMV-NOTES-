@@ -93,6 +93,14 @@ COOKIE_SAME_SITE=lax
 
 ADMIN_EMAIL=priyankakhasa937@gmail.com
 
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=priyankakhasa937@gmail.com
+SMTP_PASS=your_gmail_app_password
+SMTP_FROM=BPSMV Hub <priyankakhasa937@gmail.com>
+DISABLE_RESEND=true
+
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret

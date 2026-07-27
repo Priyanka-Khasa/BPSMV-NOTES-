@@ -50,6 +50,10 @@ services:
         sync: false
       - key: SMTP_PASS
         sync: false
+      - key: SMTP_FROM
+        value: BPSMV Hub <priyankakhasa937@gmail.com>
+      - key: DISABLE_RESEND
+        value: true
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM

@@ -28,6 +28,28 @@ const getFromHeader = () => {
   return sender.name ? `"${sender.name}" <${sender.email}>` : sender.email;
 };
 
+const getSmtpFromHeader = () => {
+  const smtpFrom = cleanEnvValue(process.env.SMTP_FROM);
+  if (smtpFrom) return smtpFrom;
+
+  const configured = parseEmailFrom(process.env.EMAIL_FROM);
+  const smtpUser = cleanEnvValue(process.env.SMTP_USER);
+  if (!smtpUser) return getFromHeader();
+
+  const senderName = process.env.BREVO_SENDER_NAME || configured.name || 'BPSMV Hub';
+  const configuredEmail = (configured.email || '').toLowerCase();
+  const smtpEmail = smtpUser.toLowerCase();
+  const smtpHost = cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com').toLowerCase();
+
+  if (smtpHost.includes('gmail') && configuredEmail && configuredEmail !== smtpEmail) {
+    return `"${senderName}" <${smtpUser}>`;
+  }
+
+  return configured.email
+    ? (configured.name ? `"${configured.name}" <${configured.email}>` : configured.email)
+    : `"${senderName}" <${smtpUser}>`;
+};
+
 const buildApiAttachment = async (attachment) => {
   if (!attachment?.path) return null;
   if (/^https?:\/\//i.test(attachment.path)) {
@@ -82,6 +104,8 @@ const sendWithBrevo = async ({ to, subject, html, attachment, replyTo }) => {
 };
 
 const sendWithResend = async ({ to, subject, html, attachment, replyTo }) => {
+  if (cleanEnvValue(process.env.DISABLE_RESEND).toLowerCase() === 'true') return false;
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
@@ -120,17 +144,18 @@ const sendWithResend = async ({ to, subject, html, attachment, replyTo }) => {
 };
 
 const createTransporter = () => {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const host = cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com');
+  const port = parseInt(cleanEnvValue(process.env.SMTP_PORT), 10) || 587;
+  const secureEnv = cleanEnvValue(process.env.SMTP_SECURE).toLowerCase();
+  const user = cleanEnvValue(process.env.SMTP_USER);
+  const pass = cleanEnvValue(process.env.SMTP_PASS);
 
   if (!user || !pass) return null;
 
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: secureEnv ? secureEnv === 'true' : port === 465,
     auth: { user, pass }
   });
 };
@@ -140,7 +165,7 @@ const sendWithSmtp = async ({ to, subject, html, attachment, replyTo }) => {
   if (!transporter) return false;
 
   const mail = {
-    from: getFromHeader() || `"BPSMV Hub" <${process.env.SMTP_USER}>`,
+    from: getSmtpFromHeader(),
     to,
     subject,
     html
@@ -160,25 +185,35 @@ const sendWithSmtp = async ({ to, subject, html, attachment, replyTo }) => {
 };
 
 const sendEmail = async ({ to, subject, html, attachment, replyTo, logLabel = 'EMAIL' }) => {
+  let providerConfigured = false;
+
   try {
+    providerConfigured = Boolean(createTransporter()) || providerConfigured;
+    if (await sendWithSmtp({ to, subject, html, attachment, replyTo })) return true;
+  } catch (error) {
+    console.error('SMTP email failed:', error);
+  }
+
+  try {
+    providerConfigured = Boolean(process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY) || providerConfigured;
     if (await sendWithBrevo({ to, subject, html, attachment, replyTo })) return true;
   } catch (error) {
     console.error('Brevo email failed:', error);
   }
 
   try {
+    providerConfigured = (
+      cleanEnvValue(process.env.DISABLE_RESEND).toLowerCase() !== 'true' &&
+      Boolean(process.env.RESEND_API_KEY)
+    ) || providerConfigured;
     if (await sendWithResend({ to, subject, html, attachment, replyTo })) return true;
   } catch (error) {
     console.error('Resend email failed:', error);
   }
 
-  try {
-    if (await sendWithSmtp({ to, subject, html, attachment, replyTo })) return true;
-  } catch (error) {
-    console.error('SMTP email failed:', error);
-  }
-
-  console.warn('Email provider credentials are not configured. Email was logged instead.');
+  console.warn(providerConfigured
+    ? 'Configured email providers did not deliver. Email was logged instead.'
+    : 'Email provider credentials are not configured. Email was logged instead.');
   console.log(`--- ${logLabel} ---`);
   console.log(`To: ${to}`);
   if (replyTo) console.log(`Reply-To: ${replyTo}`);
