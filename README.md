@@ -159,6 +159,17 @@ cd server
 node fixDB.js
 ```
 
+## Project Docs
+
+- [Local development](docs/LOCAL_DEVELOPMENT.md)
+- [Environment variables](docs/ENVIRONMENT.md)
+- [API map](docs/API.md)
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [Testing notes](docs/TESTING.md)
+- [Maintenance checklist](docs/MAINTENANCE.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+
 ## Main Routes
 
 | Route | Purpose |
